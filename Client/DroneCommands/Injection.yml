@@ -1,0 +1,10 @@
+﻿- Module: Injection
+  Command: ShellcodeInject
+  Alias: shinject
+  Description: Inject shellcode into the current or target process
+  Arguments:
+    - Label: /path/to/shellcode.bin
+      Artefact: true
+      Optional: false
+    - Label: pid
+      Optional: true

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net5.0</TargetFramework>
+        <AssemblyName>SharpC2</AssemblyName>
+        <RootNamespace>SharpC2</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AutoMapper" Version="10.1.1" />
+      <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
+      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.8" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
+      <PackageReference Include="ReadLine" Version="2.0.1" />
+      <PackageReference Include="RestSharp" Version="106.12.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\SharpC2.API\SharpC2.API.csproj" />
+    </ItemGroup>
+
+</Project>
