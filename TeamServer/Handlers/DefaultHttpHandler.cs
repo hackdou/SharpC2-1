@@ -30,7 +30,7 @@ namespace TeamServer.Handlers
 
             TokenSource = new CancellationTokenSource();
 
-            var host = Host.CreateDefaultBuilder()
+            var host = new HostBuilder()
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseUrls($"http://0.0.0.0:{GetParameter("BindPort")}");
