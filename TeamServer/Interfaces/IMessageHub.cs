@@ -4,6 +4,7 @@ namespace TeamServer.Interfaces
 {
     public interface IMessageHub
     {
+        Task HandlerLoaded(string handler);
         Task HandlerStarted(string handler);
         Task HandlerStopped(string handler);
 

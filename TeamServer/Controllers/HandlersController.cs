@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
 using SharpC2.API;
+using SharpC2.API.V1.Requests;
 using SharpC2.API.V1.Responses;
 
 using TeamServer.Handlers;
@@ -51,6 +52,19 @@ namespace TeamServer.Controllers
 
             var response = _mapper.Map<Handler, HandlerResponse>(handler);
             return Ok(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> LoadHandler([FromBody] LoadAssemblyRequest request)
+        {
+            var handler = _handlers.LoadHandler(request.Bytes);
+
+            var root = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Path.ToUriComponent()}";
+            var path = $"{root}/{handler.Name}";
+
+            await _messageHub.Clients.All.HandlerLoaded(handler.Name);
+
+            return Created(path, handler);
         }
 
         [HttpPut("{name}")]

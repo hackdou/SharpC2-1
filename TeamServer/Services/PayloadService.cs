@@ -68,7 +68,7 @@ namespace TeamServer.Services
             
             foreach (var handler in handlers)
             {
-                var ctor = handler.Methods.FirstOrDefault(m => m.FullName.Contains(".ctor", StringComparison.OrdinalIgnoreCase));
+                var ctor = handler.Methods.GetConstructor();
                 if (ctor is null) continue;
                 
                 var instructions = ctor.Body.Instructions.Where(i => i.OpCode == OpCodes.Ldstr);
@@ -86,17 +86,22 @@ namespace TeamServer.Services
 
             if (targetHandler is null) throw new Exception("Could not find matching Handler");
 
-            foreach (var handlerParameter in handlerParameters)
+            if (handlerParameters is not null)
             {
-                // get matching methods in handler
-                var method = targetHandler.Methods.FirstOrDefault(m =>
-                    m.FullName.Contains(handlerParameter.Name, StringComparison.OrdinalIgnoreCase));
-
-                var instruction = method?.Body.Instructions.FirstOrDefault(i => i.OpCode == OpCodes.Ldstr);
-                if (instruction is null) continue;
-
-                instruction.Operand = handlerParameter.Value;
+                foreach (var handlerParameter in handlerParameters)
+                {
+                    // get matching method in handler
+                    var method = targetHandler.Methods.GetMethod(handlerParameter.Name);
+                    var instruction = method?.Body.Instructions.FirstOrDefault(i => i.OpCode == OpCodes.Ldstr);
+                    if (instruction is null) continue;
+                    instruction.Operand = handlerParameter.Value;
+                }
             }
+
+            // finally, ensure that the drone is creating an instance of the correct handler
+            var droneType = moduleDef.Types.GetType("Drone");
+            var getHandler = droneType.Methods.GetMethod("get_GetHandler");
+            getHandler.Body.Instructions[0].Operand = targetHandler.Methods.GetConstructor();
 
             return moduleDef;
         }
@@ -105,8 +110,8 @@ namespace TeamServer.Services
         {
             mod.Kind = ModuleKind.Console;
 
-            var program = mod.Types.Single(t => t.Name == "Program");
-            var main = program.Methods.Single(m => m.Name == "Main");
+            var program = mod.Types.GetType("Program");
+            var main = program?.Methods.GetMethod("Main");
 
             mod.EntryPoint = main;
 
@@ -115,8 +120,9 @@ namespace TeamServer.Services
 
         private static ModuleDefMD AddUnmanagedExport(ModuleDefMD mod)
         {
-            var program = mod.Types.Single(t => t.Name == "Program");
-            var execute = program.Methods.Single(m => m.Name == "Execute");
+            var program = mod.Types.GetType("Program");
+            var execute = program?.Methods.GetMethod("Execute");
+            if (execute is null) return mod;
             
             execute.ExportInfo = new MethodExportInfo();
             execute.IsUnmanagedExport = true;
