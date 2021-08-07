@@ -7,7 +7,7 @@ namespace TeamServer.Interfaces
     public interface IHandlerService
     {
         Handler LoadHandler(byte[] bytes);
-        void LoadHandler(Handler handler);
+        void LoadDefaultHandlers();
         IEnumerable<Handler> GetHandlers();
         Handler GetHandler(string name);
         bool RemoveHandler(string name);

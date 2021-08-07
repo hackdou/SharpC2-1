@@ -86,15 +86,18 @@ namespace TeamServer.Services
 
             if (targetHandler is null) throw new Exception("Could not find matching Handler");
 
-            foreach (var handlerParameter in handlerParameters)
+            if (handlerParameters is not null)
             {
-                // get matching method in handler
-                var method = targetHandler.Methods.GetMethod(handlerParameter.Name);
-                var instruction = method?.Body.Instructions.FirstOrDefault(i => i.OpCode == OpCodes.Ldstr);
-                if (instruction is null) continue;
-                instruction.Operand = handlerParameter.Value;
+                foreach (var handlerParameter in handlerParameters)
+                {
+                    // get matching method in handler
+                    var method = targetHandler.Methods.GetMethod(handlerParameter.Name);
+                    var instruction = method?.Body.Instructions.FirstOrDefault(i => i.OpCode == OpCodes.Ldstr);
+                    if (instruction is null) continue;
+                    instruction.Operand = handlerParameter.Value;
+                }
             }
-            
+
             // finally, ensure that the drone is creating an instance of the correct handler
             var droneType = moduleDef.Types.GetType("Drone");
             var getHandler = droneType.Methods.GetMethod("get_GetHandler");

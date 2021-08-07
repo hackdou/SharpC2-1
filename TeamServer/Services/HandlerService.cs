@@ -23,10 +23,10 @@ namespace TeamServer.Services
             _hubContext = hubContext;
         }
 
-        public Handler LoadHandler(byte[] bytes)
+        private IEnumerable<Handler> LoadHandler(Assembly asm)
         {
-            var asm = Assembly.Load(bytes);
-
+            List<Handler> handlers = new();
+            
             foreach (var type in asm.GetTypes())
             {
                 if (!type.IsSubclassOf(typeof(Handler))) continue;
@@ -34,14 +34,28 @@ namespace TeamServer.Services
                 if (Activator.CreateInstance(type) is not Handler handler)
                     throw new Exception("Could not create instance of Handler.");
 
-                LoadHandler(handler);
-                return handler;
+                RegisterHandler(handler);
+                handlers.Add(handler);
             }
 
-            return null;
+            return handlers;
         }
 
-        public void LoadHandler(Handler handler)
+        public void LoadDefaultHandlers()
+        {
+            var self = Assembly.GetExecutingAssembly();
+            _ = LoadHandler(self);
+        }
+
+        public Handler LoadHandler(byte[] bytes)
+        {
+            var asm = Assembly.Load(bytes);
+            var handlers = LoadHandler(asm);
+
+            return handlers.First();
+        }
+
+        private void RegisterHandler(Handler handler)
         {
             handler.Init(_taskService, _hubContext);
             _handlers.Add(handler);

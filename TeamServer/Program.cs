@@ -27,13 +27,13 @@ namespace TeamServer
 
             // Always load the default handler
             var handlerService = host.Services.GetRequiredService<IHandlerService>();
-            handlerService.LoadHandler(new DefaultHttpHandler());
+            handlerService.LoadDefaultHandlers();
 
             // If path to handler was included, load it
             if (args.Length > 1)
             {
                 var bytes = await File.ReadAllBytesAsync(args[1]);
-                _ = handlerService.LoadHandler(bytes);
+                handlerService.LoadHandler(bytes);
             }
 
             await host.RunAsync();
