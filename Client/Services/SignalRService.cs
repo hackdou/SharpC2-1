@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR.Client;
@@ -16,6 +18,7 @@ namespace SharpC2.Services
         }
         
         // Handlers
+        public event Action<string> HandlerLoaded;
         public event Action<string> HandlerStarted;
         public event Action<string> HandlerStopped;
         
@@ -27,11 +30,13 @@ namespace SharpC2.Services
         public event Action<string, string> DroneTaskCancelled;
         public event Action<string, byte[]> DroneTaskAborted;
 
-        public async Task Connect(string hostname, string port)
+        public async Task Connect(string hostname, string port, string nick, string pass)
         {
             var connection = new HubConnectionBuilder()
                 .WithUrl($"https://{hostname}:{port}/MessageHub", o =>
                 {
+                    var basic = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{nick}:{pass}"));
+                    o.Headers.Add("Authorization", $"Basic {basic}");
                     o.HttpMessageHandlerFactory = handler => new HttpClientHandler
                     {
                         ServerCertificateCustomValidationCallback = _certs.RemoteCertificateValidationCallback
@@ -42,6 +47,7 @@ namespace SharpC2.Services
             
             await connection.StartAsync();
 
+            connection.On<string>("HandlerLoaded", msg => HandlerLoaded?.Invoke(msg));
             connection.On<string>("HandlerStarted", msg => HandlerStarted?.Invoke(msg));
             connection.On<string>("HandlerStopped", msg => HandlerStopped?.Invoke(msg));
 

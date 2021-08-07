@@ -66,6 +66,15 @@ namespace SharpC2.Services
             return _mapper.Map<HandlerResponse, Handler>(handler);
         }
 
+        public async Task LoadHandler(byte[] handler)
+        {
+            var request = new RestRequest($"{Routes.V1.Handlers}", Method.POST);
+            var asm = new LoadAssemblyRequest { Bytes = handler };
+            request.AddParameter("application/json", JsonSerializer.Serialize(asm), ParameterType.RequestBody);
+
+            await _client.ExecuteAsync(request);
+        }
+
         public async Task SetHandlerParameter(string name, string key, string value)
         {
             var request = new RestRequest($"{Routes.V1.Handlers}/{name}?key={key}&value={value}", Method.PATCH);

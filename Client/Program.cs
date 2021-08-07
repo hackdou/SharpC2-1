@@ -45,7 +45,7 @@ namespace SharpC2
                 authenticated = true;
                 
                 // connect to SignalR
-                await signalR.Connect(server, port);
+                await signalR.Connect(server, port, nick, password);
             }
 
             // load the drone screen as a pseudo home screen

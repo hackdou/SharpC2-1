@@ -55,12 +55,14 @@ namespace TeamServer.Controllers
         }
 
         [HttpPost]
-        public IActionResult LoadHandler([FromBody] LoadAssemblyRequest request)
+        public async Task<IActionResult> LoadHandler([FromBody] LoadAssemblyRequest request)
         {
             var handler = _handlers.LoadHandler(request.Bytes);
 
-            var root = HttpContext.Request.Path.ToUriComponent();
-            var path = $"{root}/{Routes.V1.Handlers}/{handler.Name}";
+            var root = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Path.ToUriComponent()}";
+            var path = $"{root}/{handler.Name}";
+
+            await _messageHub.Clients.All.HandlerLoaded(handler.Name);
 
             return Created(path, handler);
         }

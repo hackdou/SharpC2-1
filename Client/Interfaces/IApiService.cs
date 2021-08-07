@@ -12,6 +12,7 @@ namespace SharpC2.Interfaces
         // Handlers
         Task<IEnumerable<Handler>> GetHandlers();
         Task<Handler> GetHandler(string name);
+        Task LoadHandler(byte[] handler);
         Task SetHandlerParameter(string name, string key, string value);
         Task StartHandler(string name);
         Task StopHandler(string name);

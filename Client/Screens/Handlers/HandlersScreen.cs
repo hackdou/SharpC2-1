@@ -22,19 +22,21 @@ namespace SharpC2.Screens
             _screens = screens;
             _signalR = signalR;
 
-            _signalR.HandlerStarted += h => CustomConsole.WriteMessage($"Handler \"{h}\" started.");
-            _signalR.HandlerStopped += h => CustomConsole.WriteMessage($"Handler \"{h}\" stopped.");
+            _signalR.HandlerLoaded += OnHandlerLoaded;
+            _signalR.HandlerStarted += OnHandlerStarted;
+            _signalR.HandlerStopped += OnHandlerStopped;
         }
 
         public IEnumerable<Handler> Handlers { get; private set; }
 
         public override void AddCommands()
         {
-            Commands.Add(new ScreenCommand(name: "list", description: "List Handlers", callback: ListHandlers));
-            Commands.Add(new ScreenCommand(name: "config", description: "Configure the given Handler", usage: "config <handler>", callback: ConfigHandler));
-            Commands.Add(new ScreenCommand(name: "start", description: "Start the given Handler", usage: "start <handler>", callback: StartHandler));
-            Commands.Add(new ScreenCommand(name: "stop", description: "Stop the given Handler", usage: "stop <handler>", callback: StopHandler));
-            Commands.Add(new ScreenCommand(name: "payload", description: "Generate a payload for the given Handler", usage: "payload <handler> <format> <path>", callback: GeneratePayload));
+            Commands.Add(new ScreenCommand("load", "Load a Handler DLL", LoadHandler, "load </path/to/handler.dll"));
+            Commands.Add(new ScreenCommand("list", "List Handlers", ListHandlers));
+            Commands.Add(new ScreenCommand("config", "Configure the given Handler", ConfigHandler, "config <handler>"));
+            Commands.Add(new ScreenCommand("start", "Start the given Handler", StartHandler, "start <handler>"));
+            Commands.Add(new ScreenCommand("stop", "Stop the given Handler", StopHandler, "stop <handler>"));
+            Commands.Add(new ScreenCommand("payload", "Generate a payload for the given Handler", GeneratePayload, "payload <handler> <format> <path>"));
             
             ReadLine.AutoCompletionHandler = new HandlersAutoComplete(this);
         }
@@ -42,6 +44,31 @@ namespace SharpC2.Screens
         public override async Task LoadInitialData()
         {
             Handlers = (await _api.GetHandlers()).ToArray();
+        }
+        
+        private void OnHandlerLoaded(string handler)
+            => CustomConsole.WriteMessage($"Handler \"{handler}\" loaded");
+
+        private void OnHandlerStarted(string handler)
+            => CustomConsole.WriteMessage($"Handler \"{handler}\" started.");
+
+        private void OnHandlerStopped(string handler)
+            => CustomConsole.WriteMessage($"Handler \"{handler}\" stopped.");
+
+        private async Task<bool> LoadHandler(string[] args)
+        {
+            if (args.Length < 1) return false;
+            var path = args[1];
+            
+            if (!File.Exists(path))
+            {
+                CustomConsole.WriteError($"{path} not found");
+                return false;
+            }
+
+            var bytes = await File.ReadAllBytesAsync(path);
+            await _api.LoadHandler(bytes);
+            return true;
         }
 
         private async Task<bool> ListHandlers(string[] args)
@@ -125,6 +152,15 @@ namespace SharpC2.Screens
 
             return true;
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            _signalR.HandlerLoaded -= OnHandlerLoaded;
+            _signalR.HandlerStarted -= OnHandlerStarted;
+            _signalR.HandlerStopped -= OnHandlerStopped;
+            
+            base.Dispose(disposing);
+        }
     }
 
     public class HandlersAutoComplete : AutoCompleteHandler
@@ -150,9 +186,11 @@ namespace SharpC2.Screens
 
             if (split.Length == 2)
             {
-                return split[0].StartsWith("help")
-                    ? commands
-                    : _screen.Handlers.Select(h => h.Name).ToArray();
+                if (split[0].StartsWith("help"))
+                    return _screen.Handlers.Select(h => h.Name).ToArray();
+
+                if (split[0].StartsWith("load"))
+                    return Extensions.GetPartialPath(split[1]).ToArray();
             }
 
             if (split.Length == 3)
