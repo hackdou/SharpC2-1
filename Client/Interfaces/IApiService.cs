@@ -16,7 +16,9 @@ namespace SharpC2.Interfaces
         Task SetHandlerParameter(string name, string key, string value);
         Task StartHandler(string name);
         Task StopHandler(string name);
-        Task<byte[]> GeneratePayload(string name, string format);
+
+        // Payloads
+        Task<byte[]> GeneratePayload(Payload payload); 
         
         // Drones
         Task<IEnumerable<Drone>> GetDrones();

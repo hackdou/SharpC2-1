@@ -36,8 +36,7 @@ namespace SharpC2.Screens
             Commands.Add(new ScreenCommand("config", "Configure the given Handler", ConfigHandler, "config <handler>"));
             Commands.Add(new ScreenCommand("start", "Start the given Handler", StartHandler, "start <handler>"));
             Commands.Add(new ScreenCommand("stop", "Stop the given Handler", StopHandler, "stop <handler>"));
-            Commands.Add(new ScreenCommand("payload", "Generate a payload for the given Handler", GeneratePayload, "payload <handler> <format> <path>"));
-            
+
             ReadLine.AutoCompletionHandler = new HandlersAutoComplete(this);
         }
 
@@ -110,46 +109,6 @@ namespace SharpC2.Screens
             var handler = args[1];
             await _api.StopHandler(handler);
             
-            return true;
-        }
-
-        private async Task<bool> GeneratePayload(string[] args)
-        {
-            if (args.Length < 4) return false;
-            
-            var handler = args[1];
-            var format = args[2];
-            var path = args[3];
-
-            var targetDirectory = Path.GetDirectoryName(path);
-            if (!Directory.Exists(targetDirectory))
-            {
-                CustomConsole.WriteError("Target directory does not exist.");
-                return false;
-            }
-
-            // this is pretty stupid, the API should tell us which formats are available
-            if (!format.Equals("exe", StringComparison.OrdinalIgnoreCase) &&
-                !format.Equals("dll", StringComparison.OrdinalIgnoreCase))
-            {
-                CustomConsole.WriteError("Format should be \"exe\" or \"dll\".");
-                return false;
-            }
-
-            var payload = await _api.GeneratePayload(handler, format);
-
-            try
-            {
-                await File.WriteAllBytesAsync(path, payload);
-            }
-            catch (Exception e)
-            {
-                CustomConsole.WriteError(e.Message);
-                return false;
-            }
-            
-            CustomConsole.WriteMessage($"Saved {payload.Length} bytes.");
-
             return true;
         }
 

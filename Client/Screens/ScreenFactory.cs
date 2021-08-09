@@ -25,6 +25,7 @@ namespace SharpC2.Screens
                 Screen.ScreenType.Handlers => new HandlersScreen(_apiService, this, _signalR),
                 Screen.ScreenType.HandlerConfig => new ConfigHandlerScreen(_apiService),
                 Screen.ScreenType.DroneInteract => new DroneInteractScreen(_apiService, _signalR),
+                Screen.ScreenType.Payloads => new PayloadsScreen(_apiService),
                 
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
             };

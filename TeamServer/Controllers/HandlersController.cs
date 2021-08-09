@@ -23,14 +23,12 @@ namespace TeamServer.Controllers
     public class HandlersController : ControllerBase
     {
         private readonly IHandlerService _handlers;
-        private readonly IPayloadService _payloads;
         private readonly IHubContext<MessageHub, IMessageHub> _messageHub;
         private readonly IMapper _mapper;
 
-        public HandlersController(IHandlerService handlerService, IPayloadService payloadService, IHubContext<MessageHub, IMessageHub> messageHub, IMapper mapper)
+        public HandlersController(IHandlerService handlerService, IHubContext<MessageHub, IMessageHub> messageHub, IMapper mapper)
         {
             _handlers = handlerService;
-            _payloads = payloadService;
             _messageHub = messageHub;
             _mapper = mapper;
         }
@@ -129,16 +127,6 @@ namespace TeamServer.Controllers
                 return NotFound();
 
             return NoContent();
-        }
-
-        [HttpGet("{name}/payload")]
-        public async Task<IActionResult> GeneratePayload(string name, [FromQuery] string format)
-        {
-            var handler = _handlers.GetHandler(name);
-            if (handler is null) return NotFound();
-
-            var payload = await _payloads.GeneratePayload(handler, format);
-            return Ok(payload);
         }
     }
 }
