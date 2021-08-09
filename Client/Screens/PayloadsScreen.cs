@@ -110,12 +110,30 @@ namespace SharpC2.Screens
         
         public override string[] GetSuggestions(string text, int index)
         {
-            if (string.IsNullOrEmpty(text)) return _screen.Commands.Select(c => c.Name).ToArray();
-            
-            if (text.StartsWith("set", StringComparison.OrdinalIgnoreCase))
-            {
-                var split = text.Split(' ');
+            var commands = _screen.Commands.Select(c => c.Name).ToArray();
+            var split = text.Split(' ');
 
+            if (split.Length == 1)
+            {
+                return string.IsNullOrEmpty(split[0])
+                    ? commands
+                    : commands.Where(c => c.StartsWith(split[0])).ToArray();
+            }
+
+            if (split.Length == 2)
+            {
+                if (split[0].StartsWith("help", StringComparison.OrdinalIgnoreCase))
+                    return commands.Where(c => c.StartsWith(split[1])).ToArray();
+
+                if (split[0].StartsWith("set", StringComparison.OrdinalIgnoreCase))
+                    return new[] {"handler", "format", "dllexport"};
+                
+                if (text.StartsWith("generate", StringComparison.OrdinalIgnoreCase))
+                    return Extensions.GetPartialPath(split[1]).ToArray();
+            }
+
+            if (split.Length == 3)
+            {
                 if (split[1].Contains("handler", StringComparison.OrdinalIgnoreCase))
                     return _screen.Handlers.Select(h => h.Name).ToArray();
 
@@ -125,13 +143,7 @@ namespace SharpC2.Screens
                         .Select(f => f.ToString())
                         .ToArray();
             }
-
-            if (text.StartsWith("generate", StringComparison.OrdinalIgnoreCase))
-            {
-                var split = text.Split(' ');
-                return Extensions.GetPartialPath(split[1]).ToArray();
-            }
-
+            
             return Array.Empty<string>();
         }
     }

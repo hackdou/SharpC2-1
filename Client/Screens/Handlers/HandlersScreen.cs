@@ -145,11 +145,14 @@ namespace SharpC2.Screens
 
             if (split.Length == 2)
             {
-                if (split[0].StartsWith("help"))
+                if (split[0].StartsWith("help", StringComparison.OrdinalIgnoreCase))
                     return _screen.Handlers.Select(h => h.Name).ToArray();
 
-                if (split[0].StartsWith("load"))
+                if (split[0].StartsWith("load", StringComparison.OrdinalIgnoreCase))
                     return Extensions.GetPartialPath(split[1]).ToArray();
+
+                if (split[0].StartsWith("config", StringComparison.OrdinalIgnoreCase))
+                    return _screen.Handlers.Select(h => h.Name).ToArray();
             }
 
             if (split.Length == 3)
