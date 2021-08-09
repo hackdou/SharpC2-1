@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,6 +22,7 @@ namespace SharpC2.Services
         public event Action<string> HandlerStopped;
         
         //Drones
+        public event Action<string> DroneCheckedIn;
         public event Action<string, string> DroneTasked;
         public event Action<string, int> DroneDataSent;
         public event Action<string, byte[]> DroneTaskRunning;
@@ -51,6 +51,7 @@ namespace SharpC2.Services
             connection.On<string>("HandlerStarted", msg => HandlerStarted?.Invoke(msg));
             connection.On<string>("HandlerStopped", msg => HandlerStopped?.Invoke(msg));
 
+            connection.On<string>("DroneCheckedIn", (drone) => DroneCheckedIn?.Invoke(drone));
             connection.On<string, string>("DroneTasked", (drone, task) => DroneTasked?.Invoke(drone, task));
             connection.On<string, int>("DroneDataSent", (drone, size) => DroneDataSent?.Invoke(drone, size));
             connection.On<string, byte[]>("DroneTaskRunning", (drone, result) => DroneTaskRunning?.Invoke(drone, result));

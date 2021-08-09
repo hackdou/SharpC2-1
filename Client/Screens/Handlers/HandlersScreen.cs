@@ -151,7 +151,9 @@ namespace SharpC2.Screens
                 if (split[0].StartsWith("load", StringComparison.OrdinalIgnoreCase))
                     return Extensions.GetPartialPath(split[1]).ToArray();
 
-                if (split[0].StartsWith("config", StringComparison.OrdinalIgnoreCase))
+                if (split[0].StartsWith("config", StringComparison.OrdinalIgnoreCase)
+                 || split[0].StartsWith("start", StringComparison.OrdinalIgnoreCase)
+                 || split[0].StartsWith("stop", StringComparison.OrdinalIgnoreCase))
                     return _screen.Handlers.Select(h => h.Name).ToArray();
             }
 

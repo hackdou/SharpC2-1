@@ -22,6 +22,8 @@ namespace SharpC2.Screens
             _api = api;
             _screens = screens;
             _signalR = signalR;
+
+            _signalR.DroneCheckedIn += OnDroneCheckIn;
         }
 
         public override void AddCommands()
@@ -97,6 +99,21 @@ namespace SharpC2.Screens
             ReadLine.AutoCompletionHandler = new DronesAutoComplete(this);
 
             return true;
+        }
+        
+        private void OnDroneCheckIn(string droneGuid)
+        {
+            if (Drones.Any(d => d.Guid.Equals(droneGuid, StringComparison.OrdinalIgnoreCase))) return;
+            
+            CustomConsole.WriteMessage($"Drone {droneGuid} checked in.");
+            Drones.Add(new Drone{Guid = droneGuid});
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            _signalR.DroneCheckedIn -= OnDroneCheckIn;
+            
+            base.Dispose(disposing);
         }
     }
     

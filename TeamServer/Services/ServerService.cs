@@ -58,6 +58,8 @@ namespace TeamServer.Services
             var drone = _drones.GetDrone(message.Metadata.Guid);
             drone?.CheckIn();
 
+            await _hub.Clients.All.DroneCheckedIn(drone?.Metadata.Guid);
+
             switch (message.Type)
             {
                 case C2Message.MessageType.DroneModule:
