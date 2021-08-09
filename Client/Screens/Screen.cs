@@ -109,7 +109,8 @@ namespace SharpC2.Screens
             Drones,
             Handlers,
             HandlerConfig,
-            DroneInteract
+            DroneInteract,
+            Payloads
         }
 
         protected virtual void Dispose(bool disposing)

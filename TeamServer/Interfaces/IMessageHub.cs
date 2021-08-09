@@ -8,6 +8,7 @@ namespace TeamServer.Interfaces
         Task HandlerStarted(string handler);
         Task HandlerStopped(string handler);
 
+        Task DroneCheckedIn(string droneGuid);
         Task DroneDataSent(string droneGuid, int messageSize);
         Task DroneTasked(string droneGuid, string taskGuid);
         Task DroneTaskRunning(string droneGuid, byte[] result);

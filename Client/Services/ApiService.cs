@@ -93,12 +93,24 @@ namespace SharpC2.Services
             await _client.ExecuteAsync(request);
         }
 
-        public async Task<byte[]> GeneratePayload(string handler, string format)
+        public async Task<byte[]> GeneratePayload(Payload payload)
         {
-            var request = new RestRequest($"{Routes.V1.Handlers}/{handler}/payload?format={format}", Method.GET);
+            var payloadRequest = new PayloadRequest
+            {
+                Handler = payload.Handler,
+                Format = (PayloadRequest.PayloadFormat)payload.Format,
+                DllExport = payload.DllExport
+            };
+            
+            var request = new RestRequest($"{Routes.V1.Payloads}", Method.POST);
+            request.AddParameter("application/json",
+                JsonSerializer.Serialize(payloadRequest),
+                ParameterType.RequestBody);
+            
             var response = await _client.ExecuteAsync(request);
+            var result = JsonSerializer.Deserialize<PayloadResponse>(response.Content, _options);
 
-            return Convert.FromBase64String(response.Content.Replace("\"", ""));
+            return result?.Content;
         }
 
         public async Task<IEnumerable<Drone>> GetDrones()
