@@ -10,11 +10,13 @@ namespace Drone.Modules
 
         protected Drone Drone;
         protected DroneConfig Config;
+        protected DroneEvasion Evasion;
 
-        public void Init(Drone drone, DroneConfig config)
+        public void Init(Drone drone, DroneConfig config, DroneEvasion evasion)
         {
             Drone = drone;
             Config = config;
+            Evasion = evasion;
         }
 
         public abstract void AddCommands();
