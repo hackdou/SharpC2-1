@@ -46,6 +46,12 @@ namespace SharpC2.Screens
                 CustomConsole.WriteError("Target directory does not exist.");
                 return false;
             }
+
+            if (string.IsNullOrEmpty(_payload.Handler))
+            {
+                CustomConsole.WriteError("Please specify a Handler.");
+                return false;
+            }
             
             var payload = await _api.GeneratePayload(_payload);
 
