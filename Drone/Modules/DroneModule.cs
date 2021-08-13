@@ -25,6 +25,7 @@ namespace Drone.Modules
         {
             public string Name { get; }
             public string Description { get; }
+            public bool Visible { get; set; } = true;
             public List<Argument> Arguments { get; } = new();
             public Drone.Callback Callback { get; }
 
