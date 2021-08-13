@@ -10,6 +10,33 @@ namespace Drone.DInvoke.DynamicInvoke
 {
     public static class Native
     {
+        public static IntPtr NtOpenProcess(uint pid, Data.Win32.Kernel32.ProcessAccessFlags desiredAccess)
+        {
+            var hProcess = IntPtr.Zero;
+            
+            var oa = new Data.Native.OBJECT_ATTRIBUTES();
+            var ci = new Data.Native.CLIENT_ID {UniqueProcess = (IntPtr) pid};
+
+            object[] funcargs = { hProcess, desiredAccess, oa, ci };
+
+            var retValue = (Data.Native.NTSTATUS) Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtOpenProcess",
+                typeof(DELEGATES.NtOpenProcess), ref funcargs);
+            
+            if (retValue != Data.Native.NTSTATUS.Success && retValue == Data.Native.NTSTATUS.InvalidCid)
+            {
+                throw new InvalidOperationException("An invalid client ID was specified.");
+            }
+            
+            if (retValue != Data.Native.NTSTATUS.Success)
+            {
+                throw new UnauthorizedAccessException("Access is denied.");
+            }
+
+            hProcess = (IntPtr)funcargs[0];
+
+            return hProcess;
+        }
+        
         public static Data.Native.NTSTATUS NtCreateSection(
             ref IntPtr SectionHandle,
             uint DesiredAccess,
@@ -258,6 +285,12 @@ namespace Drone.DInvoke.DynamicInvoke
 
         public struct DELEGATES
         {
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            public delegate Data.Native.NTSTATUS NtOpenProcess(
+                ref IntPtr ProcessHandle,
+                Data.Win32.Kernel32.ProcessAccessFlags DesiredAccess,
+                ref Data.Native.OBJECT_ATTRIBUTES ObjectAttributes,
+                ref Data.Native.CLIENT_ID ClientId);
 
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate Data.Native.NTSTATUS NtCreateSection(

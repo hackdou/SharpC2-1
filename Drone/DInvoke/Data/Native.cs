@@ -6,6 +6,13 @@ namespace Drone.DInvoke.Data
     public static class Native
     {
         [StructLayout(LayoutKind.Sequential)]
+        public struct CLIENT_ID
+        {
+            public IntPtr UniqueProcess;
+            public IntPtr UniqueThread;
+        }
+        
+        [StructLayout(LayoutKind.Sequential)]
         public struct UNICODE_STRING
         {
             public UInt16 Length;
