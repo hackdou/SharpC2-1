@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2021-08-13
+### Added
+- Added a null-reference check to the Handler string when generating payloads
+
 ## [0.2.0] - 2021-08-09
 ### Changed
 - Moved payload generation to its own API endpoint
