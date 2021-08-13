@@ -15,6 +15,7 @@ namespace Drone
     {
         private Metadata _metadata;
         private DroneConfig _config;
+        private DroneEvasion _evasion;
         private Handler _handler;
         private bool _running;
 
@@ -26,6 +27,7 @@ namespace Drone
         public void Start()
         {
             _config = Utilities.GenerateDefaultConfig();
+            _evasion = new DroneEvasion(_config);
             _metadata = Utilities.GenerateMetadata();
 
             _handler = GetHandler;
@@ -144,7 +146,7 @@ namespace Drone
 
         public void LoadDroneModule(DroneModule module)
         {
-            module.Init(this, _config);
+            module.Init(this, _config, _evasion);
             module.AddCommands();
             _modules.Add(module);
             SendModuleLoaded(module);

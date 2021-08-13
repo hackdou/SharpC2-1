@@ -11,6 +11,8 @@ namespace Drone
 {
     public static class Utilities
     {
+        public static bool IsProcess64Bit => IntPtr.Size == 8;
+
         public static Metadata GenerateMetadata()
         {
             var hostname = Dns.GetHostName();
@@ -25,7 +27,7 @@ namespace Drone
                 Address = addresses.LastOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork)?.ToString(),
                 Process = process.ProcessName,
                 Pid = process.Id,
-                Arch = IntPtr.Size == 8 ? "x64" : "x86"
+                Arch = IsProcess64Bit ? "x64" : "x86"
             };
         }
 

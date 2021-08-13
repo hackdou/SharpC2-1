@@ -138,11 +138,22 @@ default-http  True
 ### Generate a Payload for the Handler
 
 ```
-[handlers] # help payload
-Generate a payload for the given Handler
-Usage: payload <handler> <format> <path>
+[drones] # payloads
 
-[handlers] # payload default-http exe C:\Temp\drone.exe
+[payloads] # show
+
+Handler  Format  DllExport
+-------  ------  ---------
+         Exe     Execute
+
+[payloads] # set Handler default-http
+
+[payloads] # help generate
+
+Generate payload
+Usage: generate </output/path>
+
+[payloads] # generate C:\Temp\drone.exe
 [+] Saved 74240 bytes.
 ```
 
@@ -159,8 +170,6 @@ C:\Temp> drone.exe
 ### Interacting with a Drone
 
 ```
-[handlers] # back
-
 [drones] # list
 
 Guid        Address      Hostname      Username  Process  PID    Arch  LastSeen
