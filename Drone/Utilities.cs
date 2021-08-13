@@ -51,6 +51,8 @@ namespace Drone
 
             foreach (var command in module.Commands)
             {
+                if (!command.Visible) continue;
+                
                 var commandDef = new DroneModuleDefinition.CommandDefinition
                 {
                     Name = command.Name,
