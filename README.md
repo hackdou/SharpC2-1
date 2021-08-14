@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/SharpC2/SharpC2.svg?branch=main)](https://travis-ci.com/SharpC2/SharpC2)
 [![Documentation Status](https://readthedocs.org/projects/sharpc2/badge/?version=latest)](https://sharpc2.readthedocs.io/en/latest/?badge=latest)
 
 # SharpC2
