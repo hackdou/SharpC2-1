@@ -24,7 +24,8 @@ namespace SharpC2.Screens
         {
             _api = api;
             _signalR = signalR;
-            
+
+            _signalR.DroneModuleLoaded += OnDroneModuleLoaded;
             _signalR.DroneTasked += OnDroneTasked;
             _signalR.DroneDataSent += OnDroneDataSent;
             _signalR.DroneTaskRunning += OnDroneTaskRunning;
@@ -131,6 +132,22 @@ namespace SharpC2.Screens
 
             await _api.TaskDrone(Name, module.Name, command.Name, args, artefact);
             return true;
+        }
+        
+        private void OnDroneModuleLoaded(string droneGuid, DroneModule module)
+        {
+            if (!droneGuid.Equals(Name, StringComparison.OrdinalIgnoreCase)) return;
+            
+            Drone.Modules.Add(module);
+            
+            foreach (var command in module.Commands)
+            {
+                Commands.Add(new ScreenCommand(
+                    name: command.Name,
+                    description: command.Description,
+                    usage: command.Usage,
+                    callback: ExecuteDroneCommand));
+            }
         }
 
         private void OnDroneTasked(string droneGuid, string taskGuid)

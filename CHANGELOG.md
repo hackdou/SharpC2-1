@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.4] - 2021-08-14
+### Added
+- Load external Drone modules at runtime.
+- DroneModuleLoaded SignalR call.
+
 ## [0.2.3] - 2021-08-13
 ### Added
 - Reverse port forwards.
