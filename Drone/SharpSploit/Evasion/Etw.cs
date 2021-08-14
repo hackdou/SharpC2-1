@@ -5,6 +5,7 @@ namespace Drone.SharpSploit.Evasion
 {
     public class Etw
     {
+        //Slightly modified version of the AMSI evasion module
         private IntPtr _address;
         private byte[] _original;
 
