@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-using TeamServer.Handlers;
 using TeamServer.Interfaces;
 
 namespace TeamServer
@@ -17,7 +16,7 @@ namespace TeamServer
         {
             // args => <password> [handler.dll]
             if (args.Length < 1)
-                throw new ArgumentException("Usage: TeamServer.exe <password>");
+                throw new ArgumentException("Usage: TeamServer.exe <password> [handler.dll]");
 
             var host = CreateHostBuilder(args).Build();
 

@@ -158,12 +158,22 @@ namespace Drone
             _taskTokens.Remove(taskGuid);
         }
 
-        public void LoadDroneModule(DroneModule module)
+        private void LoadDroneModule(DroneModule module)
         {
             module.Init(this, _config, _evasion);
             module.AddCommands();
             _modules.Add(module);
             SendModuleLoaded(module);
+        }
+
+        public void LoadDroneModule(Assembly asm)
+        {
+            foreach (var type in asm.GetTypes())
+            {
+                if (!type.IsSubclassOf(typeof(DroneModule))) continue;
+                var module = (DroneModule) Activator.CreateInstance(type);
+                LoadDroneModule(module);
+            }
         }
 
         private void SendModuleLoaded(DroneModule module)
@@ -185,12 +195,7 @@ namespace Drone
         private void LoadDefaultModules()
         {
             var self = Assembly.GetExecutingAssembly();
-            foreach (var type in self.GetTypes())
-            {
-                if (!type.IsSubclassOf(typeof(DroneModule))) continue;
-                var module = (DroneModule) Activator.CreateInstance(type);
-                LoadDroneModule(module);
-            }
+            LoadDroneModule(self);
         }
 
         private static Handler GetHandler => new DefaultHttpHandler();

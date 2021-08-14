@@ -64,7 +64,7 @@ namespace TeamServer.Services
             {
                 case C2Message.MessageType.DroneModule:
                     var module = message.Data.Deserialize<DroneModule>();
-                    HandleRegisterDroneModule(message.Metadata, module);
+                    await HandleRegisterDroneModule(message.Metadata, module);
                     break;
 
                 case C2Message.MessageType.DroneTaskUpdate:
@@ -86,9 +86,10 @@ namespace TeamServer.Services
             await module.Execute(metadata, update);
         }
 
-        private void HandleRegisterDroneModule(DroneMetadata metadata, DroneModule module)
+        private async Task HandleRegisterDroneModule(DroneMetadata metadata, DroneModule module)
         {
             var drone = _drones.GetDrone(metadata.Guid);
+            await _hub.Clients.All.DroneModuleLoaded(metadata.Guid, module);
             drone.AddModule(module);
         }
 
