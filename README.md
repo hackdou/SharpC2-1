@@ -1,16 +1,14 @@
+[![Documentation Status](https://readthedocs.org/projects/sharpc2/badge/?version=latest)](https://sharpc2.readthedocs.io/en/latest/?badge=latest)
+
 # SharpC2
 
 SharpC2 is a Command and Control Framework written in C#.
 
 The solution consists of an ASP.NET Core Team Server, a .NET Standard Implant, and a .NET Client.
 
-
-
 ## Quick Start
 
 The quickest way to have a play with the framework is clone the repo, then build and run the Debug versions.
-
-
 
 ### Start the Team Server
 
@@ -29,11 +27,7 @@ info: Microsoft.Hosting.Lifetime[0]
       Content root path: C:\Users\Daniel\source\repos\SharpC2_dev\TeamServer\bin\Debug\net5.0
 ```
 
-
-
 **Note**:  By default, it will start in `Production` mode and listen for connections on all interfaces.  To restrict to the localhost only, set the hosting environment to `Development` mode:  `set ASPNETCORE_ENVIRONMENT=Development`.
-
-
 
 ### Start the Client
 
@@ -52,8 +46,6 @@ C:\Users\Daniel\source\repos\SharpC2_dev\Client\bin\Debug\net5.0>dotnet SharpC2.
 
 (server)>
 ```
-
-
 
 ### Connect to the Team Server
 
@@ -87,8 +79,6 @@ Server Certificate
 (accept? [y/N])> y
 [drones] #
 ```
-
-
 
 ### Configure and Start the Default HTTP Handler
 
@@ -133,8 +123,6 @@ Name          Running
 default-http  True
 ```
 
-
-
 ### Generate a Payload for the Handler
 
 ```
@@ -157,15 +145,11 @@ Usage: generate </output/path>
 [+] Saved 74240 bytes.
 ```
 
-
-
 Execute the payload.
 
 ```
 C:\Temp> drone.exe
 ```
-
-
 
 ### Interacting with a Drone
 
@@ -224,61 +208,6 @@ mimikatz(powershell) # coffee
 ```
 
 
+## Documentation
 
-## Publishing
-
-The best way to publish Release versions is with the `dotnet` command line utility.
-
-```
-C:\SharpC2> dotnet publish -c Release
-Microsoft (R) Build Engine version 16.10.0-preview-21126-01+6819f7ab0 for .NET
-Copyright (C) Microsoft Corporation. All rights reserved.
-
-  Determining projects to restore...
-  All projects are up-to-date for restore.
-  Drone -> C:\SharpC2\Drone\bin\Release\netstandard2.0\Drone.dll
-  SharpC2.API -> C:\SharpC2\SharpC2.API\bin\Release\netstandard2.0\SharpC2.API.dll
-  TeamServer -> C:\SharpC2\TeamServer\bin\Release\net5.0\TeamServer.dll
-  Client -> C:\SharpC2\Client\bin\Release\net5.0\SharpC2.dll
-```
-
-
-
-You may build projects (such as the Client) to run on any compatible platform using `-r <runtime>`, including Windows, Linux and macOS.
-
-```
-C:\SharpC2\Client> dotnet publish -c Release -r win-x64
-Microsoft (R) Build Engine version 16.10.0-preview-21126-01+6819f7ab0 for .NET
-Copyright (C) Microsoft Corporation. All rights reserved.
-
-  Determining projects to restore...
-  All projects are up-to-date for restore.
-  Client -> C:\SharpC2\Client\bin\Release\net5.0\win-x64\SharpC2.dll
-  
-C:\SharpC2\Client\bin\Release\net5.0\win-x64\publish> SharpC2.exe
-  ___ _                   ___ ___
- / __| |_  __ _ _ _ _ __ / __|_  )
- \__ \ ' \/ _` | '_| '_ \ (__ / /
- |___/_||_\__,_|_| | .__/\___/___|
-                   |_|
-    @_RastaMouse
-    @_xpn_
-
-(server)>
-```
-
-```
-C:\SharpC2\Client>dotnet publish -c Release -r linux-x64
-
-rasta@Ghost-Canyon:/mnt/c/SharpC2/Client/bin/Release/net5.0/linux-x64/publish$ ./SharpC2
-  ___ _                   ___ ___
- / __| |_  __ _ _ _ _ __ / __|_  )
- \__ \ ' \/ _` | '_| '_ \ (__ / /
- |___/_||_\__,_|_| | .__/\___/___|
-                   |_|
-    @_RastaMouse
-    @_xpn_
-
-(server)>
-```
-
+See more documentation on [Read the Docs](https://sharpc2.readthedocs.io/en/latest/index.html).
