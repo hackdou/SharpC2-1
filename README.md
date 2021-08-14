@@ -52,7 +52,23 @@ C:\Users\Daniel\source\repos\SharpC2_dev\Client\bin\Debug\net5.0>dotnet SharpC2.
 
 (server)>
 ```
+The client also supports command line arguments for faster setup
 
+```
+C:\SharpC2\Client> dotnet build
+Client -> C:\SharpC2\Client\bin\Debug\net5.0\SharpC2.dll
+
+C:\Users\Daniel\source\repos\SharpC2_dev\Client\bin\Debug\net5.0>dotnet SharpC2.dll --server localhost --port 8443 --nick rasta --password Passw0rd!
+  ___ _                   ___ ___
+ / __| |_  __ _ _ _ _ __ / __|_  )
+ \__ \ ' \/ _` | '_| '_ \ (__ / /
+ |___/_||_\__,_|_| | .__/\___/___|
+                   |_|
+    @_RastaMouse
+    @_xpn_
+
+(server)>
+```
 
 
 ### Connect to the Team Server

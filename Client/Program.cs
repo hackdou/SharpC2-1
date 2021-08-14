@@ -22,13 +22,16 @@ namespace SharpC2
             var signalR = sp.GetRequiredService<SignalRService>();
             
             var authenticated = false;
+            //This is to avoid an infinite loop of login attempts
+            var authfailed = false;
 
             while (!authenticated)
             {
                 string server, port, nick, password;
 
-                if (args.Contains(new string[] { "--server", "--port", "--nick", "--password" }))
+                if (args.Contains(new string[] { "--server", "--port", "--nick", "--password" }) && !authfailed)
                 {
+                    
                     server = args.GetValue("--server");
                     port = args.GetValue("--port");
                     nick = args.GetValue("--nick");
@@ -51,6 +54,7 @@ namespace SharpC2
                 {
                     Console.WriteLine();
                     Console.WriteLine("Authentication failed");
+                    authfailed = true;
                     continue;
                 }
                 
