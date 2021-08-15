@@ -28,7 +28,7 @@ info: Microsoft.Hosting.Lifetime[0]
       Content root path: C:\SharpC2\TeamServer\bin\Debug\net5.0
 ```
 
-**Note**:  By default, it will start in `Production` mode and listen for connections on all interfaces.  To restrict to the localhost only, set the hosting environment to `Development` mode:  `set ASPNETCORE_ENVIRONMENT=Development`.
+**Note**:  If the server starts in `Development` mode, it will only listen for connections on the `localhost`.  To ensure it runs in `Production` mode (and therefore listen for connections on all interfaces) set the `ASPNETCORE_ENVIRONMENT` variable to `Production`.
 
 ### Start the Client
 
@@ -37,24 +37,6 @@ C:\SharpC2\Client> dotnet build
 Client -> C:\SharpC2\Client\bin\Debug\net5.0\SharpC2.dll
 
 C:\SharpC2\Client\bin\Debug\net5.0>dotnet SharpC2.dll
-  ___ _                   ___ ___
- / __| |_  __ _ _ _ _ __ / __|_  )
- \__ \ ' \/ _` | '_| '_ \ (__ / /
- |___/_||_\__,_|_| | .__/\___/___|
-                   |_|
-    @_RastaMouse
-    @_xpn_
-
-(server)>
-```
-
-The client also supports command line arguments for faster setup.
-
-```
-C:\SharpC2\Client> dotnet build
-Client -> C:\SharpC2\Client\bin\Debug\net5.0\SharpC2.dll
-
-C:\SharpC2\Client\bin\Debug\net5.0>dotnet SharpC2.dll --server localhost --port 8443 --nick rasta --password Passw0rd!
   ___ _                   ___ ___
  / __| |_  __ _ _ _ _ __ / __|_  )
  \__ \ ' \/ _` | '_| '_ \ (__ / /
@@ -97,6 +79,12 @@ Server Certificate
 
 (accept? [y/N])> y
 [drones] #
+```
+
+The client also supports command line arguments for faster setup.
+
+```
+C:\SharpC2\Client\bin\Debug\net5.0>dotnet SharpC2.dll --server localhost --port 8443 --nick rasta --password Passw0rd!
 ```
 
 ### Configure and Start the Default HTTP Handler
