@@ -9,7 +9,6 @@
         <PackageId />
         <PackageVersion />
         <Authors />
-        <OutputType>Exe</OutputType>
     </PropertyGroup>
 
 </Project>

