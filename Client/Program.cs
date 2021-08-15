@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
-
+using SharpC2.Helpers;
 using SharpC2.Interfaces;
 using SharpC2.Screens;
 using SharpC2.Services;
@@ -22,13 +22,28 @@ namespace SharpC2
             var signalR = sp.GetRequiredService<SignalRService>();
             
             var authenticated = false;
+            //This is to avoid an infinite loop of login attempts
+            var authfailed = false;
 
             while (!authenticated)
             {
-                var server = PromptForInput("server");
-                var port = PromptForInput("port");
-                var nick = PromptForInput("nick");
-                var password = PromptForInput("pass", true);
+                string server, port, nick, password;
+
+                if (args.Contains(new string[] { "--server", "--port", "--nick", "--password" }) && !authfailed)
+                {
+                    
+                    server = args.GetValue("--server");
+                    port = args.GetValue("--port");
+                    nick = args.GetValue("--nick");
+                    password = args.GetValue("--password");
+                }
+                else
+                {
+                    server = PromptForInput("server");
+                    port = PromptForInput("port");
+                    nick = PromptForInput("nick");
+                    password = PromptForInput("pass", true);
+                }
 
                 api.InitClient(server, port, nick, password);
 
@@ -39,6 +54,7 @@ namespace SharpC2
                 {
                     Console.WriteLine();
                     Console.WriteLine("Authentication failed");
+                    authfailed = true;
                     continue;
                 }
                 
