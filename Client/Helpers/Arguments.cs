@@ -1,51 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SharpC2.Helpers
 {
     public static class Arguments
     {
-        //Get the argument value (if any) from a array based on arg pre-fix
+        // Get the argument value (if any) from a array based on arg pre-fix
         public static string GetValue(this string[] args, string substring)
         {
-            if (args.Contains(substring))
-                return args[args.GetIndex(substring) + 1];
-
-            return "";
-
+            return args.Contains(substring)
+                ? args[args.GetIndex(substring) + 1]
+                : "";
         }
 
-        //Get the index of a string in an array
-        public static int GetIndex(this string[] args, string substring)
+        // Get the index of a string in an array
+        private static int GetIndex(this IEnumerable<string> args, string substring)
         {
-            return args.ToList().FindIndex(a => a == substring);
-
+            return args.ToList().FindIndex(a =>
+                a.Equals(substring, StringComparison.OrdinalIgnoreCase));
         }
 
-        //Bool check if an array contains a given set of substrings
-        public static bool Contains(this string[] args, string[] substrings)
+        // Bool check if an array contains a given set of substrings
+        public static bool Contains(this IEnumerable<string> args, IEnumerable<string> subStrings)
         {
-            foreach (var subString in substrings)
-            {
-                if (args.ToList().FindIndex(a => a == subString) == -1)
-                    return false;
-            }
-            return true;
-
+            return subStrings.All(subString =>
+                args.ToList().FindIndex(a =>
+                    a.Equals(subString, StringComparison.OrdinalIgnoreCase)) != -1);
         }
 
-        //Bool check if an array contains an string
-        public static bool Contains(this string[] args, string substring)
+        // Bool check if an array contains an string
+        private static bool Contains(this IEnumerable<string> args, string substring)
         {
-
-            if (args.ToList().FindIndex(a => a == substring) != -1)
-                return true;
-
-            return false;
-
+            return args.ToList().FindIndex(a =>
+                a.Equals(substring, StringComparison.OrdinalIgnoreCase)) != -1;
         }
     }
 }

@@ -6,7 +6,6 @@ using System.Threading;
 using Drone.Models;
 using Drone.DInvoke.DynamicInvoke;
 using Drone.DInvoke.ManualMap;
-using Drone.SharpSploit.Evasion;
 
 namespace Drone.Modules
 {
@@ -33,6 +32,7 @@ namespace Drone.Modules
             if (string.IsNullOrEmpty(decoy))
             {
                 Drone.SendError(task.TaskGuid, "Unable to find a suitable decoy module ");
+                Evasion.RestoreEvasionMethods();
                 return;
             }
 

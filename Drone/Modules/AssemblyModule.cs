@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 
 using Drone.Models;
+using Drone.SharpSploit.Execution;
 
 namespace Drone.Modules
 {
@@ -37,10 +38,8 @@ namespace Drone.Modules
             
             Console.SetOut(stdOutWriter);
             Console.SetError(stdErrWriter);
-            
-            
-                
-            SharpSploit.Execution.Assembly.Execute(asm, task.Arguments);
+
+            Assembly.Execute(asm, task.Arguments);
                 
             Console.Out.Flush();
             Console.Error.Flush();

