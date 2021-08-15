@@ -37,7 +37,8 @@ namespace Drone
             
             config.SetConfig("SleepInterval", 1);
             config.SetConfig("SleepJitter", 0);
-            config.SetConfig("BypassAmsi", true);
+            config.SetConfig("BypassAmsi", false);
+            config.SetConfig("BypassEtw", false);
 
             return config;
         }
