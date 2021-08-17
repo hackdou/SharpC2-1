@@ -56,7 +56,10 @@ namespace SharpC2.Screens
 
         private async Task<bool> LoadHandler(string[] args)
         {
-            if (args.Length < 1) return false;
+            if (args.Length < 2){
+                CustomConsole.WriteError("Specify a handler: load <handler>");
+                return false;
+            }
             var path = args[1];
             
             if (!File.Exists(path))
@@ -83,6 +86,10 @@ namespace SharpC2.Screens
         
         private async Task<bool> ConfigHandler(string[] args)
         {
+            if (args.Length < 2){
+                CustomConsole.WriteError("Specify a handler: config <handler>");
+                return false;
+            }
             var handler = args[1];
             using var screen = _screens.GetScreen(ScreenType.HandlerConfig);
             screen.SetName(handler);
@@ -98,6 +105,10 @@ namespace SharpC2.Screens
         
         private async Task<bool> StartHandler(string[] args)
         {
+            if (args.Length < 2){
+                CustomConsole.WriteError("Specify a handler: start <handler>");
+                return false;
+            }
             var handler = args[1];
             await _api.StartHandler(handler);
             
@@ -106,6 +117,10 @@ namespace SharpC2.Screens
         
         private async Task<bool> StopHandler(string[] args)
         {
+            if (args.Length < 2){
+                CustomConsole.WriteError("Specify a handler: stop <handler>");
+                return false;
+            }
             var handler = args[1];
             await _api.StopHandler(handler);
             
