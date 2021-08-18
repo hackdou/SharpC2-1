@@ -13,7 +13,7 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <OutputPath>..\</OutputPath>
+      <OutputPath>..\..\TeamServer\Resources\</OutputPath>
     </PropertyGroup>
 
     <ItemGroup>
