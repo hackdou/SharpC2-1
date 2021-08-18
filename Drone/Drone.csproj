@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net45</TargetFramework>
-        <LangVersion>latestmajor</LangVersion>
+        <LangVersion>default</LangVersion>
         <Company />
         <Product />
         <IsPackable>false</IsPackable>
@@ -10,6 +10,10 @@
         <PackageVersion />
         <Authors />
         <AssemblyName>drone</AssemblyName>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <OutputPath>..\TeamServer\Resources\</OutputPath>
     </PropertyGroup>
 
     <ItemGroup>
