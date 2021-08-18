@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.6] - 2021-08-18
+### Added
+- `ps` command to `stdapi`.
+
 ## [0.2.5] - 2021-08-18
 ### Changed
 - Moved most Drone functionality out into external DLLs.
@@ -9,7 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - [Ceri Coburn's](https://twitter.com/_EthicalChaos_) [MinHook.NET](https://github.com/CCob/MinHook.NET) engine.
 - D/Invoke's Injection API.
-- `shinject` command.
+- `shinject` command to `stdapi`.
 
 ## [0.2.4] - 2021-08-14
 ### Added

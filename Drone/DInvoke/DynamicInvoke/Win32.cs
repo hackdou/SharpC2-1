@@ -9,25 +9,27 @@ namespace Drone.DInvoke.DynamicInvoke
 {
     public static class Win32
     {
-        public static IntPtr CreateRemoteThread(
-            IntPtr hProcess,
-            IntPtr lpThreadAttributes,
-            uint dwStackSize,
-            IntPtr lpStartAddress,
-            IntPtr lpParameter,
-            uint dwCreationFlags,
-            ref IntPtr lpThreadId)
+        public static bool IsWow64Process(IntPtr hProcess, ref bool lpSystemInfo)
         {
-            // Craft an array for the arguments
+            object[] funcargs = { hProcess, lpSystemInfo };
+
+            var retVal = (bool)Generic.DynamicAPIInvoke(@"kernel32.dll", @"IsWow64Process", typeof(Delegates.IsWow64Process), ref funcargs);
+            lpSystemInfo = (bool) funcargs[1];
+            
+            return retVal;
+        }
+        
+        public static IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, uint dwStackSize,
+            IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, ref IntPtr lpThreadId)
+        {
             object[] funcargs =
             {
                 hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, lpThreadId
             };
 
-            IntPtr retValue = (IntPtr)Generic.DynamicAPIInvoke(@"kernel32.dll", @"CreateRemoteThread",
+            var retValue = (IntPtr)Generic.DynamicAPIInvoke(@"kernel32.dll", @"CreateRemoteThread",
                 typeof(Delegates.CreateRemoteThread), ref funcargs);
-
-            // Update the modified variables
+            
             lpThreadId = (IntPtr)funcargs[6];
 
             return retValue;
@@ -39,12 +41,7 @@ namespace Drone.DInvoke.DynamicInvoke
         {
             object[] funcargs =
             {
-                lpszUsername,
-                lpszDomain,
-                lpszPassword,
-                dwLogonType,
-                dwLogonProvider,
-                phToken
+                lpszUsername, lpszDomain, lpszPassword, dwLogonType, dwLogonProvider, phToken
             };
 
             var retVal = (bool)Generic.DynamicAPIInvoke(@"advapi32.dll", @"LogonUserA",
@@ -312,6 +309,11 @@ namespace Drone.DInvoke.DynamicInvoke
                 uint nNumberOfBytesToWrite,
                 ref uint lpNumberOfBytesWritten,
                 IntPtr lpOverlapped);
+            
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            public delegate bool IsWow64Process(
+                IntPtr hProcess, ref bool lpSystemInfo
+            );
         }
     }
 }
