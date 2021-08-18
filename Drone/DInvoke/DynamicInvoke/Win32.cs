@@ -9,6 +9,30 @@ namespace Drone.DInvoke.DynamicInvoke
 {
     public static class Win32
     {
+        public static IntPtr CreateRemoteThread(
+            IntPtr hProcess,
+            IntPtr lpThreadAttributes,
+            uint dwStackSize,
+            IntPtr lpStartAddress,
+            IntPtr lpParameter,
+            uint dwCreationFlags,
+            ref IntPtr lpThreadId)
+        {
+            // Craft an array for the arguments
+            object[] funcargs =
+            {
+                hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, lpThreadId
+            };
+
+            IntPtr retValue = (IntPtr)Generic.DynamicAPIInvoke(@"kernel32.dll", @"CreateRemoteThread",
+                typeof(Delegates.CreateRemoteThread), ref funcargs);
+
+            // Update the modified variables
+            lpThreadId = (IntPtr)funcargs[6];
+
+            return retValue;
+        }
+        
         public static bool LogonUserA(string lpszUsername, string lpszDomain, string lpszPassword,
             Data.Win32.Advapi32.LogonUserType dwLogonType, Data.Win32.Advapi32.LogonUserProvider dwLogonProvider,
             ref IntPtr phToken)
@@ -194,6 +218,15 @@ namespace Drone.DInvoke.DynamicInvoke
         {
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate bool CloseHandle(IntPtr handle);
+            
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            public delegate IntPtr CreateRemoteThread(IntPtr hProcess,
+                IntPtr lpThreadAttributes,
+                uint dwStackSize,
+                IntPtr lpStartAddress,
+                IntPtr lpParameter,
+                uint dwCreationFlags,
+                out IntPtr lpThreadId);
             
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate bool LogonUserA(

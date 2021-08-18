@@ -10,6 +10,78 @@ namespace Drone.DInvoke.DynamicInvoke
 {
     public static class Native
     {
+        public static Data.Native.NTSTATUS NtCreateThreadEx(
+            ref IntPtr threadHandle,
+            Data.Win32.WinNT.ACCESS_MASK desiredAccess,
+            IntPtr objectAttributes,
+            IntPtr processHandle,
+            IntPtr startAddress,
+            IntPtr parameter,
+            bool createSuspended,
+            int stackZeroBits,
+            int sizeOfStack,
+            int maximumStackSize,
+            IntPtr attributeList)
+        {
+            // Craft an array for the arguments
+            object[] funcargs =
+            {
+                threadHandle, desiredAccess, objectAttributes, processHandle, startAddress, parameter, createSuspended, stackZeroBits,
+                sizeOfStack, maximumStackSize, attributeList
+            };
+
+            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtCreateThreadEx",
+                typeof(Delegates.NtCreateThreadEx), ref funcargs);
+
+            // Update the modified variables
+            threadHandle = (IntPtr)funcargs[0];
+
+            return retValue;
+        }
+        
+        public static Data.Native.NTSTATUS RtlCreateUserThread(
+            IntPtr Process,
+            IntPtr ThreadSecurityDescriptor,
+            bool CreateSuspended,
+            IntPtr ZeroBits,
+            IntPtr MaximumStackSize,
+            IntPtr CommittedStackSize,
+            IntPtr StartAddress,
+            IntPtr Parameter,
+            ref IntPtr Thread,
+            IntPtr ClientId)
+        {
+            // Craft an array for the arguments
+            object[] funcargs =
+            {
+                Process, ThreadSecurityDescriptor, CreateSuspended, ZeroBits, 
+                MaximumStackSize, CommittedStackSize, StartAddress, Parameter,
+                Thread, ClientId
+            };
+
+            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"RtlCreateUserThread",
+                typeof(Delegates.RtlCreateUserThread), ref funcargs);
+
+            // Update the modified variables
+            Thread = (IntPtr)funcargs[8];
+
+            return retValue;
+        }
+        
+        public static Data.Native.NTSTATUS NtUnmapViewOfSection(IntPtr hProc, IntPtr baseAddr)
+        {
+            // Craft an array for the arguments
+            object[] funcargs =
+            {
+                hProc, baseAddr
+            };
+
+            Data.Native.NTSTATUS result = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtUnmapViewOfSection",
+                typeof(Delegates.NtUnmapViewOfSection), ref funcargs);
+
+            return result;
+        }
+        
         public static IntPtr NtOpenProcess(uint pid, Data.Win32.Kernel32.ProcessAccessFlags desiredAccess)
         {
             var hProcess = IntPtr.Zero;
@@ -20,7 +92,7 @@ namespace Drone.DInvoke.DynamicInvoke
             object[] funcargs = { hProcess, desiredAccess, oa, ci };
 
             var retValue = (Data.Native.NTSTATUS) Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtOpenProcess",
-                typeof(DELEGATES.NtOpenProcess), ref funcargs);
+                typeof(Delegates.NtOpenProcess), ref funcargs);
             
             if (retValue != Data.Native.NTSTATUS.Success && retValue == Data.Native.NTSTATUS.InvalidCid)
             {
@@ -53,7 +125,7 @@ namespace Drone.DInvoke.DynamicInvoke
                 SectionHandle, DesiredAccess, ObjectAttributes, MaximumSize, SectionPageProtection, AllocationAttributes, FileHandle
             };
 
-            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtCreateSection", typeof(DELEGATES.NtCreateSection), ref funcargs);
+            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtCreateSection", typeof(Delegates.NtCreateSection), ref funcargs);
             if (retValue != Data.Native.NTSTATUS.Success)
             {
                 throw new InvalidOperationException("Unable to create section, " + retValue);
@@ -86,7 +158,7 @@ namespace Drone.DInvoke.DynamicInvoke
                 Win32Protect
             };
 
-            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtMapViewOfSection", typeof(DELEGATES.NtMapViewOfSection), ref funcargs);
+            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtMapViewOfSection", typeof(Delegates.NtMapViewOfSection), ref funcargs);
             if (retValue != Data.Native.NTSTATUS.Success && retValue != Data.Native.NTSTATUS.ImageNotAtBase)
             {
                 throw new InvalidOperationException("Unable to map view of section, " + retValue);
@@ -107,7 +179,7 @@ namespace Drone.DInvoke.DynamicInvoke
                 DestinationString, SourceString
             };
 
-            Generic.DynamicAPIInvoke(@"ntdll.dll", @"RtlInitUnicodeString", typeof(DELEGATES.RtlInitUnicodeString), ref funcargs);
+            Generic.DynamicAPIInvoke(@"ntdll.dll", @"RtlInitUnicodeString", typeof(Delegates.RtlInitUnicodeString), ref funcargs);
 
             // Update the modified variables
             DestinationString = (Data.Native.UNICODE_STRING)funcargs[0];
@@ -121,7 +193,7 @@ namespace Drone.DInvoke.DynamicInvoke
                 PathToFile, dwFlags, ModuleFileName, ModuleHandle
             };
 
-            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"LdrLoadDll", typeof(DELEGATES.LdrLoadDll), ref funcargs);
+            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"LdrLoadDll", typeof(Delegates.LdrLoadDll), ref funcargs);
 
             // Update the modified variables
             ModuleHandle = (IntPtr)funcargs[3];
@@ -137,7 +209,7 @@ namespace Drone.DInvoke.DynamicInvoke
                 Destination, Length
             };
 
-            Generic.DynamicAPIInvoke(@"ntdll.dll", @"RtlZeroMemory", typeof(DELEGATES.RtlZeroMemory), ref funcargs);
+            Generic.DynamicAPIInvoke(@"ntdll.dll", @"RtlZeroMemory", typeof(Delegates.RtlZeroMemory), ref funcargs);
         }
 
         public static Data.Native.NTSTATUS NtQueryInformationProcess(IntPtr hProcess, Data.Native.PROCESSINFOCLASS processInfoClass, out IntPtr pProcInfo)
@@ -168,7 +240,7 @@ namespace Drone.DInvoke.DynamicInvoke
                 hProcess, processInfoClass, pProcInfo, processInformationLength, RetLen
             };
 
-            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtQueryInformationProcess", typeof(DELEGATES.NtQueryInformationProcess), ref funcargs);
+            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtQueryInformationProcess", typeof(Delegates.NtQueryInformationProcess), ref funcargs);
             if (retValue != Data.Native.NTSTATUS.Success)
             {
                 throw new UnauthorizedAccessException("Access is denied.");
@@ -200,7 +272,7 @@ namespace Drone.DInvoke.DynamicInvoke
                 ProcessHandle, BaseAddress, RegionSize, NewProtect, OldProtect
             };
 
-            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtProtectVirtualMemory", typeof(DELEGATES.NtProtectVirtualMemory), ref funcargs);
+            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtProtectVirtualMemory", typeof(Delegates.NtProtectVirtualMemory), ref funcargs);
             if (retValue != Data.Native.NTSTATUS.Success)
             {
                 throw new InvalidOperationException("Failed to change memory protection, " + retValue);
@@ -219,7 +291,7 @@ namespace Drone.DInvoke.DynamicInvoke
                 ProcessHandle, BaseAddress, Buffer, BufferLength, BytesWritten
             };
 
-            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtWriteVirtualMemory", typeof(DELEGATES.NtWriteVirtualMemory), ref funcargs);
+            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtWriteVirtualMemory", typeof(Delegates.NtWriteVirtualMemory), ref funcargs);
             if (retValue != Data.Native.NTSTATUS.Success)
             {
                 throw new InvalidOperationException("Failed to write memory, " + retValue);
@@ -237,7 +309,7 @@ namespace Drone.DInvoke.DynamicInvoke
                 hModule, FunctionName, Ordinal, FunctionAddress
             };
 
-            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"LdrGetProcedureAddress", typeof(DELEGATES.LdrGetProcedureAddress), ref funcargs);
+            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"LdrGetProcedureAddress", typeof(Delegates.LdrGetProcedureAddress), ref funcargs);
             if (retValue != Data.Native.NTSTATUS.Success)
             {
                 throw new InvalidOperationException("Failed get procedure address, " + retValue);
@@ -255,7 +327,7 @@ namespace Drone.DInvoke.DynamicInvoke
                 VersionInformation
             };
 
-            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"RtlGetVersion", typeof(DELEGATES.RtlGetVersion), ref funcargs);
+            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"RtlGetVersion", typeof(Delegates.RtlGetVersion), ref funcargs);
             if (retValue != Data.Native.NTSTATUS.Success)
             {
                 throw new InvalidOperationException("Failed get procedure address, " + retValue);
@@ -272,7 +344,7 @@ namespace Drone.DInvoke.DynamicInvoke
                 FileHandle, DesiredAccess, ObjAttr, IoStatusBlock, ShareAccess, OpenOptions
             };
 
-            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtOpenFile", typeof(DELEGATES.NtOpenFile), ref funcargs);
+            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtOpenFile", typeof(Delegates.NtOpenFile), ref funcargs);
             if (retValue != Data.Native.NTSTATUS.Success)
             {
                 throw new InvalidOperationException("Failed to open file, " + retValue);
@@ -283,8 +355,35 @@ namespace Drone.DInvoke.DynamicInvoke
             return FileHandle;
         }
 
-        public struct DELEGATES
+        public struct Delegates
         {
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            public delegate Data.Native.NTSTATUS NtCreateThreadEx(
+                out IntPtr threadHandle,
+                Data.Win32.WinNT.ACCESS_MASK desiredAccess,
+                IntPtr objectAttributes,
+                IntPtr processHandle,
+                IntPtr startAddress,
+                IntPtr parameter,
+                bool createSuspended,
+                int stackZeroBits,
+                int sizeOfStack,
+                int maximumStackSize,
+                IntPtr attributeList);
+            
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            public delegate Data.Native.NTSTATUS RtlCreateUserThread(
+                IntPtr Process,
+                IntPtr ThreadSecurityDescriptor,
+                bool CreateSuspended,
+                IntPtr ZeroBits,
+                IntPtr MaximumStackSize,
+                IntPtr CommittedStackSize,
+                IntPtr StartAddress,
+                IntPtr Parameter,
+                ref IntPtr Thread,
+                IntPtr ClientId);
+            
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate Data.Native.NTSTATUS NtOpenProcess(
                 ref IntPtr ProcessHandle,
@@ -332,6 +431,11 @@ namespace Drone.DInvoke.DynamicInvoke
             public delegate void RtlZeroMemory(
                 IntPtr Destination,
                 int length);
+            
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            public delegate Data.Native.NTSTATUS NtUnmapViewOfSection(
+                IntPtr hProc,
+                IntPtr baseAddr);
 
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate UInt32 NtQueryInformationProcess(
