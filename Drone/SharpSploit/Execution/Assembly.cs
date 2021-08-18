@@ -9,7 +9,7 @@ namespace Drone.SharpSploit.Execution
     {
         public static string Execute(byte[] assemblyBytes, string[] args = null)
         {
-            if (args == null) args = new string[] { };
+            args ??= new string[] { };
 
             var domain = AppDomain.CreateDomain(Guid.NewGuid().ToShortGuid(), null, null, null, false);
             var proxy = (ShadowRunnerProxy)domain.CreateInstanceAndUnwrap(typeof(ShadowRunnerProxy).Assembly.FullName, typeof(ShadowRunnerProxy).FullName);
@@ -26,29 +26,30 @@ namespace Drone.SharpSploit.Execution
         public string ExecuteAssembly(byte[] bytes, string[] args)
         {
             var asm = Reflect.Assembly.Load(bytes);
-            var ms = new MemoryStream();
             
+            var ms = new MemoryStream();
+            var writer = new StreamWriter(ms)
+            {
+                AutoFlush = true
+            };
+
             var realStdOut = Console.Out;
             var realStdErr = Console.Error;
-            var stdOutWriter = new StreamWriter(ms);
-            var stdErrWriter = new StreamWriter(ms);
-            
-            stdOutWriter.AutoFlush = true;
-            stdErrWriter.AutoFlush = true;
-            
-            Console.SetOut(stdOutWriter);
-            Console.SetError(stdErrWriter);
+
+            Console.SetOut(writer);
+            Console.SetError(writer);
             
             asm.EntryPoint.Invoke(null, new object[] { args });
             
             Console.Out.Flush();
             Console.Error.Flush();
+            
             Console.SetOut(realStdOut);
             Console.SetError(realStdErr);
 
             var result = Encoding.UTF8.GetString(ms.ToArray());
             ms.Dispose();
-
+            
             return result;
         }
     }

@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -21,6 +22,9 @@
 
     <ItemGroup>
       <None Remove="Resources\Drones\Drone.exe" />
+      <None Remove="Resources\Drone.pdb" />
+      <None Remove="Resources\stdapi.pdb" />
+      <None Remove="Resources\MinHook.NET.dll" />
     </ItemGroup>
 
     <ItemGroup>
@@ -29,6 +33,8 @@
 
     <ItemGroup>
       <EmbeddedResource Include="Resources\drone.dll" />
+      <None Remove="Resources\stdapi.dll" />
+      <EmbeddedResource Include="Resources\stdapi.dll" />
     </ItemGroup>
 
 </Project>

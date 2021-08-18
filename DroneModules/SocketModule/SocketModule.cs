@@ -1,39 +1,36 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Threading;
 
 using Drone.Models;
+using Drone.Modules;
 using Drone.SharpSploit.Generic;
 using Drone.SharpSploit.Pivoting;
 
-namespace Drone.Modules
+namespace Drone
 {
-    public class ReversePortForwardModule : DroneModule
+    public class SocketModule : DroneModule
     {
-        public override string Name { get; } = "rportfwd";
-        public override void AddCommands()
+        public override string Name => "sockets";
+
+        public override List<Command> Commands => new List<Command>
         {
-            var start = new Command("rportfwd-start", "Start a new reverse port forward", Start);
-            start.Arguments.Add(new Command.Argument("bindPort", false));
-            start.Arguments.Add(new Command.Argument("forwardHost", false));
-            start.Arguments.Add(new Command.Argument("forwardPort", false));
-
-            var stop = new Command("rportfwd-stop", "Stop a reverse port forward", Stop);
-            stop.Arguments.Add(new Command.Argument("bindPort", false));
-
-            var list = new Command("rportfwd-list", "List all active reverse port forwards", List);
-            var purge = new Command("rportfwd-purge", "Purge all active reverse port forwards", Purge);
-
-            var inbound = new Command("rportfwd-inbound", "", HandleInboundResponse) {Visible = false};
-
-            Commands.Add(start);
-            Commands.Add(stop);
-            Commands.Add(list);
-            Commands.Add(purge);
-            Commands.Add(inbound);
-        }
-
+            new("start-rportfwd", "Start a new reverse port forward", Start, new List<Command.Argument>
+            {
+                new("bindPort", false),
+                new("forwardHost", false),
+                new("forwardPort", false),
+            }),
+            new("stop-rportfwd", "Stop a reverse port forward", Stop, new List<Command.Argument>
+            {
+                new("bindPort", false)
+            }),
+            new("list-rportfwd", "List all active reverse port forwards", List),
+            new("purge-rportfwd", "Purge all active reverse port forwards", Purge),
+            new("rportfwd-inbound", "", HandleInboundResponse, visible: false)
+        };
+        
         private readonly SharpSploitResultList<ReversePortForward> _forwards = new();
 
         private void Stop(DroneTask task, CancellationToken token)
@@ -105,21 +102,5 @@ namespace Drone.Modules
 
         private ReversePortForward GetReversePortForward(int bindPort)
             => _forwards.SingleOrDefault(r => r.BindPort == bindPort);
-    }
-
-    [DataContract]
-    public class ReversePortForwardPacket
-    {
-        [DataMember (Name = "bindPort")]
-        public int BindPort { get; set; }
-        
-        [DataMember (Name = "forwardHost")]
-        public string ForwardHost { get; set; }
-        
-        [DataMember (Name = "forwardPort")]
-        public int ForwardPort { get; set; }
-        
-        [DataMember (Name = "data")]
-        public string Data { get; set; }
     }
 }

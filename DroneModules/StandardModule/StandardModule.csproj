@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net45</TargetFramework>
+        <LangVersion>default</LangVersion>
+        <Company>RastaMouse</Company>
+        <Product>SharpC2</Product>
+        <IsPackable>false</IsPackable>
+        <PackageId />
+        <PackageVersion />
+        <Authors />
+        <AssemblyName>stdapi</AssemblyName>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <OutputPath>..\..\TeamServer\Resources\</OutputPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Drone\Drone.csproj" />
+    </ItemGroup>
+
+</Project>

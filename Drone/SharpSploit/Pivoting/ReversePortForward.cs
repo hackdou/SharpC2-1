@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 using System.Threading;
 
 using Drone.Modules;
@@ -128,5 +129,21 @@ namespace Drone.SharpSploit.Pivoting
                 new() {Name = "ForwardHost", Value = _forwardHost},
                 new() {Name = "ForwardPort", Value = _forwardPort}
             };
+    }
+    
+    [DataContract]
+    public class ReversePortForwardPacket
+    {
+        [DataMember (Name = "bindPort")]
+        public int BindPort { get; set; }
+        
+        [DataMember (Name = "forwardHost")]
+        public string ForwardHost { get; set; }
+        
+        [DataMember (Name = "forwardPort")]
+        public int ForwardPort { get; set; }
+        
+        [DataMember (Name = "data")]
+        public string Data { get; set; }
     }
 }

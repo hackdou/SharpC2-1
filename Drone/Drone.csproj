@@ -2,13 +2,26 @@
 
     <PropertyGroup>
         <TargetFramework>net45</TargetFramework>
-        <LangVersion>latestmajor</LangVersion>
+        <LangVersion>default</LangVersion>
         <Company />
         <Product />
         <IsPackable>false</IsPackable>
         <PackageId />
         <PackageVersion />
         <Authors />
+        <AssemblyName>drone</AssemblyName>
     </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <OutputPath>..\TeamServer\Resources\</OutputPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="dnMerge" Version="0.5.13">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="MinHook.NET" Version="1.1.1" />
+    </ItemGroup>
 
 </Project>
