@@ -5,7 +5,7 @@
 
 SharpC2 is a Command and Control Framework written in C#.
 
-The solution consists of an ASP.NET Core Team Server, a .NET Standard Implant, and a .NET Client.
+The solution consists of an ASP.NET Core Team Server, a .NET Framework Implant, and a .NET Client.
 
 ## Quick Start
 
