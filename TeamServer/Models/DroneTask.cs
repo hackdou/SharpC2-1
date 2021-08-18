@@ -18,8 +18,10 @@ namespace TeamServer.Models
         [JsonIgnore]
         public byte[] Result { get; set; }
 
-        public DroneTask()
+        public DroneTask(string module, string command)
         {
+            Module = module;
+            Command = command;
             TaskGuid = Guid.NewGuid().ConvertToShortGuid();
         }
 

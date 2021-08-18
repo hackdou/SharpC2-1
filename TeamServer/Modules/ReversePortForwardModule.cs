@@ -40,10 +40,8 @@ namespace TeamServer.Modules
             var inData = await ReadFromStream(stream);
 
             var drone = Drones.GetDrone(metadata.Guid);
-            drone?.TaskDrone(new DroneTask
+            drone?.TaskDrone(new DroneTask("rportfwd", "rportfwd-inbound")
             {
-                Module = "rportfwd",
-                Command = "rportfwd-inbound",
                 Arguments = new [] { packet.BindPort.ToString(), Convert.ToBase64String(inData) }
             });
         }

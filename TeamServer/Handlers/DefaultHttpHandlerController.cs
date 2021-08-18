@@ -46,7 +46,7 @@ namespace TeamServer.Handlers
             }
 
             // get anything outbound
-            var message = _tasks.GetDroneTasks(metadata);
+            var message = await _tasks.GetDroneTasks(metadata);
 
             if (message is null) return NoContent();
             await _hub.Clients.All.DroneDataSent(metadata.Guid, message.Data.Length);

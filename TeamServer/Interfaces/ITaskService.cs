@@ -8,6 +8,6 @@ namespace TeamServer.Interfaces
     public interface ITaskService
     {
         Task RecvC2Data(IEnumerable<C2Message> messages);
-        C2Message GetDroneTasks(DroneMetadata metadata);
+        Task<C2Message> GetDroneTasks(DroneMetadata metadata);
     }
 }
