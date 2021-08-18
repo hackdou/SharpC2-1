@@ -13,15 +13,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Compile Remove="Modules\AssemblyModule.cs" />
-      <Compile Remove="Modules\FilesystemModule.cs" />
-      <Compile Remove="Modules\MapModule.cs" />
-      <Compile Remove="Modules\ReversePortForwardModule.cs" />
-      <Compile Remove="Modules\ShellModule.cs" />
-      <Compile Remove="Modules\TokenModule.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
       <PackageReference Include="dnMerge" Version="0.5.13">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
