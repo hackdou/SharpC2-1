@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.5] - 2021-08-18
+### Changed
+- Moved most Drone functionality out into external DLLs.
+- The `stdapi` is pushed on initial check-in.
+- AMSI and ETW bypasses now use API hooking.
+### Added
+- [Ceri Coburn's](https://twitter.com/_EthicalChaos_) [MinHook.NET](https://github.com/CCob/MinHook.NET) engine.
+- D/Invoke's Injection API.
+- `shinject` command.
+
 ## [0.2.4] - 2021-08-14
 ### Added
 - Load external Drone modules at runtime.
