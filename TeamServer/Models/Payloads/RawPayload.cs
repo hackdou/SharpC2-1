@@ -30,7 +30,7 @@ namespace TeamServer.Models
             {
                 Arch = 3, // x86+amd64
                 Bypass = 1, // none
-                Domain = Guid.NewGuid().ConvertToShortGuid(),
+                Domain = Guid.NewGuid().ToShortGuid(),
                 InputFile = _tempDroneFile,
                 Payload = _tempShellcodeFile
             };

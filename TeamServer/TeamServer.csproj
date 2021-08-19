@@ -32,6 +32,8 @@
     <ItemGroup>
       <EmbeddedResource Include="Resources\drone.dll" />
       <EmbeddedResource Include="Resources\stdapi.dll" />
+      <None Remove="Resources\drone_svc.exe" />
+      <EmbeddedResource Include="Resources\drone_svc.exe" />
     </ItemGroup>
 
     <ItemGroup>
@@ -40,6 +42,10 @@
 
     <ItemGroup>
       <Content Remove="external-packages\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Resources\net45\drone_svc.exe.config" />
     </ItemGroup>
 
 </Project>

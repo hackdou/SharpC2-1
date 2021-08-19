@@ -20,7 +20,7 @@ namespace TeamServer
         public static byte[] Serialize<T>(this T data)
             => JsonSerializer.SerializeToUtf8Bytes(data, Options);
 
-        public static string ConvertToShortGuid(this Guid guid)
+        public static string ToShortGuid(this Guid guid)
             => guid.ToString().Replace("-", "")[..10];
 
         public static TypeDef GetType(this IEnumerable<TypeDef> types, string name)

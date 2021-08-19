@@ -85,6 +85,9 @@ namespace SharpC2.Screens
             if (key.Equals("dllexport", StringComparison.OrdinalIgnoreCase))
                 _payload.DllExport = value;
             
+            if (key.Equals("spawnto", StringComparison.OrdinalIgnoreCase))
+                _payload.SpawnTo = value;
+            
             return Task.FromResult(true);
         }
 
@@ -101,6 +104,7 @@ namespace SharpC2.Screens
             if (value.Equals("exe", StringComparison.OrdinalIgnoreCase)) return Payload.PayloadFormat.Exe;
             if (value.Equals("dll", StringComparison.OrdinalIgnoreCase)) return Payload.PayloadFormat.Dll;
             if (value.Equals("raw", StringComparison.OrdinalIgnoreCase)) return Payload.PayloadFormat.Raw;
+            if (value.Equals("svc", StringComparison.OrdinalIgnoreCase)) return Payload.PayloadFormat.Svc;
 
             throw new Exception("Invalid payload format");
         }

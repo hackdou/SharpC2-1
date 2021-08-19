@@ -7,13 +7,15 @@ namespace SharpC2.Models
         public string Handler { get; set; } = "";
         public PayloadFormat Format { get; set; } = PayloadFormat.Exe;
         public string DllExport { get; set; } = "Execute";
+        public string SpawnTo { get; set; } = @"C:\Windows\System32\notepad.exe";
 
         public enum PayloadFormat : int
         {
             Exe = 0,
             Dll = 1,
             PowerShell = 2,
-            Raw = 3
+            Raw = 3,
+            Svc = 4
         }
 
         protected internal override IList<SharpSploitResultProperty> ResultProperties =>
@@ -21,7 +23,8 @@ namespace SharpC2.Models
             {
                 new() { Name = "Handler", Value = Handler },
                 new() { Name = "Format", Value = Format },
-                new() { Name = "DllExport", Value = DllExport }
+                new() { Name = "DllExport", Value = DllExport },
+                new() { Name = "SpawnTo", Value = SpawnTo }
             };
     }
 }

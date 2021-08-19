@@ -54,6 +54,11 @@ namespace TeamServer.Controllers
                     payload = new RawPayload();
                     break;
                 
+                case PayloadRequest.PayloadFormat.Svc:
+                    payload = new ServicePayload();
+                    ((ServicePayload)payload).SpawnTo = request.SpawnTo;
+                    break;
+                
                 default:
                     return BadRequest("Unknown payload format");
             }
