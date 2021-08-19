@@ -100,6 +100,7 @@ namespace SharpC2.Screens
         {
             if (value.Equals("exe", StringComparison.OrdinalIgnoreCase)) return Payload.PayloadFormat.Exe;
             if (value.Equals("dll", StringComparison.OrdinalIgnoreCase)) return Payload.PayloadFormat.Dll;
+            if (value.Equals("raw", StringComparison.OrdinalIgnoreCase)) return Payload.PayloadFormat.Raw;
 
             throw new Exception("Invalid payload format");
         }

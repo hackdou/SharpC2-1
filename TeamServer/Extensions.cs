@@ -32,5 +32,33 @@ namespace TeamServer
 
         public static MethodDef GetConstructor(this IEnumerable<MethodDef> methods)
             => methods.GetMethod(".ctor");
+
+        public static ModuleDefMD ConvertModuleToExe(this ModuleDefMD module)
+        {
+            module.Kind = ModuleKind.Console;
+
+            var program = module.Types.GetType("Program");
+            var main = program?.Methods.GetMethod("Main");
+
+            module.EntryPoint = main;
+
+            return module;
+        }
+        
+        public static ModuleDefMD AddUnmanagedExport(this ModuleDefMD module, string exportName)
+        {
+            var program = module.Types.GetType("Program");
+            var execute = program?.Methods.GetMethod("Execute");
+            if (execute is null) return module;
+            
+            execute.ExportInfo = new MethodExportInfo(exportName);
+            execute.IsUnmanagedExport = true;
+            
+            var type = execute.MethodSig.RetType;
+            type = new CModOptSig(module.CorLibTypes.GetTypeRef("System.Runtime.CompilerServices", "CallConvStdcall"), type);
+            execute.MethodSig.RetType = type;
+
+            return module;
+        }
     }
 }

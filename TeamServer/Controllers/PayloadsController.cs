@@ -33,11 +33,34 @@ namespace TeamServer.Controllers
         {
             var handler = _handlers.GetHandler(request.Handler);
             if (handler is null) return NotFound();
-            
-            var payload = _mapper.Map<PayloadRequest, Payload>(request);
-            payload.SetHandler(handler);
-            await payload.Generate();
 
+            Payload payload = null;
+
+            switch (request.Format)
+            {
+                case PayloadRequest.PayloadFormat.Exe:
+                    payload = new ExePayload();
+                    break;
+                
+                case PayloadRequest.PayloadFormat.Dll:
+                    payload = new DllPayload();
+                    ((DllPayload)payload).DllExport = request.DllExport;
+                    break;
+                
+                case PayloadRequest.PayloadFormat.PowerShell:
+                    break;
+                
+                case PayloadRequest.PayloadFormat.Raw:
+                    payload = new RawPayload();
+                    break;
+                
+                default:
+                    return BadRequest("Unknown payload format");
+            }
+
+            payload!.Handler = handler;
+            await payload.Generate();
+            
             var response = _mapper.Map<Payload, PayloadResponse>(payload);
             return Ok(response);
         }

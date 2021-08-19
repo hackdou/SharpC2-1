@@ -11,7 +11,6 @@ namespace TeamServer.Mapping
     {
         public PayloadProfiles()
         {
-            CreateMap<PayloadRequest, Payload>();
             CreateMap<Payload, PayloadResponse>();
         }
     }

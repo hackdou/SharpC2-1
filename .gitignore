@@ -193,7 +193,9 @@ publish/
 PublishScripts/
 
 # NuGet Packages
-*.nupkg
+# Comment this line out to keep the DonutCore package
+# *.nupkg 
+
 # NuGet Symbol Packages
 *.snupkg
 # The packages folder can be ignored because of Package Restore

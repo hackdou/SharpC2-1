@@ -6,11 +6,12 @@ namespace SharpC2.API.V1.Requests
         public PayloadFormat Format { get; set; } = PayloadFormat.Exe;
         public string DllExport { get; set; } = "Execute";
         
-        public enum PayloadFormat
+        public enum PayloadFormat : int
         {
-            Exe,
-            Dll,
-            PowerShell
+            Exe = 0,
+            Dll = 1,
+            PowerShell = 2,
+            Raw = 3
         }
     }
 }

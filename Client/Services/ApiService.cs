@@ -110,7 +110,7 @@ namespace SharpC2.Services
             var response = await _client.ExecuteAsync(request);
             var result = JsonSerializer.Deserialize<PayloadResponse>(response.Content, _options);
 
-            return result?.Content;
+            return result?.Bytes;
         }
 
         public async Task<IEnumerable<Drone>> GetDrones()

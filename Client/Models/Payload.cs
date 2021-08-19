@@ -8,10 +8,12 @@ namespace SharpC2.Models
         public PayloadFormat Format { get; set; } = PayloadFormat.Exe;
         public string DllExport { get; set; } = "Execute";
 
-        public enum PayloadFormat
+        public enum PayloadFormat : int
         {
-            Exe,
-            Dll
+            Exe = 0,
+            Dll = 1,
+            PowerShell = 2,
+            Raw = 3
         }
 
         protected internal override IList<SharpSploitResultProperty> ResultProperties =>

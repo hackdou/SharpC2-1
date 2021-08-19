@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2021-08-19
+### Changed
+- Payload API can now generate donut shellcode using [DonutCS](https://github.com/n1xbyte/donutCS).
+
 ## [0.2.6] - 2021-08-18
 ### Added
 - `ps` command to `stdapi`.
