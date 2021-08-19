@@ -209,7 +209,8 @@ PublishScripts/
 *.nuget.targets
 
 # Nuget personal access tokens and Credentials
-nuget.config
+# Needed for Travis
+# nuget.config
 
 # Microsoft Azure Build Output
 csx/
