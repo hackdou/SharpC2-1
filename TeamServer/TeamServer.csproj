@@ -34,6 +34,8 @@
       <EmbeddedResource Include="Resources\stdapi.dll" />
       <None Remove="Resources\drone_svc.exe" />
       <EmbeddedResource Include="Resources\drone_svc.exe" />
+      <None Remove="Resources\drone.ps1" />
+      <EmbeddedResource Include="Resources\drone.ps1" />
     </ItemGroup>
 
     <ItemGroup>

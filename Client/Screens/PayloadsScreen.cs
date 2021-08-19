@@ -103,6 +103,7 @@ namespace SharpC2.Screens
         {
             if (value.Equals("exe", StringComparison.OrdinalIgnoreCase)) return Payload.PayloadFormat.Exe;
             if (value.Equals("dll", StringComparison.OrdinalIgnoreCase)) return Payload.PayloadFormat.Dll;
+            if (value.Equals("powershell", StringComparison.OrdinalIgnoreCase)) return Payload.PayloadFormat.PowerShell;
             if (value.Equals("raw", StringComparison.OrdinalIgnoreCase)) return Payload.PayloadFormat.Raw;
             if (value.Equals("svc", StringComparison.OrdinalIgnoreCase)) return Payload.PayloadFormat.Svc;
 

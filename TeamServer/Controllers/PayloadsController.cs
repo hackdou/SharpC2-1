@@ -48,6 +48,7 @@ namespace TeamServer.Controllers
                     break;
                 
                 case PayloadRequest.PayloadFormat.PowerShell:
+                    payload = new PoshPayload();
                     break;
                 
                 case PayloadRequest.PayloadFormat.Raw:
