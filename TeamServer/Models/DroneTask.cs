@@ -22,7 +22,7 @@ namespace TeamServer.Models
         {
             Module = module;
             Command = command;
-            TaskGuid = Guid.NewGuid().ConvertToShortGuid();
+            TaskGuid = Guid.NewGuid().ToShortGuid();
         }
 
         public enum TaskStatus : int
