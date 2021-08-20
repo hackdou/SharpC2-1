@@ -56,9 +56,15 @@ namespace TeamServer.Services
         public async Task HandleC2Message(C2Message message)
         {
             var drone = _drones.GetDrone(message.Metadata.Guid);
-            drone?.CheckIn();
 
-            await _hub.Clients.All.DroneCheckedIn(drone?.Metadata.Guid);
+            if (drone is null)
+            {
+                drone = new Drone(message.Metadata);
+                _drones.AddDrone(drone);
+            }
+            
+            drone.CheckIn();
+            await _hub.Clients.All.DroneCheckedIn(drone.Metadata.Guid);
 
             switch (message.Type)
             {

@@ -46,8 +46,8 @@ namespace Drone
         
         private void DisposeToken(DroneTask task, CancellationToken token)
         {
-            var guid = task.Arguments[0];
-            var tok = GetTokenFromStore(guid);
+            var handle = task.Arguments[0];
+            var tok = GetTokenFromStore(handle);
 
             tok.Dispose();
             _tokens.Remove(tok);
@@ -55,8 +55,8 @@ namespace Drone
         
         private void UseToken(DroneTask task, CancellationToken token)
         {
-            var guid = task.Arguments[0];
-            var tok = GetTokenFromStore(guid);
+            var handle = task.Arguments[0];
+            var tok = GetTokenFromStore(handle);
 
             if (tok is null)
             {

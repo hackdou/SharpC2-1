@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.3.3] - 2021-08-20
+### Changed
+- Fix bug when handling message from first-time-seen Drone.
+
 ## [0.3.2] - 2021-08-19
 ### Changed
 - Payload API can now generate donut shellcode using [DonutCS](https://github.com/n1xbyte/donutCS).
