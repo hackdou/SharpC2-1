@@ -8,6 +8,20 @@ namespace TeamServer.Models
         public string Username { get; set; }
         public string Process { get; set; }
         public int Pid { get; set; }
-        public string Arch { get; set; }
+        public DroneIntegrity Integrity { get; set; }
+        public DroneArch Arch { get; set; }
+        
+        public enum DroneIntegrity
+        {
+            Medium,
+            High,
+            SYSTEM
+        }
+
+        public enum DroneArch
+        {
+            x86,
+            x64
+        }
     }
 }

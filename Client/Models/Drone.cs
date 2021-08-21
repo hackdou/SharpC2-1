@@ -11,7 +11,8 @@ namespace SharpC2.Models
         public string Username { get; set; }
         public string Process { get; set; }
         public int Pid { get; set; }
-        public string Arch { get; set; }
+        public DroneIntegrity Integrity { get; set; }
+        public DroneArch Arch { get; set; }
         public DateTime LastSeen { get; set; }
 
         public List<DroneModule> Modules { get; set; }
@@ -24,6 +25,19 @@ namespace SharpC2.Models
                 return Math.Round(time, 2);
             }
         }
+        
+        public enum DroneIntegrity
+        {
+            Medium,
+            High,
+            SYSTEM
+        }
+
+        public enum DroneArch
+        {
+            x86,
+            x64
+        }
 
         protected internal override IList<SharpSploitResultProperty> ResultProperties =>
             new List<SharpSploitResultProperty>
@@ -34,6 +48,7 @@ namespace SharpC2.Models
                 new() {Name = "Username", Value = Username},
                 new() {Name = "Process", Value = Process},
                 new() {Name = "PID", Value = Pid},
+                new() {Name = "Integrity", Value = Integrity},
                 new() {Name = "Arch", Value = Arch},
                 new() {Name = "LastSeen", Value = $"{LastSeenSeconds}s"}
             };

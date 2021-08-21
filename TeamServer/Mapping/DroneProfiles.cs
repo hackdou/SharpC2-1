@@ -26,9 +26,9 @@ namespace TeamServer.Mapping
                 .ForMember(d => d.Username, opt => opt.MapFrom(d => d.Metadata.Username))
                 .ForMember(d => d.Process, opt => opt.MapFrom(d => d.Metadata.Process))
                 .ForMember(d => d.Pid, opt => opt.MapFrom(d => d.Metadata.Pid))
+                .ForMember(d => d.Integrity, opt => opt.MapFrom(d => d.Metadata.Integrity))
                 .ForMember(d => d.Arch, opt => opt.MapFrom(d => d.Metadata.Arch))
                 .ForMember(d => d.Modules, opt => opt.MapFrom(d => d.Modules));
-            //.ForMember(d => d.LastSeen, opt => opt.MapFrom(d => d.Metadata.Arch));
         }
     }
 }

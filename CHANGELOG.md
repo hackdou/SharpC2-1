@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.3.4] - 2021-08-21
+### Changed
+- Drone metadata now contains the integrity of its host process.
+- Drone arch is now an enum, rather than a string.
+
 ## [0.3.3] - 2021-08-20
 ### Changed
 - Fix bug when handling message from first-time-seen Drone.

