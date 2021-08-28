@@ -1,0 +1,10 @@
+Stage:
+  DllExport: Execute
+PostExploitation:
+  BypassAmsi: false
+  BypassEtw: false
+  SpawnTo: C:\Windows\System32\notepad.exe
+  AppDomain: SharpC2
+ProcessInjection:
+  Allocation: NtWriteVirtualMemory
+  Execution: RtlCreateUserThread

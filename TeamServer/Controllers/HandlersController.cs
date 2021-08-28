@@ -23,12 +23,15 @@ namespace TeamServer.Controllers
     public class HandlersController : ControllerBase
     {
         private readonly IHandlerService _handlers;
+        private readonly IServerService _server;
         private readonly IHubContext<MessageHub, IMessageHub> _messageHub;
         private readonly IMapper _mapper;
 
-        public HandlersController(IHandlerService handlerService, IHubContext<MessageHub, IMessageHub> messageHub, IMapper mapper)
+        public HandlersController(IHandlerService handlerService, IServerService serverService,
+            IHubContext<MessageHub, IMessageHub> messageHub, IMapper mapper)
         {
             _handlers = handlerService;
+            _server = serverService;
             _messageHub = messageHub;
             _mapper = mapper;
         }

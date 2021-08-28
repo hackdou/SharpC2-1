@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 using AutoMapper;
@@ -6,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using SharpC2.API;
-using SharpC2.API.V1.Requests;
 using SharpC2.API.V1.Responses;
 
 using TeamServer.Interfaces;
@@ -19,52 +19,36 @@ namespace TeamServer.Controllers
     [Route(Routes.V1.Payloads)]
     public class PayloadsController : ControllerBase
     {
-        private readonly IMapper _mapper;
         private readonly IHandlerService _handlers;
+        private readonly IServerService _server;
+        private readonly IMapper _mapper;
 
-        public PayloadsController(IMapper mapper, IHandlerService handlers)
+        public PayloadsController(IHandlerService handlerService, IServerService serverService, IMapper mapper)
         {
+            _handlers = handlerService;
+            _server = serverService;
             _mapper = mapper;
-            _handlers = handlers;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> GeneratePayload([FromBody] PayloadRequest request)
+        [HttpGet("{handler}/{format}")]
+        public async Task<IActionResult> GetPayload(string handler, string format)
         {
-            var handler = _handlers.GetHandler(request.Handler);
-            if (handler is null) return NotFound();
+            var h = _handlers.GetHandler(handler);
+            if (h is null) return NotFound();
 
-            Payload payload = null;
+            var c2 = _server.GetC2Profile();
 
-            switch (request.Format)
+            Payload payload = format.ToLowerInvariant() switch
             {
-                case PayloadRequest.PayloadFormat.Exe:
-                    payload = new ExePayload();
-                    break;
+                "exe" => new ExePayload(h, c2),
+                "dll" => new DllPayload(h, c2),
+                "powershell" => new PoshPayload(h, c2),
+                "raw" => new RawPayload(h, c2),
+                "svc" => new ServicePayload(h, c2),
                 
-                case PayloadRequest.PayloadFormat.Dll:
-                    payload = new DllPayload();
-                    ((DllPayload)payload).DllExport = request.DllExport;
-                    break;
-                
-                case PayloadRequest.PayloadFormat.PowerShell:
-                    payload = new PoshPayload();
-                    break;
-                
-                case PayloadRequest.PayloadFormat.Raw:
-                    payload = new RawPayload();
-                    break;
-                
-                case PayloadRequest.PayloadFormat.Svc:
-                    payload = new ServicePayload();
-                    ((ServicePayload)payload).SpawnTo = request.SpawnTo;
-                    break;
-                
-                default:
-                    return BadRequest("Unknown payload format");
-            }
-
-            payload!.Handler = handler;
+                _ => throw new ArgumentException("Unknown payload format")
+            };
+            
             await payload.Generate();
             
             var response = _mapper.Map<Payload, PayloadResponse>(payload);
