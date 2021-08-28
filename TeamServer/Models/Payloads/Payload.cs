@@ -112,14 +112,20 @@ namespace TeamServer.Models
 
         private void SetBypassAmsi(MethodDef method)
         {
-            var instruction = method.Body.Instructions.Single(i => i.OpCode == OpCodes.Ldstr);
-            instruction.Operand = C2Profile.PostExploitation.BypassAmsi.ToString().ToLowerInvariant();
+            var instruction = method.Body.Instructions[0];
+
+            instruction.OpCode = C2Profile.PostExploitation.BypassAmsi
+                ? OpCodes.Ldc_I4_1
+                : OpCodes.Ldc_I4_0;
         }
         
         private void SetBypassEtw(MethodDef method)
         {
-            var instruction = method.Body.Instructions.Single(i => i.OpCode == OpCodes.Ldstr);
-            instruction.Operand = C2Profile.PostExploitation.BypassEtw.ToString().ToLowerInvariant();
+            var instruction = method.Body.Instructions[0];
+
+            instruction.OpCode = C2Profile.PostExploitation.BypassEtw
+                ? OpCodes.Ldc_I4_1
+                : OpCodes.Ldc_I4_0;
         }
     }
 }

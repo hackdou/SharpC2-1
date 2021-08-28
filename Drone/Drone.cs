@@ -212,6 +212,7 @@ namespace Drone
 
         public void Stop()
         {
+            _handler.Stop();
             _running = false;
         }
 
