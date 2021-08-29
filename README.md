@@ -220,4 +220,4 @@ mimikatz(powershell) # coffee
 
 ## Documentation
 
-See more documentation on [Read the Docs](https://sharpc2.readthedocs.io/en/latest/index.html).
+See more documentation on [Read the Docs](https://sharpc2.readthedocs.io/en/latest).
