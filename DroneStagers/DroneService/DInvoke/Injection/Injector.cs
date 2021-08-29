@@ -2,36 +2,18 @@
 
 namespace DroneService.DInvoke.Injection
 {
-    /// <summary>
-    /// Provides static functions for performing injection using a combination of Allocation and Execution components.
-    /// </summary>
-    /// <author>The Wover (@TheRealWover)</author>
     public static class Injector
     {
-        /// <summary>
-        /// Inject a payload into a target process using a specified allocation and execution technique.
-        /// </summary>
-        /// <author>The Wover (@TheRealWover)</author>
-        /// <param name="Payload"></param>
-        /// <param name="AllocationTechnique"></param>
-        /// <param name="ExecutionTechnique"></param>
-        /// <param name="Process"></param>
-        /// <returns></returns>
-        public static bool Inject(PayloadType Payload, AllocationTechnique AllocationTechnique, ExecutionTechnique ExecutionTechnique, Process Process)
+        public static bool Inject(PayloadType payload, AllocationTechnique allocationTechnique, ExecutionTechnique executionTechnique, Process process)
         {
-            return ExecutionTechnique.Inject(Payload, AllocationTechnique, Process);
+            if (allocationTechnique.IsSupportedPayloadType(payload) == false
+                || executionTechnique.IsSupportedPayloadType(payload) == false)
+                throw new PayloadTypeNotSupported(payload.GetType());
+
+            return executionTechnique.Inject(payload, allocationTechnique, process);
         }
 
-        /// <summary>
-        /// Inject a payload into the current process using a specified allocation and execution technique.
-        /// </summary>
-        /// <param name="Payload"></param>
-        /// <param name="AllocationTechnique"></param>
-        /// <param name="ExecutionTechnique"></param>
-        /// <returns></returns>
-        public static bool Inject(PayloadType Payload, AllocationTechnique AllocationTechnique, ExecutionTechnique ExecutionTechnique)
-        {
-            return ExecutionTechnique.Inject(Payload, AllocationTechnique);
-        }
+        public static bool Inject(PayloadType payload, AllocationTechnique allocationTechnique, ExecutionTechnique executionTechnique)
+            => Inject(payload, allocationTechnique, executionTechnique, Process.GetCurrentProcess());
     }
 }
