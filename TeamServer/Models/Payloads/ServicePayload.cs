@@ -1,10 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Threading.Tasks;
 
 using dnlib.DotNet;
-using dnlib.DotNet.Emit;
 
 using TeamServer.Handlers;
 
@@ -37,15 +34,12 @@ namespace TeamServer.Models
         {
             var service = module.Types.GetType("Service");
             var method = service.Methods.GetMethod("SpawnTo");
-            
-            var instruction = method.Body.Instructions.First(i => i.OpCode == OpCodes.Ldstr);
-            instruction.Operand = C2Profile.PostExploitation.SpawnTo;
+            method.Body.Instructions[0].Operand = C2Profile.PostExploitation.SpawnTo;
         }
 
         private void SetAllocation(ModuleDef module)
         {
             var alloc = module.Types.GetType(C2Profile.ProcessInjection.Allocation);
-            
             var service = module.Types.GetType("Service");
             var method = service.Methods.GetMethod("Allocation");
             method.Body.Instructions[0].Operand = alloc;
@@ -54,7 +48,6 @@ namespace TeamServer.Models
         private void SetExecution(ModuleDef module)
         {
             var exec = module.Types.GetType(C2Profile.ProcessInjection.Execution);
-            
             var service = module.Types.GetType("Service");
             var method = service.Methods.GetMethod("Execution");
             method.Body.Instructions[0].Operand = exec;

