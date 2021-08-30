@@ -26,7 +26,7 @@ namespace Drone
             {
                 new("bindPort", false)
             }),
-            new("list-rportfwd", "List all active reverse port forwards", List),
+            new("list-rportfwds", "List all active reverse port forwards", List),
             new("purge-rportfwd", "Purge all active reverse port forwards", Purge),
             new("rportfwd-inbound", "", HandleInboundResponse, visible: false)
         };

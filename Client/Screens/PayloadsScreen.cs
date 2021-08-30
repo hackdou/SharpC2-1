@@ -69,7 +69,7 @@ namespace SharpC2.Screens
             return true;
         }
 
-        public Task<bool> SetOption(string[] args)
+        private Task<bool> SetOption(string[] args)
         {
             if (args.Length < 3) return Task.FromResult(false);
             
@@ -81,13 +81,7 @@ namespace SharpC2.Screens
             
             if (key.Equals("format", StringComparison.OrdinalIgnoreCase))
                 _payload.Format = FormatFromString(value);
-            
-            if (key.Equals("dllexport", StringComparison.OrdinalIgnoreCase))
-                _payload.DllExport = value;
-            
-            if (key.Equals("spawnto", StringComparison.OrdinalIgnoreCase))
-                _payload.SpawnTo = value;
-            
+
             return Task.FromResult(true);
         }
 

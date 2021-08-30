@@ -10,6 +10,113 @@ namespace Drone.DInvoke.DynamicInvoke
 {
     public static class Native
     {
+        public static bool NtQueryInformationProcessWow64Information(IntPtr hProcess)
+        {
+            Data.Native.NTSTATUS retValue = NtQueryInformationProcess(hProcess, Data.Native.PROCESSINFOCLASS.ProcessWow64Information, out IntPtr pProcInfo);
+            
+            if (retValue != Data.Native.NTSTATUS.Success)
+                throw new UnauthorizedAccessException("Access is denied.");
+
+            if (Marshal.ReadIntPtr(pProcInfo) == IntPtr.Zero)
+                return false;
+            
+            return true;
+        }
+        
+        public static IntPtr NtAllocateVirtualMemory(IntPtr ProcessHandle, ref IntPtr BaseAddress, IntPtr ZeroBits, ref IntPtr RegionSize, UInt32 AllocationType, UInt32 Protect)
+        {
+            // Craft an array for the arguments
+            object[] funcargs =
+            {
+                ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protect
+            };
+
+            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtAllocateVirtualMemory", typeof(Delegates.NtAllocateVirtualMemory), ref funcargs);
+            
+            if (retValue == Data.Native.NTSTATUS.AccessDenied)
+            {
+                // STATUS_ACCESS_DENIED
+                throw new UnauthorizedAccessException("Access is denied.");
+            }
+            if (retValue == Data.Native.NTSTATUS.AlreadyCommitted)
+            {
+                // STATUS_ALREADY_COMMITTED
+                throw new InvalidOperationException("The specified address range is already committed.");
+            }
+            if (retValue == Data.Native.NTSTATUS.CommitmentLimit)
+            {
+                // STATUS_COMMITMENT_LIMIT
+                throw new InvalidOperationException("Your system is low on virtual memory.");
+            }
+            if (retValue == Data.Native.NTSTATUS.ConflictingAddresses)
+            {
+                // STATUS_CONFLICTING_ADDRESSES
+                throw new InvalidOperationException("The specified address range conflicts with the address space.");
+            }
+            if (retValue == Data.Native.NTSTATUS.InsufficientResources)
+            {
+                // STATUS_INSUFFICIENT_RESOURCES
+                throw new InvalidOperationException("Insufficient system resources exist to complete the API call.");
+            }
+            if (retValue == Data.Native.NTSTATUS.InvalidHandle)
+            {
+                // STATUS_INVALID_HANDLE
+                throw new InvalidOperationException("An invalid HANDLE was specified.");
+            }
+            if (retValue == Data.Native.NTSTATUS.InvalidPageProtection)
+            {
+                // STATUS_INVALID_PAGE_PROTECTION
+                throw new InvalidOperationException("The specified page protection was not valid.");
+            }
+            if (retValue == Data.Native.NTSTATUS.NoMemory)
+            {
+                // STATUS_NO_MEMORY
+                throw new InvalidOperationException("Not enough virtual memory or paging file quota is available to complete the specified operation.");
+            }
+            if (retValue == Data.Native.NTSTATUS.ObjectTypeMismatch)
+            {
+                // STATUS_OBJECT_TYPE_MISMATCH
+                throw new InvalidOperationException("There is a mismatch between the type of object that is required by the requested operation and the type of object that is specified in the request.");
+            }
+            if (retValue != Data.Native.NTSTATUS.Success)
+            {
+                // STATUS_PROCESS_IS_TERMINATING == 0xC000010A
+                throw new InvalidOperationException("An attempt was made to duplicate an object handle into or out of an exiting process.");
+            }
+
+            BaseAddress = (IntPtr)funcargs[1];
+            return BaseAddress;
+        }
+        
+        public static void NtFreeVirtualMemory(IntPtr ProcessHandle, ref IntPtr BaseAddress, ref IntPtr RegionSize, UInt32 FreeType)
+        {
+            // Craft an array for the arguments
+            object[] funcargs =
+            {
+                ProcessHandle, BaseAddress, RegionSize, FreeType
+            };
+
+            Data.Native.NTSTATUS retValue = (Data.Native.NTSTATUS)Generic.DynamicAPIInvoke(@"ntdll.dll", @"NtFreeVirtualMemory", typeof(Delegates.NtFreeVirtualMemory), ref funcargs);
+            
+            if (retValue == Data.Native.NTSTATUS.AccessDenied)
+            {
+                // STATUS_ACCESS_DENIED
+                throw new UnauthorizedAccessException("Access is denied.");
+            }
+            
+            if (retValue == Data.Native.NTSTATUS.InvalidHandle)
+            {
+                // STATUS_INVALID_HANDLE
+                throw new InvalidOperationException("An invalid HANDLE was specified.");
+            }
+            
+            if (retValue != Data.Native.NTSTATUS.Success)
+            {
+                // STATUS_OBJECT_TYPE_MISMATCH == 0xC0000024
+                throw new InvalidOperationException("There is a mismatch between the type of object that is required by the requested operation and the type of object that is specified in the request.");
+            }
+        }
+        
         public static Data.Native.NTSTATUS NtCreateThreadEx(
             ref IntPtr threadHandle,
             Data.Win32.WinNT.ACCESS_MASK desiredAccess,
@@ -358,6 +465,22 @@ namespace Drone.DInvoke.DynamicInvoke
         public struct Delegates
         {
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            public delegate UInt32 NtAllocateVirtualMemory(
+                IntPtr ProcessHandle,
+                ref IntPtr BaseAddress,
+                IntPtr ZeroBits,
+                ref IntPtr RegionSize,
+                UInt32 AllocationType,
+                UInt32 Protect);
+            
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            public delegate UInt32 NtFreeVirtualMemory(
+                IntPtr ProcessHandle,
+                ref IntPtr BaseAddress,
+                ref IntPtr RegionSize,
+                UInt32 FreeType);
+            
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate Data.Native.NTSTATUS NtCreateThreadEx(
                 out IntPtr threadHandle,
                 Data.Win32.WinNT.ACCESS_MASK desiredAccess,
@@ -405,11 +528,11 @@ namespace Drone.DInvoke.DynamicInvoke
             public delegate Data.Native.NTSTATUS NtMapViewOfSection(
                 IntPtr SectionHandle,
                 IntPtr ProcessHandle,
-                out IntPtr BaseAddress,
+                ref IntPtr BaseAddress,
                 IntPtr ZeroBits,
                 IntPtr CommitSize,
                 IntPtr SectionOffset,
-                out ulong ViewSize,
+                ref ulong ViewSize,
                 uint InheritDisposition,
                 uint AllocationType,
                 uint Win32Protect);

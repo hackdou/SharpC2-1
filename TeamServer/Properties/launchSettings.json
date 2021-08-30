@@ -23,7 +23,7 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:8443",
-      "commandLineArgs": "Passw0rd!",
+      "commandLineArgs": "-p Passw0rd!",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

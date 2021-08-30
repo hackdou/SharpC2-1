@@ -95,18 +95,7 @@ namespace SharpC2.Services
 
         public async Task<byte[]> GeneratePayload(Payload payload)
         {
-            var payloadRequest = new PayloadRequest
-            {
-                Handler = payload.Handler,
-                Format = (PayloadRequest.PayloadFormat)payload.Format,
-                DllExport = payload.DllExport
-            };
-            
-            var request = new RestRequest($"{Routes.V1.Payloads}", Method.POST);
-            request.AddParameter("application/json",
-                JsonSerializer.Serialize(payloadRequest),
-                ParameterType.RequestBody);
-            
+            var request = new RestRequest($"{Routes.V1.Payloads}/{payload.Handler}/{payload.Format}", Method.GET);
             var response = await _client.ExecuteAsync(request);
             var result = JsonSerializer.Deserialize<PayloadResponse>(response.Content, _options);
 

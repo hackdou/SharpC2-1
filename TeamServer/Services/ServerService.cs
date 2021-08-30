@@ -16,6 +16,8 @@ namespace TeamServer.Services
 {
     public class ServerService : IServerService
     {
+        private C2Profile _profile; 
+            
         private readonly IDroneService _drones;
         private readonly IHubContext<MessageHub, IMessageHub> _hub;
         
@@ -27,6 +29,16 @@ namespace TeamServer.Services
             _hub = hub;
             
             LoadDefaultModules();
+        }
+
+        public void SetC2Profile(C2Profile profile)
+        {
+            _profile = profile;
+        }
+
+        public C2Profile GetC2Profile()
+        {
+            return _profile ?? new C2Profile();
         }
 
         public Module LoadModule(byte[] bytes)

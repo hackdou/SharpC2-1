@@ -1,19 +1,22 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+
 using Reflect = System.Reflection;
 
 namespace Drone.SharpSploit.Execution
 {
     public static class Assembly
     {
-        public static string Execute(byte[] assemblyBytes, string[] args = null)
+        private static string AppDomainName => "SharpC2";
+        
+        public static string AssemblyExecute(byte[] assemblyBytes, string[] args = null)
         {
             args ??= new string[] { };
 
-            var domain = AppDomain.CreateDomain(Guid.NewGuid().ToShortGuid(), null, null, null, false);
+            var domain = AppDomain.CreateDomain(AppDomainName, null, null, null, false);
             var proxy = (ShadowRunnerProxy)domain.CreateInstanceAndUnwrap(typeof(ShadowRunnerProxy).Assembly.FullName, typeof(ShadowRunnerProxy).FullName);
-            var result = proxy.ExecuteAssembly(assemblyBytes, args);
+            var result = proxy.AssemblyExecute(assemblyBytes, args);
             
             AppDomain.Unload(domain);
 
@@ -23,7 +26,7 @@ namespace Drone.SharpSploit.Execution
 
     public class ShadowRunnerProxy : MarshalByRefObject
     {
-        public string ExecuteAssembly(byte[] bytes, string[] args)
+        public string AssemblyExecute(byte[] bytes, string[] args)
         {
             var asm = Reflect.Assembly.Load(bytes);
             

@@ -17,7 +17,7 @@ The quickest way to have a play with the framework is clone the repo, then build
 C:\SharpC2\TeamServer> dotnet build
 TeamServer -> C:\SharpC2\TeamServer\bin\Debug\net5.0\TeamServer.dll
 
-C:\SharpC2\TeamServer\bin\Debug\net5.0> dotnet TeamServer.dll Passw0rd!
+C:\SharpC2\TeamServer\bin\Debug\net5.0> dotnet TeamServer.dll --password Passw0rd!
 info: Microsoft.Hosting.Lifetime[0]
       Now listening on: https://0.0.0.0:8443
 info: Microsoft.Hosting.Lifetime[0]
@@ -174,16 +174,20 @@ Guid        Address      Hostname      Username  Process  PID    Arch  LastSeen
 Name              Description
 ----              -----------
 back              Back to previous screen
-bypass-amsi       Bypass AMSI for post-ex tasks
+bypass            Set a directive to bypass AMSI/ETW on tasks
 cd                Change working directory
-execute-assembly  Execute a .NET assembly in memory
+execute-assembly  Execute a .NET assembly
 exit              Exit this Drone
+getuid            Get current identity
 help              Get help
-ls                List files and directories
-overload          Map a native DLL into memory
-pwd               Print current working directory
+load-module       Load an external Drone module
+ls                List filesystem
+overload          Map and execute a native DLL
+ps                List running processes
+pwd               Print working directory
 run               Run a command
 shell             Run a command via cmd.exe
+shinject          Inject arbitrary shellcode into a process
 sleep             Set sleep interval and jitter
 
 [655a3dea9d] # help overload
@@ -214,7 +218,6 @@ mimikatz(powershell) # coffee
 [+] Task complete.
 ```
 
-
 ## Documentation
 
-See more documentation on [Read the Docs](https://sharpc2.readthedocs.io/en/latest/index.html).
+See more documentation on [Read the Docs](https://sharpc2.readthedocs.io/en/latest).
