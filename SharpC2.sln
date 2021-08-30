@@ -27,8 +27,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{3FBBDB50
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "C2Lint", "Tools\C2Lint\C2Lint.csproj", "{2462BD40-7B66-4067-9106-0DDE5D10B6D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoslynModule", "DroneModules\RoslynModule\RoslynModule.csproj", "{2DFED940-D56B-4175-85F6-82E4F06922BA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,10 +69,6 @@ Global
 		{2462BD40-7B66-4067-9106-0DDE5D10B6D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2462BD40-7B66-4067-9106-0DDE5D10B6D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2462BD40-7B66-4067-9106-0DDE5D10B6D8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2DFED940-D56B-4175-85F6-82E4F06922BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2DFED940-D56B-4175-85F6-82E4F06922BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2DFED940-D56B-4175-85F6-82E4F06922BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2DFED940-D56B-4175-85F6-82E4F06922BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -85,7 +79,6 @@ Global
 		{CC6A420E-5F18-493E-A053-3EFD7E06447F} = {FBBB313E-E530-4A71-8807-F6ADE585FC47}
 		{A5C4FD62-DA9D-4DE0-AF57-342D100A8C10} = {BE8CF52D-7448-488B-AED2-215E8E703D3A}
 		{2462BD40-7B66-4067-9106-0DDE5D10B6D8} = {3FBBDB50-C3AA-484F-BE09-36BF80A7C92B}
-		{2DFED940-D56B-4175-85F6-82E4F06922BA} = {FBBB313E-E530-4A71-8807-F6ADE585FC47}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D88B0B1E-6BC3-45AD-9C25-98CF423F8206}

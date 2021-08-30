@@ -29,6 +29,7 @@ namespace TeamServer.Models
             var module = ModuleDefMD.Load(drone);
             
             EmbedHandler(module);
+            SetAppDomainName(module);
             SetBypasses(module);
             SetProcessInjectionOptions(module);
 
@@ -82,6 +83,13 @@ namespace TeamServer.Models
             var droneType = module.Types.GetType("Drone");
             var getHandler = droneType.Methods.GetMethod("get_GetHandler");
             getHandler.Body.Instructions[0].Operand = targetHandler.Methods.GetConstructor();
+        }
+
+        private void SetAppDomainName(ModuleDef module)
+        {
+            var type = module.Types.GetType("SharpSploit.Execution.Assembly");
+            var method = type.Methods.GetMethod("AppDomainName");
+            method.Body.Instructions[0].Operand = C2Profile.PostExploitation.AppDomain;
         }
 
         private void SetBypasses(ModuleDef module)

