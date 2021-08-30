@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2021-08-30
+## Added
+- Team Server now uses a C2 Profile to control Drone behaviours.
+- New C2Lint tool to validate C2 Profiles.
+## Changed
+- Simplified Payload API by moving options to the C2 Profile.
+
 ## [0.3.4] - 2021-08-21
 ### Changed
 - Drone metadata now contains the integrity of its host process.
