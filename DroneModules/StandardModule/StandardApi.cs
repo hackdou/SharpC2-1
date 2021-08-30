@@ -37,7 +37,7 @@ namespace Drone
             new("upload", "Upload a file to the current working directory of the Drone", UploadFile, new List<Command.Argument>
             {
                new("/path/to/origin", false, true),
-               new ("destination-filename" ,false)
+               new("destination-filename" ,false)
             }),
             new("rm", "Delete a file", DeleteFile, new List<Command.Argument>
             {
