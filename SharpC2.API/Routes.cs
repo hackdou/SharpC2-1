@@ -8,7 +8,6 @@ namespace SharpC2.API
             public const string Handlers = "/api/v1/handlers";
             public const string Drones = "/api/v1/drones";
             public const string Payloads = "/api/v1/payloads";
-            public const string SharpShell = "/api/v1/sharpshell";
         }
     }
 }

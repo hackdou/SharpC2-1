@@ -22,17 +22,6 @@ namespace Drone.SharpSploit.Execution
 
             return result;
         }
-
-        public static string AssemblyReflect(byte[] assemblyBytes, string type, string method)
-        {
-            var domain = AppDomain.CreateDomain(AppDomainName, null, null, null, false);
-            var proxy = (ShadowRunnerProxy)domain.CreateInstanceAndUnwrap(typeof(ShadowRunnerProxy).Assembly.FullName, typeof(ShadowRunnerProxy).FullName);
-            var result = proxy.AssemblyReflect(assemblyBytes, type, method);
-            
-            AppDomain.Unload(domain);
-
-            return result;
-        }
     }
 
     public class ShadowRunnerProxy : MarshalByRefObject
@@ -65,12 +54,6 @@ namespace Drone.SharpSploit.Execution
             ms.Dispose();
             
             return result;
-        }
-
-        public string AssemblyReflect(byte[] bytes, string type, string method)
-        {
-            var asm = Reflect.Assembly.Load(bytes);
-            return (string) asm.GetType(type)?.GetMethod(method)?.Invoke(null, new object[] { });
         }
     }
 }
