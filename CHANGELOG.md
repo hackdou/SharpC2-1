@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Team Server now uses a C2 Profile to control Drone behaviours.
 - New C2Lint tool to validate C2 Profiles.
+- A few extra `stdapi` commands: `cat`, `upload`, `rm`, `rmdir` and `mkdir`.
 ### Changed
 - Simplified Payload API by moving options to the C2 Profile.
 
