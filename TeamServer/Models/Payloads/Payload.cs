@@ -87,7 +87,7 @@ namespace TeamServer.Models
 
         private void SetAppDomainName(ModuleDef module)
         {
-            var type = module.Types.GetType("SharpSploit.Execution.Assembly");
+            var type = module.Types.GetType("Assembly");
             var method = type.Methods.GetMethod("AppDomainName");
             method.Body.Instructions[0].Operand = C2Profile.PostExploitation.AppDomain;
         }
