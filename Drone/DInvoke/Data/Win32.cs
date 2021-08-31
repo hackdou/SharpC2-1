@@ -4,6 +4,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Drone.DInvoke.Data
 {
@@ -124,7 +125,7 @@ namespace Drone.DInvoke.Data
                 LOGON32_LOGON_NETWORK_CLEARTEXT = 8,
                 LOGON32_LOGON_NEW_CREDENTIALS = 9
             }
-            
+
             [Flags]
             public enum TokenAccess : uint
             {
@@ -143,8 +144,104 @@ namespace Drone.DInvoke.Data
                 TOKEN_WRITE = 0x000200E0,
                 TOKEN_EXECUTE = 0x00020000
             }
+
+            [Flags]
+            public enum SCMAccess : uint
+            {
+                SC_MANAGER_CONNECT = 0x00001,
+                SC_MANAGER_CREATE_SERVICE = 0x00002,
+                SC_MANAGER_ENUMERATE_SERVICE = 0x00004,
+                SC_MANAGER_LOCK = 0x00008,
+                SC_MANAGER_QUERY_LOCK_STATUS = 0x00010,
+                SC_MANAGER_MODIFY_BOOT_CONFIG = 0x00020,
+
+                SC_MANAGER_ALL_ACCESS = WinNT.ACCESS_MASK.STANDARD_RIGHTS_REQUIRED |
+                                        SC_MANAGER_CONNECT |
+                                        SC_MANAGER_CREATE_SERVICE |
+                                        SC_MANAGER_ENUMERATE_SERVICE |
+                                        SC_MANAGER_LOCK |
+                                        SC_MANAGER_QUERY_LOCK_STATUS |
+                                        SC_MANAGER_MODIFY_BOOT_CONFIG,
+
+                GENERIC_READ = WinNT.ACCESS_MASK.STANDARD_RIGHTS_READ |
+                               SC_MANAGER_ENUMERATE_SERVICE |
+                               SC_MANAGER_QUERY_LOCK_STATUS,
+
+                GENERIC_WRITE = WinNT.ACCESS_MASK.STANDARD_RIGHTS_WRITE |
+                                SC_MANAGER_CREATE_SERVICE |
+                                SC_MANAGER_MODIFY_BOOT_CONFIG,
+
+                GENERIC_EXECUTE = WinNT.ACCESS_MASK.STANDARD_RIGHTS_EXECUTE |
+                                  SC_MANAGER_CONNECT | SC_MANAGER_LOCK,
+
+                GENERIC_ALL = SC_MANAGER_ALL_ACCESS,
+            }
+
+            [Flags]
+            public enum ServiceAccess : uint
+            {
+                STANDARD_RIGHTS_REQUIRED = 0xF0000,
+                SERVICE_QUERY_CONFIG = 0x00001,
+                SERVICE_CHANGE_CONFIG = 0x00002,
+                SERVICE_QUERY_STATUS = 0x00004,
+                SERVICE_ENUMERATE_DEPENDENTS = 0x00008,
+                SERVICE_START = 0x00010,
+                SERVICE_STOP = 0x00020,
+                SERVICE_PAUSE_CONTINUE = 0x00040,
+                SERVICE_INTERROGATE = 0x00080,
+                SERVICE_USER_DEFINED_CONTROL = 0x00100,
+
+                SERVICE_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED |
+                                     SERVICE_QUERY_CONFIG |
+                                     SERVICE_CHANGE_CONFIG |
+                                     SERVICE_QUERY_STATUS |
+                                     SERVICE_ENUMERATE_DEPENDENTS |
+                                     SERVICE_START |
+                                     SERVICE_STOP |
+                                     SERVICE_PAUSE_CONTINUE |
+                                     SERVICE_INTERROGATE |
+                                     SERVICE_USER_DEFINED_CONTROL
+            }
             
+            [StructLayout(LayoutKind.Sequential)]
+            public class ServiceConfig
+            {
+                public ServiceType dwServiceType;
+                public ServiceStartType dwStartType;
+                public ServiceErrorControl dwErrorControl;
+                public string lpBinaryPathName;
+                public string lpLoadOrderGroup;
+                public uint dwTagId;
+                public string lpDependencies;
+                public string lpServiceStartName;
+                public string lpDisplayName;
+            }
+
+            public enum ServiceType : uint
+            {
+                SERVICE_FILE_SYSTEM_DRIVER = 0x00000002,
+                SERVICE_KERNEL_DRIVER = 0x00000001,
+                SERVICE_WIN32_OWN_PROCESS = 0x00000010,
+                SERVICE_WIN32_SHARE_PROCESS = 0x00000020,
+                SERVICE_INTERACTIVE_PROCESS = 0x00000100
+            }
             
+            public enum ServiceStartType : uint
+            {
+                SERVICE_AUTO_START = 0x00000002,
+                SERVICE_BOOT_START = 0x00000000,
+                SERVICE_DEMAND_START = 0x00000003,
+                SERVICE_DISABLED = 0x00000004,
+                SERVICE_SYSTEM_START = 0x00000001
+            }
+            
+            public enum ServiceErrorControl : uint
+            {
+                SERVICE_ERROR_CRITICAL = 0x00000003,
+                SERVICE_ERROR_IGNORE = 0x00000000,
+                SERVICE_ERROR_NORMAL = 0x00000001,
+                SERVICE_ERROR_SEVERE = 0x00000002
+            }
         }
 
         public static class WinNT

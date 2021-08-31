@@ -39,7 +39,7 @@ namespace Drone.DInvoke.Injection
             
             if (result != Data.Native.NTSTATUS.Success) return false;
 
-            DynamicInvoke.Win32.CloseHandle(hThread);
+            DynamicInvoke.Win32.Kernel32.CloseHandle(hThread);
             return true;   
         }
     }
@@ -69,7 +69,7 @@ namespace Drone.DInvoke.Injection
             
             if (result != Data.Native.NTSTATUS.Success) return false;
 
-            DynamicInvoke.Win32.CloseHandle(hThread);
+            DynamicInvoke.Win32.Kernel32.CloseHandle(hThread);
             return true;  
         }
     }
@@ -89,7 +89,7 @@ namespace Drone.DInvoke.Injection
         {
             var threadId = new IntPtr();
 
-            var hThread = DynamicInvoke.Win32.CreateRemoteThread(
+            var hThread = DynamicInvoke.Win32.Kernel32.CreateRemoteThread(
                 process.Handle,
                 IntPtr.Zero,
                 0,
@@ -100,8 +100,8 @@ namespace Drone.DInvoke.Injection
 
             if (hThread == IntPtr.Zero) return false;
 
-            DynamicInvoke.Win32.CloseHandle(hThread);
-            DynamicInvoke.Win32.CloseHandle(threadId);
+            DynamicInvoke.Win32.Kernel32.CloseHandle(hThread);
+            DynamicInvoke.Win32.Kernel32.CloseHandle(threadId);
             
             return true;
         }

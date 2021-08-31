@@ -9,213 +9,274 @@ namespace Drone.DInvoke.DynamicInvoke
 {
     public static class Win32
     {
-        public static bool IsWow64Process(IntPtr hProcess, ref bool lpSystemInfo)
+        public static class Kernel32
         {
-            object[] funcargs = { hProcess, lpSystemInfo };
-
-            var retVal = (bool)Generic.DynamicAPIInvoke(@"kernel32.dll", @"IsWow64Process", typeof(Delegates.IsWow64Process), ref funcargs);
-            lpSystemInfo = (bool) funcargs[1];
-            
-            return retVal;
-        }
-        
-        public static IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, uint dwStackSize,
-            IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, ref IntPtr lpThreadId)
-        {
-            object[] funcargs =
+            public static bool IsWow64Process(IntPtr hProcess, ref bool lpSystemInfo)
             {
-                hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, lpThreadId
-            };
+                object[] funcargs = { hProcess, lpSystemInfo };
 
-            var retValue = (IntPtr)Generic.DynamicAPIInvoke(@"kernel32.dll", @"CreateRemoteThread",
-                typeof(Delegates.CreateRemoteThread), ref funcargs);
-            
-            lpThreadId = (IntPtr)funcargs[6];
+                var retVal = (bool)Generic.DynamicAPIInvoke(@"kernel32.dll", @"IsWow64Process",
+                    typeof(Delegates.IsWow64Process), ref funcargs);
+                lpSystemInfo = (bool)funcargs[1];
 
-            return retValue;
-        }
-        
-        public static bool LogonUserA(string lpszUsername, string lpszDomain, string lpszPassword,
-            Data.Win32.Advapi32.LogonUserType dwLogonType, Data.Win32.Advapi32.LogonUserProvider dwLogonProvider,
-            ref IntPtr phToken)
-        {
-            object[] funcargs =
+                return retVal;
+            }
+
+            public static IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, uint dwStackSize,
+                IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, ref IntPtr lpThreadId)
             {
-                lpszUsername, lpszDomain, lpszPassword, dwLogonType, dwLogonProvider, phToken
-            };
+                object[] funcargs =
+                {
+                    hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, lpThreadId
+                };
 
-            var retVal = (bool)Generic.DynamicAPIInvoke(@"advapi32.dll", @"LogonUserA",
-                typeof(Delegates.LogonUserA), ref funcargs);
+                var retValue = (IntPtr)Generic.DynamicAPIInvoke(@"kernel32.dll", @"CreateRemoteThread",
+                    typeof(Delegates.CreateRemoteThread), ref funcargs);
 
-            phToken = (IntPtr) funcargs[5];
-            return retVal;
-        }
+                lpThreadId = (IntPtr)funcargs[6];
 
-        public static bool ImpersonateLoggedOnUser(IntPtr hToken)
-        {
-            object[] funcargs = { hToken };
-            
-            var retVal = (bool)Generic.DynamicAPIInvoke(@"advapi32.dll", @"ImpersonateLoggedOnUser",
-                typeof(Delegates.ImpersonateLoggedOnUser), ref funcargs);
-            
-            return retVal;
-        }
+                return retValue;
+            }
 
-        public static bool RevertToSelf()
-        {
-            object[] funcargs = { };
-            
-            var retVal = (bool)Generic.DynamicAPIInvoke(@"advapi32.dll", @"RevertToSelf",
-                typeof(Delegates.RevertToSelf), ref funcargs);
-            
-            return retVal;
-        }
-
-        public static bool OpenProcessToken(IntPtr hProcess, Data.Win32.Advapi32.TokenAccess tokenAccess, ref IntPtr hToken)
-        {
-            object[] funcargs = { hProcess, tokenAccess, hToken };
-            
-            var retVal = (bool)Generic.DynamicAPIInvoke(@"advapi32.dll", @"OpenProcessToken",
-                typeof(Delegates.OpenProcessToken), ref funcargs);
-
-            hToken = (IntPtr) funcargs[2];
-            
-            return retVal;
-        }
-
-        public static bool DuplicateTokenEx(IntPtr hExistingToken, Data.Win32.Advapi32.TokenAccess dwDesiredAccess,
-            Data.Win32.WinNT.SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
-            Data.Win32.WinNT.TOKEN_TYPE TokenType, ref IntPtr phNewToken)
-        {
-            var lpTokenAttributes = new Data.Win32.WinNT.SECURITY_ATTRIBUTES();
-            lpTokenAttributes.nLength = Marshal.SizeOf(lpTokenAttributes);
-            
-            object[] funcargs =
+            public static bool CloseHandle(IntPtr handle)
             {
-                hExistingToken, dwDesiredAccess, lpTokenAttributes, ImpersonationLevel,
-                TokenType, phNewToken
-            };
-            
-            var retVal = (bool)Generic.DynamicAPIInvoke(@"advapi32.dll", @"DuplicateTokenEx",
-                typeof(Delegates.DuplicateTokenEx), ref funcargs);
+                object[] funcargs = { handle };
 
-            phNewToken = (IntPtr) funcargs[5];
-            
-            return retVal;
-        }
-        
-        public static bool CloseHandle(IntPtr handle)
-        {
-            object[] funcargs = { handle };
-            
-            var retVal = (bool)Generic.DynamicAPIInvoke(@"kernel32.dll", @"CloseHandle",
-                typeof(Delegates.CloseHandle), ref funcargs);
-            
-            return retVal;
-        }
+                var retVal = (bool)Generic.DynamicAPIInvoke(@"kernel32.dll", @"CloseHandle",
+                    typeof(Delegates.CloseHandle), ref funcargs);
 
-        public static IntPtr CreateFileW(
-            [MarshalAs(UnmanagedType.LPWStr)] string lpFileName, uint dwDesiredAccess, uint dwShareMode,
-            IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile)
-        {
-            object[] funcargs =
+                return retVal;
+            }
+
+            public static IntPtr CreateFileTransactedW([MarshalAs(UnmanagedType.LPWStr)] string lpFileName,
+                uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition,
+                uint dwFlagsAndAttributes, IntPtr hTemplateFile, IntPtr hTransaction, ref ushort pusMiniVersion,
+                IntPtr nullValue)
             {
-                lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes,
-                dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile
-            };
-            
-            var retVal = (IntPtr)Generic.DynamicAPIInvoke(@"KernelBase.dll", @"CreateFileW",
-                typeof(Delegates.CreateFileW), ref funcargs);
-            
-            return retVal;
-        }
+                object[] funcargs =
+                {
+                    lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition,
+                    dwFlagsAndAttributes, hTemplateFile, hTransaction, pusMiniVersion, nullValue
+                };
 
-        public static uint GetFileAttributesW(IntPtr lpFileName)
-        {
-            object[] funcargs = { lpFileName };
-            
-            var retVal = (uint)Generic.DynamicAPIInvoke(@"KernelBase.dll", @"GetFileAttributesW",
-                typeof(Delegates.GetFileAttributesW), ref funcargs);
-            
-            return retVal;
-        }
+                var retVal = (IntPtr)Generic.DynamicAPIInvoke(@"Kernel32.dll", @"CreateFileTransactedW",
+                    typeof(Delegates.CreateFileTransactedW), ref funcargs);
 
-        public static bool GetFileAttributesExW(IntPtr lpFileName, uint fInfoLevelId, ref IntPtr lpFileInformation)
-        {
-            object[] funcargs = { lpFileName, fInfoLevelId, lpFileInformation };
-            
-            var retVal = (bool)Generic.DynamicAPIInvoke(@"KernelBase.dll", @"GetFileAttributesExW",
-                typeof(Delegates.GetFileAttributesExW), ref funcargs);
+                return retVal;
+            }
 
-            lpFileInformation = (IntPtr)funcargs[2];
-            
-            return retVal;
-        }
-
-        public static bool GetFileInformationByHandle(IntPtr hFile, ref IntPtr lpFileInformation)
-        {
-            object[] funcargs = { hFile, lpFileInformation };
-            
-            var retVal = (bool)Generic.DynamicAPIInvoke(@"KernelBase.dll", @"GetFileInformationByHandle",
-                typeof(Delegates.GetFileInformationByHandle), ref funcargs);
-
-            lpFileInformation = (IntPtr)funcargs[1];
-            
-            return retVal;
-        }
-
-        public static IntPtr CreateTransaction(IntPtr lpTransactionAttributes, IntPtr uow, int createOptions,
-            int isolationLevel, int isolationFlags, int timeout,
-            [MarshalAs(UnmanagedType.LPWStr)] System.Text.StringBuilder description)
-        {
-            object[] funcargs =
+            public static bool WriteFile(IntPtr hFile, byte[] lpBuffer, uint nNumberOfBytesToWrite,
+                ref uint lpNumberOfBytesWritten, IntPtr lpOverlapped)
             {
-                lpTransactionAttributes, uow, createOptions, isolationLevel, isolationFlags,
-                timeout, description
-            };
-            
-            var retVal = (IntPtr)Generic.DynamicAPIInvoke(@"ktmw32.dll", @"CreateTransaction",
-                typeof(Delegates.CreateTransaction), ref funcargs, true);
+                object[] funcargs =
+                {
+                    hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped
+                };
 
-            return retVal;
+                var retVal = (bool)Generic.DynamicAPIInvoke(@"Kernel32.dll", @"WriteFile",
+                    typeof(Delegates.WriteFile), ref funcargs);
+
+                return retVal;
+            }
         }
 
-        public static IntPtr CreateFileTransactedW([MarshalAs(UnmanagedType.LPWStr)] string lpFileName,
-            uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition,
-            uint dwFlagsAndAttributes, IntPtr hTemplateFile, IntPtr hTransaction, ref ushort pusMiniVersion,
-            IntPtr nullValue)
+        public static class Advapi32
         {
-            object[] funcargs =
+            public static bool LogonUserA(string lpszUsername, string lpszDomain, string lpszPassword,
+                Data.Win32.Advapi32.LogonUserType dwLogonType, Data.Win32.Advapi32.LogonUserProvider dwLogonProvider,
+                ref IntPtr phToken)
             {
-                lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition,
-                dwFlagsAndAttributes, hTemplateFile, hTransaction, pusMiniVersion, nullValue
-            };
-            
-            var retVal = (IntPtr)Generic.DynamicAPIInvoke(@"Kernel32.dll", @"CreateFileTransactedW",
-                typeof(Delegates.CreateFileTransactedW), ref funcargs);
+                object[] funcargs =
+                {
+                    lpszUsername, lpszDomain, lpszPassword, dwLogonType, dwLogonProvider, phToken
+                };
 
-            return retVal;
+                var retVal = (bool)Generic.DynamicAPIInvoke(@"advapi32.dll", @"LogonUserA",
+                    typeof(Delegates.LogonUserA), ref funcargs);
+
+                phToken = (IntPtr)funcargs[5];
+                return retVal;
+            }
+
+            public static bool ImpersonateLoggedOnUser(IntPtr hToken)
+            {
+                object[] funcargs = { hToken };
+
+                var retVal = (bool)Generic.DynamicAPIInvoke(@"advapi32.dll", @"ImpersonateLoggedOnUser",
+                    typeof(Delegates.ImpersonateLoggedOnUser), ref funcargs);
+
+                return retVal;
+            }
+
+            public static bool RevertToSelf()
+            {
+                object[] funcargs = { };
+
+                var retVal = (bool)Generic.DynamicAPIInvoke(@"advapi32.dll", @"RevertToSelf",
+                    typeof(Delegates.RevertToSelf), ref funcargs);
+
+                return retVal;
+            }
+
+            public static bool OpenProcessToken(IntPtr hProcess, Data.Win32.Advapi32.TokenAccess tokenAccess,
+                ref IntPtr hToken)
+            {
+                object[] funcargs = { hProcess, tokenAccess, hToken };
+
+                var retVal = (bool)Generic.DynamicAPIInvoke(@"advapi32.dll", @"OpenProcessToken",
+                    typeof(Delegates.OpenProcessToken), ref funcargs);
+
+                hToken = (IntPtr)funcargs[2];
+
+                return retVal;
+            }
+
+            public static bool DuplicateTokenEx(IntPtr hExistingToken, Data.Win32.Advapi32.TokenAccess dwDesiredAccess,
+                Data.Win32.WinNT.SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, Data.Win32.WinNT.TOKEN_TYPE TokenType,
+                ref IntPtr phNewToken)
+            {
+                var lpTokenAttributes = new Data.Win32.WinNT.SECURITY_ATTRIBUTES();
+                lpTokenAttributes.nLength = Marshal.SizeOf(lpTokenAttributes);
+
+                object[] funcargs =
+                {
+                    hExistingToken, dwDesiredAccess, lpTokenAttributes, ImpersonationLevel,
+                    TokenType, phNewToken
+                };
+
+                var retVal = (bool)Generic.DynamicAPIInvoke(@"advapi32.dll", @"DuplicateTokenEx",
+                    typeof(Delegates.DuplicateTokenEx), ref funcargs);
+
+                phNewToken = (IntPtr)funcargs[5];
+
+                return retVal;
+            }
+
+            public static IntPtr OpenSCManager(string machineName, string databaseName,
+                Data.Win32.Advapi32.SCMAccess dwAccess)
+            {
+                object[] funcargs = { machineName, databaseName, dwAccess };
+                return (IntPtr)Generic.DynamicAPIInvoke(@"advapi32.dll", @"OpenSCManager",
+                    typeof(Delegates.OpenSCManager), ref funcargs);
+            }
+
+            public static bool QueryServiceConfig(IntPtr hService,
+                out Data.Win32.Advapi32.ServiceConfig serviceConfig)
+            {
+                object[] funcargs = { hService, IntPtr.Zero, (uint)0, (uint)0 };
+
+                Generic.DynamicAPIInvoke(@"advapi32.dll", @"QueryServiceConfigA", typeof(Delegates.QueryServiceConfig),
+                    ref funcargs);
+
+                var bytesRequired = (uint)funcargs[3];
+                var ptr = Marshal.AllocHGlobal((int)bytesRequired);
+
+                funcargs = new object[] { hService, ptr, bytesRequired, (uint)0 };
+
+                var success = (bool)Generic.DynamicAPIInvoke(@"advapi32.dll", @"QueryServiceConfigA",
+                    typeof(Delegates.QueryServiceConfig), ref funcargs);
+
+                if (!success)
+                {
+                    Marshal.FreeHGlobal(ptr);
+                    serviceConfig = null;
+                    return false;
+                }
+
+                serviceConfig =
+                    (Data.Win32.Advapi32.ServiceConfig)Marshal.PtrToStructure(ptr,
+                        typeof(Data.Win32.Advapi32.ServiceConfig));
+
+                return true;
+            }
+
+            public static bool CloseServiceHandle(IntPtr hSCObject)
+            {
+                object[] funcargs = { hSCObject };
+
+                return (bool)Generic.DynamicAPIInvoke(@"advapi32.dll", @"CloseServiceHandle",
+                    typeof(Delegates.CloseServiceHandle), ref funcargs);
+            }
         }
 
-        public static bool WriteFile(IntPtr hFile, byte[] lpBuffer, uint nNumberOfBytesToWrite,
-            ref uint lpNumberOfBytesWritten, IntPtr lpOverlapped)
+        public static class KernelBase
         {
-            object[] funcargs =
+            public static IntPtr CreateFileW(
+                [MarshalAs(UnmanagedType.LPWStr)] string lpFileName, uint dwDesiredAccess, uint dwShareMode,
+                IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes,
+                IntPtr hTemplateFile)
             {
-                hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped
-            };
-            
-            var retVal = (bool)Generic.DynamicAPIInvoke(@"Kernel32.dll", @"WriteFile",
-                typeof(Delegates.WriteFile), ref funcargs);
+                object[] funcargs =
+                {
+                    lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes,
+                    dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile
+                };
 
-            return retVal;
+                var retVal = (IntPtr)Generic.DynamicAPIInvoke(@"KernelBase.dll", @"CreateFileW",
+                    typeof(Delegates.CreateFileW), ref funcargs);
+
+                return retVal;
+            }
+
+            public static uint GetFileAttributesW(IntPtr lpFileName)
+            {
+                object[] funcargs = { lpFileName };
+
+                var retVal = (uint)Generic.DynamicAPIInvoke(@"KernelBase.dll", @"GetFileAttributesW",
+                    typeof(Delegates.GetFileAttributesW), ref funcargs);
+
+                return retVal;
+            }
+
+            public static bool GetFileAttributesExW(IntPtr lpFileName, uint fInfoLevelId, ref IntPtr lpFileInformation)
+            {
+                object[] funcargs = { lpFileName, fInfoLevelId, lpFileInformation };
+
+                var retVal = (bool)Generic.DynamicAPIInvoke(@"KernelBase.dll", @"GetFileAttributesExW",
+                    typeof(Delegates.GetFileAttributesExW), ref funcargs);
+
+                lpFileInformation = (IntPtr)funcargs[2];
+
+                return retVal;
+            }
+
+            public static bool GetFileInformationByHandle(IntPtr hFile, ref IntPtr lpFileInformation)
+            {
+                object[] funcargs = { hFile, lpFileInformation };
+
+                var retVal = (bool)Generic.DynamicAPIInvoke(@"KernelBase.dll", @"GetFileInformationByHandle",
+                    typeof(Delegates.GetFileInformationByHandle), ref funcargs);
+
+                lpFileInformation = (IntPtr)funcargs[1];
+
+                return retVal;
+            }
+        }
+
+        public static class Ktmw32
+        {
+            public static IntPtr CreateTransaction(IntPtr lpTransactionAttributes, IntPtr uow, int createOptions,
+                int isolationLevel, int isolationFlags, int timeout,
+                [MarshalAs(UnmanagedType.LPWStr)] System.Text.StringBuilder description)
+            {
+                object[] funcargs =
+                {
+                    lpTransactionAttributes, uow, createOptions, isolationLevel, isolationFlags,
+                    timeout, description
+                };
+
+                var retVal = (IntPtr)Generic.DynamicAPIInvoke(@"ktmw32.dll", @"CreateTransaction",
+                    typeof(Delegates.CreateTransaction), ref funcargs, true);
+
+                return retVal;
+            }
         }
 
         public static class Delegates
         {
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate bool CloseHandle(IntPtr handle);
-            
+
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate IntPtr CreateRemoteThread(IntPtr hProcess,
                 IntPtr lpThreadAttributes,
@@ -224,7 +285,7 @@ namespace Drone.DInvoke.DynamicInvoke
                 IntPtr lpParameter,
                 uint dwCreationFlags,
                 out IntPtr lpThreadId);
-            
+
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate bool LogonUserA(
                 string lpszUsername,
@@ -233,10 +294,10 @@ namespace Drone.DInvoke.DynamicInvoke
                 Data.Win32.Advapi32.LogonUserType dwLogonType,
                 Data.Win32.Advapi32.LogonUserProvider dwLogonProvider,
                 ref IntPtr phToken);
-            
+
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate bool ImpersonateLoggedOnUser(IntPtr hToken);
-            
+
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate bool OpenProcessToken(
                 IntPtr ProcessHandle,
@@ -254,7 +315,7 @@ namespace Drone.DInvoke.DynamicInvoke
 
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate bool RevertToSelf();
-            
+
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate IntPtr CreateFileW(
                 [MarshalAs(UnmanagedType.LPWStr)] string lpFileName,
@@ -309,11 +370,27 @@ namespace Drone.DInvoke.DynamicInvoke
                 uint nNumberOfBytesToWrite,
                 ref uint lpNumberOfBytesWritten,
                 IntPtr lpOverlapped);
-            
+
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate bool IsWow64Process(
-                IntPtr hProcess, ref bool lpSystemInfo
-            );
+                IntPtr hProcess,
+                ref bool lpSystemInfo);
+
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            public delegate IntPtr OpenSCManager(
+                string machineName,
+                string databaseName,
+                Data.Win32.Advapi32.SCMAccess dwAccess);
+
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            public delegate bool QueryServiceConfig(
+                IntPtr hService,
+                IntPtr lpServiceConfig,
+                uint cbBufSize,
+                out uint pcbBytesNeeded);
+
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            public delegate bool CloseServiceHandle(IntPtr hSCObject);
         }
     }
 }

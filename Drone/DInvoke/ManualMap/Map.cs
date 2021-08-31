@@ -72,7 +72,7 @@ namespace Drone.DInvoke.ManualMap
                 ModuleBase = pBaseAddress
             };
 
-            DynamicInvoke.Win32.CloseHandle(hFile);
+            DynamicInvoke.Win32.Kernel32.CloseHandle(hFile);
 
             return SecMapObject;
         }

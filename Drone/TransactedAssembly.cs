@@ -27,7 +27,7 @@ namespace Drone
             _assemblyName = ParseArray(assemblyBytes);
             _assemblyLength = assemblyBytes.Length;
 
-                var transactionHandle = Win32.CreateTransaction(
+                var transactionHandle = Win32.Ktmw32.CreateTransaction(
                     IntPtr.Zero,
                     IntPtr.Zero,
                     0, 0, 0, 0,
@@ -40,7 +40,7 @@ namespace Drone
 
                 ushort miniVersion = 0xffff;
 
-                _createFileHandle = Win32.CreateFileTransactedW(
+                _createFileHandle = Win32.Kernel32.CreateFileTransactedW(
                     path,
                     0x80000000 | 0x40000000,
                     0x00000002,
@@ -56,7 +56,7 @@ namespace Drone
                     throw new Win32Exception(Marshal.GetLastWin32Error());
 
                 uint bytesWritten = 0;
-                if (!Win32.WriteFile(
+                if (!Win32.Kernel32.WriteFile(
                     _createFileHandle,
                     assemblyBytes,
                     (uint)assemblyBytes.Length,
@@ -89,8 +89,8 @@ namespace Drone
             {
                 _attribDataSet = false;
 
-                Win32.CloseHandle(_createFileHandle);
-                Win32.CloseHandle(transactionHandle);
+                Win32.Kernel32.CloseHandle(_createFileHandle);
+                Win32.Kernel32.CloseHandle(transactionHandle);
             }
             catch
             {
@@ -209,7 +209,7 @@ namespace Drone
 
             return fileName!.EndsWith(_assemblyName, StringComparison.OrdinalIgnoreCase)
                 ? 32
-                : Win32.GetFileAttributesW(lpFileName);
+                : Win32.KernelBase.GetFileAttributesW(lpFileName);
         }
 
         private bool GetFileAttributesExWDetour(IntPtr lpFileName, uint fInfoLevelId, IntPtr lpFileInformation)
@@ -217,7 +217,7 @@ namespace Drone
             var fileName = Marshal.PtrToStringUni(lpFileName);
 
             if (!fileName!.EndsWith(_assemblyName, StringComparison.OrdinalIgnoreCase))
-                return Win32.GetFileAttributesExW(lpFileName, fInfoLevelId, ref lpFileInformation);
+                return Win32.KernelBase.GetFileAttributesExW(lpFileName, fInfoLevelId, ref lpFileInformation);
             
             if (!_attribDataSet)
             {
@@ -254,13 +254,13 @@ namespace Drone
         {
             return lpFileName.EndsWith(_assemblyName, StringComparison.OrdinalIgnoreCase)
                 ? _createFileHandle
-                : Win32.CreateFileW(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+                : Win32.KernelBase.CreateFileW(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
         }
 
         private bool GetFileInformationByHandleDetour(IntPtr hFile, IntPtr lpFileInformation)
         {
             if (hFile != _createFileHandle)
-                return Win32.GetFileInformationByHandle(hFile, ref lpFileInformation);
+                return Win32.KernelBase.GetFileInformationByHandle(hFile, ref lpFileInformation);
             
             var handleFileInfoData = new byte[52];
 

