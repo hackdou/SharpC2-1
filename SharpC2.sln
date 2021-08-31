@@ -27,6 +27,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{3FBBDB50
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "C2Lint", "Tools\C2Lint\C2Lint.csproj", "{2462BD40-7B66-4067-9106-0DDE5D10B6D8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpC2.API.IntegrationTests", "SharpC2.API.IntegrationTests\SharpC2.API.IntegrationTests.csproj", "{CF867055-E75D-4817-986C-50F04E06F1BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{2462BD40-7B66-4067-9106-0DDE5D10B6D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2462BD40-7B66-4067-9106-0DDE5D10B6D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2462BD40-7B66-4067-9106-0DDE5D10B6D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF867055-E75D-4817-986C-50F04E06F1BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF867055-E75D-4817-986C-50F04E06F1BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF867055-E75D-4817-986C-50F04E06F1BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF867055-E75D-4817-986C-50F04E06F1BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
