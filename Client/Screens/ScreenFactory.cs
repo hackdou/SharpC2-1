@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 
 using SharpC2.Interfaces;
 using SharpC2.Services;
@@ -26,6 +25,7 @@ namespace SharpC2.Screens
                 Screen.ScreenType.HandlerConfig => new ConfigHandlerScreen(_apiService),
                 Screen.ScreenType.DroneInteract => new DroneInteractScreen(_apiService, _signalR),
                 Screen.ScreenType.Payloads => new PayloadsScreen(_apiService),
+                Screen.ScreenType.HostedFiles => new HostedFilesScreen(_apiService, _signalR),
                 
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
             };

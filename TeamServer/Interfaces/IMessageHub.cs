@@ -9,6 +9,9 @@ namespace TeamServer.Interfaces
         Task HandlerStarted(string handler);
         Task HandlerStopped(string handler);
 
+        Task HostedFileAdded(string filename);
+        Task HostedFileDeleted(string filename);
+
         Task DroneCheckedIn(string droneGuid);
         Task DroneModuleLoaded(string droneGuid, DroneModule module);
         Task DroneDataSent(string droneGuid, int messageSize);

@@ -4,12 +4,13 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.AspNetCore.SignalR;
 using SharpC2.API;
 using SharpC2.API.V1.Requests;
 using SharpC2.API.V1.Responses;
 
 using TeamServer.Handlers;
+using TeamServer.Hubs;
 using TeamServer.Interfaces;
 
 namespace TeamServer.Controllers
@@ -20,10 +21,12 @@ namespace TeamServer.Controllers
     public class HostedFilesController : ControllerBase
     {
         private readonly IHandlerService _handlers;
+        private readonly IHubContext<MessageHub, IMessageHub> _hub;
 
-        public HostedFilesController(IHandlerService handlers)
+        public HostedFilesController(IHandlerService handlers, IHubContext<MessageHub, IMessageHub> hub)
         {
             _handlers = handlers;
+            _hub = hub;
         }
 
         [HttpGet]
@@ -57,6 +60,7 @@ namespace TeamServer.Controllers
                 p.Name.Equals("BindPort", StringComparison.OrdinalIgnoreCase)).Value;
 
             var path = $"http://{connectAddress}:{bindPort}/{request.Filename}";
+            await _hub.Clients.All.HostedFileAdded(request.Filename);
             return Created(path, request.Content);
         }
 
@@ -64,8 +68,10 @@ namespace TeamServer.Controllers
         public IActionResult DeleteFile(string filename)
         {
             var handler = (DefaultHttpHandler)_handlers.GetHandler("default-http");
-            if (handler.RemoveHostedFile(filename)) return NoContent();
-            return NotFound();
+            if (!handler.RemoveHostedFile(filename)) return NotFound();
+
+            _hub.Clients.All.HostedFileDeleted(filename);
+            return NoContent();
         }
     }
 }

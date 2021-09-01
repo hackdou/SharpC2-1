@@ -30,6 +30,7 @@ namespace SharpC2.Screens
         {
             Commands.Add(new ScreenCommand(name: "list", description: "List Drones", callback: ListDrones));
             Commands.Add(new ScreenCommand(name: "handlers", description: "Go to Handlers", callback: OpenHandlerScreen));
+            Commands.Add(new ScreenCommand(name: "hosted-files", description: "Go to Hosted Files", callback: OpenHostedFilesScreen));
             Commands.Add(new ScreenCommand(name: "payloads", description: "Go to Payloads", callback: OpenPayloadsScreen));
             Commands.Add(new ScreenCommand(name: "interact", description: "Interact with the given Drone", usage: "interact <drone>", callback: DroneInteract));
             
@@ -60,6 +61,19 @@ namespace SharpC2.Screens
             using var screen = _screens.GetScreen(ScreenType.Handlers);
             screen.SetName("handlers");
             await screen.LoadInitialData();
+            screen.AddCommands();
+            await screen.Show();
+            
+            // reset autocomplete
+            ReadLine.AutoCompletionHandler = new DronesAutoComplete(this);
+
+            return true;
+        }
+        
+        private async Task<bool> OpenHostedFilesScreen(string[] args)
+        {
+            using var screen = _screens.GetScreen(ScreenType.HostedFiles);
+            screen.SetName("hosted-files");
             screen.AddCommands();
             await screen.Show();
             

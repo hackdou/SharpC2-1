@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -160,6 +161,37 @@ namespace SharpC2.Services
 
             var drone = JsonSerializer.Deserialize<DroneTaskResponse>(response.Content, _options);
             return _mapper.Map<DroneTaskResponse, DroneTask>(drone);
+        }
+
+        public async Task<IEnumerable<HostedFile>> GetHostedFiles()
+        {
+            var request = new RestRequest(Routes.V1.HostedFiles, Method.GET);
+            var response = await _client.ExecuteAsync(request);
+
+            if (!response.IsSuccessful) return null;
+
+            var files = JsonSerializer.Deserialize<IEnumerable<HostedFileResponse>>(response.Content, _options);
+            return _mapper.Map<IEnumerable<HostedFileResponse>, IEnumerable<HostedFile>>(files);
+        }
+
+        public async Task AddHostedFile(byte[] content, string filename)
+        {
+            var fileRequest = new AddHostedFileRequest
+            {
+                Content = content,
+                Filename = filename
+            };
+            
+            var request = new RestRequest(Routes.V1.HostedFiles, Method.POST);
+            request.AddParameter("application/json", JsonSerializer.Serialize(fileRequest), ParameterType.RequestBody);
+            
+            await _client.ExecuteAsync(request);
+        }
+
+        public async Task DeleteHostedFile(string filename)
+        {
+            var request = new RestRequest($"{Routes.V1.HostedFiles}/{filename}", Method.DELETE);
+            await _client.ExecuteAsync(request);
         }
     }
 }
