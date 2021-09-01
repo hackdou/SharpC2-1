@@ -27,8 +27,7 @@ namespace TeamServer.Handlers
         public async Task<IActionResult> RouteDrone()
         {
             // troll if X-Malware header isn't present
-            if (!HttpContext.Request.Headers.TryGetValue("X-Malware", out _))
-                return BadRequest();
+            if (!HttpContext.Request.Headers.TryGetValue("X-Malware", out _)) return NotFound();
 
             // first, extract drone metadata
             var metadata = ExtractMetadata(HttpContext.Request.Headers);
