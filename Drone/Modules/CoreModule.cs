@@ -12,16 +12,16 @@ namespace Drone.Modules
 
         public override List<Command> Commands => new List<Command>
         {
-            new ("sleep", "Set sleep interval and jitter", SetSleep, new List<Command.Argument>
+            new("sleep", "Set sleep interval and jitter", SetSleep, new List<Command.Argument>
             {
-                new ("interval", false),
-                new ("jitter")
+                new("interval", false),
+                new("jitter")
             }),
-            new ("load-module", "Load an external Drone module", LoadModule, new List<Command.Argument>
+            new("load-module", "Load an external Drone module", LoadModule, new List<Command.Argument>
             {
-                new ("/path/to/module.dll", false, true)
+                new("/path/to/module.dll", false, true)
             }),
-            new ("exit", "Exit this Drone", ExitDrone)
+            new("exit", "Exit this Drone", ExitDrone)
         };
 
         private void SetSleep(DroneTask task, CancellationToken token)
