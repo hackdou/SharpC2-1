@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2021-09-01
+### Added
+- New HostedFiles API endpoint to host arbitrary files on the default HTTP Handler.
+- New Client screen to call said API.
+
 ## [0.4.0] - 2021-08-30
 ### Added
 - Team Server now uses a C2 Profile to control Drone behaviours.
