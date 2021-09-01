@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "C2Lint", "Tools\C2Lint\C2Li
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpC2.API.IntegrationTests", "SharpC2.API.IntegrationTests\SharpC2.API.IntegrationTests.csproj", "{CF867055-E75D-4817-986C-50F04E06F1BE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PowerShellModule", "DroneModules\PowerShellModule\PowerShellModule.csproj", "{B6976E5C-2A57-40E7-B294-1BAE9563F2E7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{CF867055-E75D-4817-986C-50F04E06F1BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF867055-E75D-4817-986C-50F04E06F1BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF867055-E75D-4817-986C-50F04E06F1BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6976E5C-2A57-40E7-B294-1BAE9563F2E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6976E5C-2A57-40E7-B294-1BAE9563F2E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6976E5C-2A57-40E7-B294-1BAE9563F2E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6976E5C-2A57-40E7-B294-1BAE9563F2E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -85,6 +91,7 @@ Global
 		{CC6A420E-5F18-493E-A053-3EFD7E06447F} = {FBBB313E-E530-4A71-8807-F6ADE585FC47}
 		{A5C4FD62-DA9D-4DE0-AF57-342D100A8C10} = {BE8CF52D-7448-488B-AED2-215E8E703D3A}
 		{2462BD40-7B66-4067-9106-0DDE5D10B6D8} = {3FBBDB50-C3AA-484F-BE09-36BF80A7C92B}
+		{B6976E5C-2A57-40E7-B294-1BAE9563F2E7} = {FBBB313E-E530-4A71-8807-F6ADE585FC47}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D88B0B1E-6BC3-45AD-9C25-98CF423F8206}
