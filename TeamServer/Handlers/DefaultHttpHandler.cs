@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,6 +9,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 
 using TeamServer.Models;
@@ -14,7 +18,15 @@ namespace TeamServer.Handlers
 {
     public class DefaultHttpHandler : Handler
     {
-        public override string Name { get; } = "default-http";
+        public sealed override string Name { get; } = "default-http";
+        
+        private readonly string _workingDirectory;
+
+        public DefaultHttpHandler()
+        {
+            _workingDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Handlers", Name);
+            if (!Directory.Exists(_workingDirectory)) Directory.CreateDirectory(_workingDirectory);
+        }
 
         public override List<HandlerParameter> Parameters { get; } = new()
         {
@@ -43,12 +55,12 @@ namespace TeamServer.Handlers
             return host.RunAsync(TokenSource.Token);
         }
 
-        private static void ConfigureKestrel(KestrelServerOptions k)
+        private void ConfigureKestrel(KestrelServerOptions k)
         {
             k.AddServerHeader = false;
         }
 
-        private static void ConfigureApp(IApplicationBuilder app)
+        private void ConfigureApp(IApplicationBuilder app)
         {
             app.UseRouting();
             app.UseEndpoints(e =>
@@ -59,6 +71,13 @@ namespace TeamServer.Handlers
                     action = "RouteDrone"
                 });
             });
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(_workingDirectory),
+                ServeUnknownFileTypes = true
+            });
+            
+            Debug.WriteLine(_workingDirectory);
         }
 
         private void ConfigureServices(IServiceCollection services)
@@ -66,6 +85,27 @@ namespace TeamServer.Handlers
             services.AddControllers();
             services.AddSingleton(MessageHub);
             services.AddSingleton(TaskService);
+        }
+
+        public async Task AddHostedFile(byte[] content, string filename)
+        {
+            var path = Path.Combine(_workingDirectory, filename);
+            await File.WriteAllBytesAsync(path, content);
+        }
+
+        public IEnumerable<FileInfo> GetHostedFiles()
+        {
+            var files = Directory.EnumerateFiles(_workingDirectory);
+            return files.Select(file => new FileInfo(file)).ToArray();
+        }
+
+        public bool RemoveHostedFile(string filename)
+        {
+            var path = Path.Combine(_workingDirectory, filename);
+            if (!File.Exists(path)) return false;
+            
+            File.Delete(path);
+            return true;
         }
 
         public override void Stop()

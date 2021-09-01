@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR.Client;
+
 using SharpC2.Models;
 
 namespace SharpC2.Services
@@ -21,6 +22,10 @@ namespace SharpC2.Services
         public event Action<string> HandlerLoaded;
         public event Action<string> HandlerStarted;
         public event Action<string> HandlerStopped;
+        
+        // Hosted Files
+        public event Action<string> HostedFileAdded;
+        public event Action<string> HostedFileDeleted;
         
         //Drones
         public event Action<string> DroneCheckedIn;
@@ -52,6 +57,9 @@ namespace SharpC2.Services
             connection.On<string>("HandlerLoaded", msg => HandlerLoaded?.Invoke(msg));
             connection.On<string>("HandlerStarted", msg => HandlerStarted?.Invoke(msg));
             connection.On<string>("HandlerStopped", msg => HandlerStopped?.Invoke(msg));
+            
+            connection.On<string>("HostedFileAdded", filename => HostedFileAdded?.Invoke(filename));
+            connection.On<string>("HostedFileDeleted", filename => HostedFileDeleted?.Invoke(filename));
 
             connection.On<string>("DroneCheckedIn", (drone) => DroneCheckedIn?.Invoke(drone));
             connection.On<string, DroneModule>("DroneModuleLoaded", (drone, module) => DroneModuleLoaded?.Invoke(drone, module));

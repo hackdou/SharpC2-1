@@ -16,6 +16,11 @@ namespace SharpC2.Interfaces
         Task SetHandlerParameter(string name, string key, string value);
         Task StartHandler(string name);
         Task StopHandler(string name);
+        
+        // Hosted Files
+        Task<IEnumerable<HostedFile>> GetHostedFiles();
+        Task AddHostedFile(byte[] content, string filename);
+        Task DeleteHostedFile(string filename);
 
         // Payloads
         Task<byte[]> GeneratePayload(Payload payload); 
