@@ -4,7 +4,7 @@ using System.Linq;
 using System.ServiceProcess;
 using System.Threading;
 
-using DroneService.DInvoke.Injection;
+using DroneService.DynamicInvocation.Injection;
 
 namespace DroneService
 {

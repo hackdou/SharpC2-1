@@ -7,9 +7,9 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Threading;
 
-using Drone.DInvoke.DynamicInvoke;
-using Drone.DInvoke.Injection;
-using Drone.DInvoke.ManualMap;
+using Drone.DynamicInvocation.DynamicInvoke;
+using Drone.DynamicInvocation.Injection;
+using Drone.DynamicInvocation.ManualMap;
 using Drone.Models;
 using Drone.Modules;
 using Drone.SharpSploit.Enumeration;
@@ -213,6 +213,8 @@ namespace Drone
                 funcParams);
 
             Drone.SendResult(task.TaskGuid, result);
+            
+            Map.FreeModule(map);
         }
         
         private void SetBypass(DroneTask task, CancellationToken token)

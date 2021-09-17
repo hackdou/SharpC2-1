@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Drone.SharpSploit.Evasion;
-using Drone.DInvoke.DynamicInvoke;
+using Drone.DynamicInvocation.DynamicInvoke;
 using Drone.Handlers;
 using Drone.Models;
 using Drone.Modules;
