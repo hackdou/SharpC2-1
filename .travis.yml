@@ -5,5 +5,6 @@ dotnet: 5.0.2
 script:
  - dotnet restore
  - dotnet build
- - dotnet test SharpC2.API.IntegrationTests --filter HandlerTests
- - dotnet test SharpC2.API.IntegrationTests --filter PayloadTests
+ - dotnet test ./Tests/API.IntegrationTests --filter HandlerTests
+ - dotnet test ./Tests/API.IntegrationTests --filter PayloadTests
+ - dotnet test ./Tests/TeamServer.UnitTests
