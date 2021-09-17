@@ -12,7 +12,7 @@ using TeamServer.Interfaces;
 using TeamServer.Models;
 using TeamServer.Services;
 
-namespace SharpC2.API.IntegrationTests
+namespace API.IntegrationTests
 {
     public class IntegrationTest
     {

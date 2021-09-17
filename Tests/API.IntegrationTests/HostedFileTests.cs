@@ -3,11 +3,12 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
+using SharpC2.API;
 using SharpC2.API.V1.Requests;
 
 using Xunit;
 
-namespace SharpC2.API.IntegrationTests
+namespace API.IntegrationTests
 {
     public class HostedFileTests : IntegrationTest
     {
