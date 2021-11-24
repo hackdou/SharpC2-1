@@ -13,6 +13,7 @@ namespace Drone
     public class SshModule : DroneModule
     {
         public override string Name => "ssh";
+
         public override List<Command> Commands => new List<Command>
         {
             new("ssh-cmd", "Execute a command via SSH", ExecuteSsh, new List<Command.Argument>
@@ -23,7 +24,7 @@ namespace Drone
                 new("command", false)
             })
         };
-        
+
         private void ExecuteSsh(DroneTask task, CancellationToken token)
         {
             var target = task.Arguments[0];
@@ -45,5 +46,5 @@ namespace Drone
             
             Drone.SendResult(task.TaskGuid, sb.ToString());
         }
-    }    
+    }
 }

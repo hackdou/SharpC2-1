@@ -1,13 +1,16 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+
 using AutoMapper;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using SharpC2.API;
+
+using SharpC2.API.V1;
 using SharpC2.API.V1.Requests;
 using SharpC2.API.V1.Responses;
+
 using TeamServer.Hubs;
 using TeamServer.Interfaces;
 using TeamServer.Models;
@@ -62,7 +65,7 @@ namespace TeamServer.Controllers
             var path = $"{root}/{task.TaskGuid}";
 
             var response = _mapper.Map<DroneTask, DroneTaskResponse>(task);
-            await _hub.Clients.All.DroneTasked(droneGuid, task.TaskGuid);
+            await _hub.Clients.All.DroneTasked(drone.Metadata, response);
             return Created(path, response);
         }
 
@@ -92,11 +95,12 @@ namespace TeamServer.Controllers
         }
 
         [HttpDelete("{droneGuid}")]
-        public IActionResult RemoveDrone(string droneGuid)
+        public async Task<IActionResult> RemoveDrone(string droneGuid)
         {
             var result = _drones.RemoveDrone(droneGuid);
             if (!result) return NotFound();
 
+            await _hub.Clients.All.DroneDeleted(droneGuid);
             return NoContent();
         }
 
@@ -114,7 +118,6 @@ namespace TeamServer.Controllers
             
             drone.DeletePendingTask(task);
             return NoContent();
-
         }
     }
 }

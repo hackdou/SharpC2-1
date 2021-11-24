@@ -14,12 +14,15 @@ namespace TeamServer.Services
     public class HandlerService : IHandlerService
     {
         private readonly List<Handler> _handlers = new();
+        
         private readonly ITaskService _taskService;
+        private readonly ICredentialService _credentials;
         private readonly IHubContext<MessageHub, IMessageHub> _hubContext;
 
-        public HandlerService(ITaskService taskService, IHubContext<MessageHub, IMessageHub> hubContext)
+        public HandlerService(ITaskService taskService, ICredentialService credentialService, IHubContext<MessageHub, IMessageHub> hubContext)
         {
             _taskService = taskService;
+            _credentials = credentialService;
             _hubContext = hubContext;
         }
 
@@ -57,7 +60,7 @@ namespace TeamServer.Services
 
         private void RegisterHandler(Handler handler)
         {
-            handler.Init(_taskService, _hubContext);
+            handler.Init(_taskService, _credentials, _hubContext);
             _handlers.Add(handler);
         }
 

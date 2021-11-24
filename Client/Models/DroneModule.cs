@@ -1,36 +1,18 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
 
 namespace SharpC2.Models
 {
     public class DroneModule
     {
         public string Name { get; set; }
-        public Command[] Commands { get; set; }
+        public IEnumerable<Command> Commands { get; set; }
 
         public class Command
         {
             public string Name { get; set; }
             public string Description { get; set; }
-            public Argument[] Arguments { get; set; }
-
-            public string Usage
-            {
-                get
-                {
-                    var sb = new StringBuilder($"{Name} ");
-                    
-                    foreach (var argument in Arguments)
-                    {
-                        sb.Append(argument.Optional ? "<" : "[");
-                        sb.Append(argument.Label);
-                        sb.Append(argument.Optional ? ">" : "]");
-                        sb.Append(' ');
-                    }
-
-                    return sb.ToString().TrimEnd();
-                }
-            }
-
+            public IEnumerable<Argument> Arguments { get; set; }
+            
             public class Argument
             {
                 public string Label { get; set; }

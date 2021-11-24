@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
-using SharpC2.API;
+using SharpC2.API.V1;
 using SharpC2.API.V1.Requests;
 using SharpC2.API.V1.Responses;
 
@@ -63,29 +63,35 @@ namespace TeamServer.Controllers
             var root = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Path.ToUriComponent()}";
             var path = $"{root}/{handler.Name}";
 
-            await _messageHub.Clients.All.HandlerLoaded(handler.Name);
-
-            return Created(path, handler);
+            var response = _mapper.Map<Handler, HandlerResponse>(handler);
+            await _messageHub.Clients.All.HandlerLoaded(response);
+            return Created(path, response);
         }
 
         [HttpPut("{name}")]
-        public IActionResult SetHandlerParameters(string name, [FromBody] Dictionary<string, string> parameters)
+        public async Task<IActionResult> SetHandlerParameters(string name, [FromBody] Dictionary<string, string> parameters)
         {
             var handler = _handlers.GetHandler(name);
             if (handler is null) return NotFound();
-            
             handler.SetParameters(parameters);
-            return NoContent();
+
+            await _messageHub.Clients.All.HandlerParametersSet(parameters);
+            
+            var response = _mapper.Map<Handler, HandlerResponse>(handler);
+            return Ok(response);
         }
 
         [HttpPatch("{name}")]
-        public IActionResult SetHandlerParameter(string name, [FromQuery] string key, [FromQuery] string value)
+        public async Task<IActionResult> SetHandlerParameter(string name, [FromQuery] string key, [FromQuery] string value)
         {
             var handler = _handlers.GetHandler(name);
             if (handler is null) return NotFound();
-
             handler.SetParameter(key, value);
-            return NoContent();
+            
+            await _messageHub.Clients.All.HandlerParameterSet(key, value);
+            
+            var response = _mapper.Map<Handler, HandlerResponse>(handler);
+            return Ok(response);
         }
 
         [HttpPatch("{name}/start")]
@@ -99,9 +105,10 @@ namespace TeamServer.Controllers
             var task = handler.Start();
 
             if (task.IsFaulted) return BadRequest(task.Exception?.Message);
-            await _messageHub.Clients.All.HandlerStarted(name);
             
-            return NoContent();
+            var response = _mapper.Map<Handler, HandlerResponse>(handler);
+            await _messageHub.Clients.All.HandlerStarted(response);
+            return Ok(response);
         }
 
         [HttpPatch("{name}/stop")]
@@ -116,9 +123,10 @@ namespace TeamServer.Controllers
                 return BadRequest("Handler is already stopped");
             
             handler.Stop();
-            await _messageHub.Clients.All.HandlerStopped(name);
             
-            return NoContent();
+            var response = _mapper.Map<Handler, HandlerResponse>(handler);
+            await _messageHub.Clients.All.HandlerStopped(response);
+            return Ok(response);
         }
 
         [HttpDelete("{name}")]

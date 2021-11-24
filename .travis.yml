@@ -1,10 +1,10 @@
 language: csharp
 solution: SharpC2.sln
 mono: none
-dotnet: 5.0.2
+dotnet: 6.0.100
 script:
  - dotnet restore
  - dotnet build
- - dotnet test ./Tests/API.IntegrationTests --filter HandlerTests
- - dotnet test ./Tests/API.IntegrationTests --filter PayloadTests
- - dotnet test ./Tests/TeamServer.UnitTests
+ - dotnet test Tests/SharpC2.API.IntegrationTests --filter HandlerTests
+ - dotnet test Tests/SharpC2.API.IntegrationTests --filter PayloadTests
+ - dotnet test Tests/TeamServer.UnitTests

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net45</TargetFramework>
+        <TargetFramework>net48</TargetFramework>
         <LangVersion>default</LangVersion>
         <Company />
         <Product />
@@ -10,6 +10,7 @@
         <PackageVersion />
         <Authors />
         <AssemblyName>drone</AssemblyName>
+        <OutputType>Exe</OutputType>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -27,6 +28,10 @@
     <ItemGroup>
       <Reference Include="System.ServiceProcess, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="TransactedAssembly.cs" />
     </ItemGroup>
 
 </Project>

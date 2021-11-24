@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.SignalR;
 using TeamServer.Hubs;
 using TeamServer.Interfaces;
 using TeamServer.Models;
+using TeamServer.Services;
 
 namespace TeamServer.Handlers
 {
@@ -18,12 +19,14 @@ namespace TeamServer.Handlers
         public abstract List<HandlerParameter> Parameters { get; }
         
         protected ITaskService TaskService;
+        protected ICredentialService CredentialService;
         protected IHubContext<MessageHub, IMessageHub> MessageHub;
         protected CancellationTokenSource TokenSource;
 
-        public void Init(ITaskService taskService, IHubContext<MessageHub, IMessageHub> messageHub)
+        public void Init(ITaskService taskService, ICredentialService credentialService, IHubContext<MessageHub, IMessageHub> messageHub)
         {
             TaskService = taskService;
+            CredentialService = credentialService;
             MessageHub = messageHub;
         }
 
@@ -57,6 +60,7 @@ namespace TeamServer.Handlers
                 if (string.IsNullOrEmpty(parameter.Value))
                     throw new Exception($"Parameter \"{parameter.Name}\" cannot be null");
 
+            TokenSource = new CancellationTokenSource();
             return Task.CompletedTask;
         }
         

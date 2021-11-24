@@ -1,197 +1,169 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.Json;
+﻿using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 using AutoMapper;
 
-using RestSharp;
-
-using SharpC2.API;
+using SharpC2.API.V1;
 using SharpC2.API.V1.Requests;
 using SharpC2.API.V1.Responses;
-using SharpC2.Interfaces;
 using SharpC2.Models;
 
 namespace SharpC2.Services
 {
-    public class ApiService : IApiService
+    public class ApiService
     {
+        public string Server { get; set; }
+        public string Port { get; set; }
+        public string Nick { get; set; }
+        public string Password { get; set; }
+        public bool IgnoreSsl { get; set; }
+        
+        private readonly SslService _sslService;
         private readonly IMapper _mapper;
-        private readonly CertificateService _certs;
-        private RestClient _client;
         
-        private readonly JsonSerializerOptions _options = new() {PropertyNameCaseInsensitive = true};
-
-        public ApiService(IMapper mapper, CertificateService certs)
+        private SharpC2Client _client;
+        
+        public ApiService(SslService sslService, IMapper mapper)
         {
+            _sslService = sslService;
             _mapper = mapper;
-            _certs = certs;
         }
-        
-        public void InitClient(string hostname, string port, string nick, string pass)
+
+        public void StartClient()
         {
-            _client = new RestClient($"https://{hostname}:{port}")
+            _sslService.IgnoreSsl = IgnoreSsl;
+
+            var handler = new HttpClientHandler
             {
-                RemoteCertificateValidationCallback = _certs.RemoteCertificateValidationCallback
+                ServerCertificateCustomValidationCallback = _sslService.RemoteCertificateValidationCallback
             };
 
-            _client.AddDefaultHeader("Content-Type", "application/json");
-
-            var basic = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{nick}:{pass}"));
-            _client.AddDefaultHeader("Authorization", $"Basic {basic}");
+            _client = new SharpC2Client(Server, Port, Nick, Password, handler);
         }
+
+        #region Handlers
 
         public async Task<IEnumerable<Handler>> GetHandlers()
         {
-            var request = new RestRequest(Routes.V1.Handlers, Method.GET);
-            var response = await _client.ExecuteAsync(request);
-
-            if (!response.IsSuccessful) return Array.Empty<Handler>();
-
-            var handlers = JsonSerializer.Deserialize<IEnumerable<HandlerResponse>>(response.Content, _options);
+            var handlers = await _client.GetHandlers();
             return _mapper.Map<IEnumerable<HandlerResponse>, IEnumerable<Handler>>(handlers);
         }
 
-        public async Task<Handler> GetHandler(string name)
+        public async Task<Handler> SetHandlerParameter(string handler, string key, string value)
         {
-            var request = new RestRequest($"{Routes.V1.Handlers}/{name}", Method.GET);
-            var response = await _client.ExecuteAsync(request);
-
-            if (!response.IsSuccessful) return null;
-
-            var handler = JsonSerializer.Deserialize<HandlerResponse>(response.Content, _options);
-            return _mapper.Map<HandlerResponse, Handler>(handler);
+            var handlerResponse = await _client.SetHandlerParameter(handler, key, value);
+            return _mapper.Map<HandlerResponse, Handler>(handlerResponse);
         }
 
-        public async Task LoadHandler(byte[] handler)
+        public async Task StartHandler(string handlerName)
         {
-            var request = new RestRequest($"{Routes.V1.Handlers}", Method.POST);
-            var asm = new LoadAssemblyRequest { Bytes = handler };
-            request.AddParameter("application/json", JsonSerializer.Serialize(asm), ParameterType.RequestBody);
-
-            await _client.ExecuteAsync(request);
+            await _client.StartHandler(handlerName);
         }
 
-        public async Task SetHandlerParameter(string name, string key, string value)
+        public async Task StopHandler(string handlerName)
         {
-            var request = new RestRequest($"{Routes.V1.Handlers}/{name}?key={key}&value={value}", Method.PATCH);
-            await _client.ExecuteAsync(request);
+            await _client.StopHandler(handlerName);
         }
 
-        public async Task StartHandler(string name)
-        {
-            var request = new RestRequest($"{Routes.V1.Handlers}/{name}/start", Method.PATCH);
-            await _client.ExecuteAsync(request);
-        }
+        #endregion
 
-        public async Task StopHandler(string name)
-        {
-            var request = new RestRequest($"{Routes.V1.Handlers}/{name}/stop", Method.PATCH);
-            await _client.ExecuteAsync(request);
-        }
-
-        public async Task<byte[]> GeneratePayload(Payload payload)
-        {
-            var request = new RestRequest($"{Routes.V1.Payloads}/{payload.Handler}/{payload.Format}", Method.GET);
-            var response = await _client.ExecuteAsync(request);
-            var result = JsonSerializer.Deserialize<PayloadResponse>(response.Content, _options);
-
-            return result?.Bytes;
-        }
+        #region Drones
 
         public async Task<IEnumerable<Drone>> GetDrones()
         {
-            var request = new RestRequest(Routes.V1.Drones, Method.GET);
-            var response = await _client.ExecuteAsync(request);
-
-            if (!response.IsSuccessful) return Array.Empty<Drone>();
-
-            var drones = JsonSerializer.Deserialize<IEnumerable<DroneResponse>>(response.Content, _options);
+            var drones = await _client.GetDrones();
             return _mapper.Map<IEnumerable<DroneResponse>, IEnumerable<Drone>>(drones);
         }
 
         public async Task<Drone> GetDrone(string guid)
         {
-            var request = new RestRequest($"{Routes.V1.Drones}/{guid}", Method.GET);
-            var response = await _client.ExecuteAsync(request);
-
-            if (!response.IsSuccessful) return null;
-
-            var drone = JsonSerializer.Deserialize<DroneResponse>(response.Content, _options);
+            var drone = await _client.GetDrone(guid);
             return _mapper.Map<DroneResponse, Drone>(drone);
         }
 
-        public async Task TaskDrone(string guid, string module, string command, string[] args, byte[] artefact)
+        public async Task SendDroneTask(string guid, string module, string command, string[] arguments, byte[] artefact)
         {
-            var task = new DroneTaskRequest
+            var request = new DroneTaskRequest
             {
                 Module = module,
                 Command = command,
-                Arguments = args,
+                Arguments = arguments,
                 Artefact = artefact
             };
-            
-            var request = new RestRequest($"{Routes.V1.Drones}/{guid}/tasks", Method.POST);
-            request.AddParameter("application/json", JsonSerializer.Serialize(task), ParameterType.RequestBody);
 
-            await _client.ExecuteAsync(request);
+            await _client.SendDroneTask(guid, request);
         }
 
-        public async Task<IEnumerable<DroneTask>> GetDroneTasks(string droneGuid)
+        #endregion
+
+        #region Payloads
+
+        public async Task<IEnumerable<string>> GetPayloadFormats()
         {
-            var request = new RestRequest($"{Routes.V1.Drones}/{droneGuid}/tasks", Method.GET);
-            var response = await _client.ExecuteAsync(request);
-
-            if (!response.IsSuccessful) return null;
-
-            var drone = JsonSerializer.Deserialize<IEnumerable<DroneTaskResponse>>(response.Content, _options);
-            return _mapper.Map<IEnumerable<DroneTaskResponse>, IEnumerable<DroneTask>>(drone);
+            return await _client.GetPayloadFormats();
         }
 
-        public async Task<DroneTask> GetDroneTask(string droneGuid, string taskGuid)
+        public async Task<Payload> GeneratePayload(string format, string handler)
         {
-            var request = new RestRequest($"{Routes.V1.Drones}/{droneGuid}/tasks/{taskGuid}", Method.GET);
-            var response = await _client.ExecuteAsync(request);
-
-            if (!response.IsSuccessful) return null;
-
-            var drone = JsonSerializer.Deserialize<DroneTaskResponse>(response.Content, _options);
-            return _mapper.Map<DroneTaskResponse, DroneTask>(drone);
+            var response = await _client.GetPayload(format, handler);
+            return _mapper.Map<PayloadResponse, Payload>(response);
         }
+
+        #endregion
+
+        #region HostedFiles
 
         public async Task<IEnumerable<HostedFile>> GetHostedFiles()
         {
-            var request = new RestRequest(Routes.V1.HostedFiles, Method.GET);
-            var response = await _client.ExecuteAsync(request);
-
-            if (!response.IsSuccessful) return null;
-
-            var files = JsonSerializer.Deserialize<IEnumerable<HostedFileResponse>>(response.Content, _options);
+            var files = await _client.GetHostedFiles();
             return _mapper.Map<IEnumerable<HostedFileResponse>, IEnumerable<HostedFile>>(files);
         }
 
-        public async Task AddHostedFile(byte[] content, string filename)
+        public async Task AddHostedFile(string filename, byte[] content)
         {
-            var fileRequest = new AddHostedFileRequest
+            var request = new AddHostedFileRequest
             {
-                Content = content,
-                Filename = filename
+                Filename = filename,
+                Content = content
             };
-            
-            var request = new RestRequest(Routes.V1.HostedFiles, Method.POST);
-            request.AddParameter("application/json", JsonSerializer.Serialize(fileRequest), ParameterType.RequestBody);
-            
-            await _client.ExecuteAsync(request);
+
+            await _client.AddHostedFile(request);
         }
 
         public async Task DeleteHostedFile(string filename)
         {
-            var request = new RestRequest($"{Routes.V1.HostedFiles}/{filename}", Method.DELETE);
-            await _client.ExecuteAsync(request);
+            await _client.DeleteHostedFile(filename);
         }
+
+        #endregion
+
+        #region Credentials
+
+        public async Task<IEnumerable<CredentialRecord>> GetCredentials()
+        {
+            var response = await _client.GetCredentials();
+            return _mapper.Map<IEnumerable<CredentialRecordResponse>, IEnumerable<CredentialRecord>>(response);
+        }
+
+        public async Task<bool> AddCredential(string username, string password, string domain = ".", string source = "manual")
+        {
+            var request = new AddCredentialRecordRequest
+            {
+                Username = username,
+                Domain = domain,
+                Password = password,
+                Source = source
+            };
+
+            return await _client.AddCredential(request);
+        }
+
+        public async Task<bool> DeleteCredential(string guid)
+        {
+            return await _client.DeleteCredential(guid);
+        }
+
+        #endregion
     }
 }

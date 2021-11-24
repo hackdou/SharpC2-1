@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net45</TargetFramework>
+        <TargetFramework>net48</TargetFramework>
         <LangVersion>default</LangVersion>
         <Company>RastaMouse</Company>
         <Product>SharpC2</Product>
@@ -10,18 +10,23 @@
         <PackageVersion />
         <Authors />
         <AssemblyName>ssh</AssemblyName>
+        <RootNamespace>Drone</RootNamespace>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <OutputPath>..\</OutputPath>
+        <OutputPath>..\</OutputPath>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Drone\Drone.csproj" />
+        <ProjectReference Include="..\..\Drone\Drone.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="dnMerge" Version="0.5.15">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net45" Version="1.0.2">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>

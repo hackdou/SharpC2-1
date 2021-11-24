@@ -1,40 +1,38 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text.Json;
-using System.Text.RegularExpressions;
+﻿using System;
+
+using PrettyPrompt.Consoles;
 
 namespace SharpC2
 {
     public static class Extensions
     {
-
-        public static string Serialize<T>(this T data)
+        public static void PrintOutput(this IConsole console, string output)
         {
-            var options = new JsonSerializerOptions {PropertyNameCaseInsensitive = true};
-            return JsonSerializer.Serialize(data, options);
+            console.WriteLine($"{Environment.NewLine}{output}{Environment.NewLine}");
         }
         
-        public static T Deserialize<T>(this string json)
+        public static void PrintSuccess(this IConsole console, string message)
         {
-            var options = new JsonSerializerOptions {PropertyNameCaseInsensitive = true};
-            return JsonSerializer.Deserialize<T>(json, options);
+            var currentColour = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Green;
+            console.WriteLine($"[+] {message}");
+            Console.ForegroundColor = currentColour;
         }
-
-        public static IEnumerable<string> GetPartialPath(string path)
+        
+        public static void PrintWarning(this IConsole console, string warning)
         {
-            // could be something like C:\Users or /Users
-            var index = path.LastIndexOf(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? '\\' : '/');
-            index++;
-
-            var partial = path[..index];
-
-            if (!Directory.Exists(partial)) return Array.Empty<string>();
-
-            return Directory.EnumerateFileSystemEntries(partial)
-                .Where(p => p.StartsWith(path)).ToArray();
+            var currentColour = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            console.WriteLine($"[!] {warning}");
+            Console.ForegroundColor = currentColour;
+        }
+        
+        public static void PrintError(this IConsole console, string error)
+        {
+            var currentColour = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            console.WriteLine($"[x] {error}");
+            Console.ForegroundColor = currentColour;
         }
     }
 }
