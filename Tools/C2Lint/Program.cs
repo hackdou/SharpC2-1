@@ -6,7 +6,7 @@ using TeamServer.Models;
 
 namespace C2Lint
 {
-    public class Program
+    internal static class Program
     {
         private static C2Profile _profile;
 
@@ -24,7 +24,6 @@ namespace C2Lint
             try
             {
                 _profile = deserializer.Deserialize<C2Profile>(yaml);
-                RunChecks();
             }
             catch (Exception e)
             {
@@ -32,6 +31,8 @@ namespace C2Lint
                 await Console.Error.WriteLineAsync(e.Message);
                 await Console.Error.WriteLineAsync(e.StackTrace);
             }
+            
+            RunChecks();
         }
 
         private static void RunChecks()

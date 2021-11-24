@@ -10,45 +10,34 @@ namespace C2Lint
     public class ProcessInjectionChecks
     {
         private readonly C2Profile.ProcessInjectionBlock _block;
-        private readonly Type[] _types;
+        private readonly C2Profile _default;
         
         public ProcessInjectionChecks(C2Profile.ProcessInjectionBlock block)
         {
             _block = block;
-            
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "drone.dll");
-            var bytes = File.ReadAllBytes(path);
-            var asm = Assembly.Load(bytes);
-            
-            _types = asm.GetTypes();
+            _default = new C2Profile();
         }
 
         public void CheckAllocation()
         {
-            var baseType = _types.Single(t => t.FullName == "Drone.DInvoke.Injection.AllocationTechnique");
-            var allocTypes = _types.Where(t => t.BaseType == baseType).ToArray();
+            string[] opts = { "NtWriteVirtualMemory", "NtMapViewOfSection" };
 
-            var found = allocTypes.Any(t =>
-                t.Name.Equals(_block.Allocation, StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrWhiteSpace(_block.Allocation))
+                Console.WriteLine($"[!!!] Allocation Technique not defined.  It will have its default value of {_default.ProcessInjection.Allocation}.");
 
-            if (found) return;
-            
-            Console.WriteLine($"[!!!] Allocation Technique is not valid.  Options are {string.Join(", ", allocTypes.Select(t => t.Name))}.");
-            Console.WriteLine();
+            if (!opts.Contains(_block.Allocation))
+                Console.WriteLine($"[!!!] Allocation Technique is not valid.  Options are {string.Join(", ", opts)}.");
         }
 
         public void CheckExecution()
         {
-            var baseType = _types.Single(t => t.FullName == "Drone.DInvoke.Injection.ExecutionTechnique");
-            var execTypes = _types.Where(t => t.BaseType == baseType).ToArray();
+            string[] opts = { "NtCreateThreadEx", "RtlCreateUserThread", "CreateRemoteThread" };
 
-            var found = execTypes.Any(t =>
-                t.Name.Equals(_block.Execution, StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrWhiteSpace(_block.Execution))
+                Console.WriteLine($"[!!!] Execution Technique not defined.  It will have its default value of {_default.ProcessInjection.Execution}.");
 
-            if (found) return;
-            
-            Console.WriteLine($"[!!!] Execution Technique is not valid.  Options are {string.Join(", ", execTypes.Select(t => t.Name))}.");
-            Console.WriteLine();
+            if (!opts.Contains(_block.Execution))
+                Console.WriteLine($"[!!!] Execution Technique is not valid.  Options are {string.Join(", ", opts)}.");
         }
     }
 }
