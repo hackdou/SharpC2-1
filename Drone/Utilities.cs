@@ -96,11 +96,11 @@ namespace Drone
             return definition;
         }
 
-        private static int GetSleepInterval => int.Parse("60");
-        private static int GetSleepJitter => int.Parse("10");
+        private static int GetSleepInterval => int.Parse("5");
+        private static int GetSleepJitter => int.Parse("0");
         private static bool GetBypassAmsi => false;
         private static bool GetBypassEtw => false;
-        private static Type GetAllocationTechnique => typeof(Invocation.Injection.NtWriteVirtualMemory);
-        private static Type GetExecutionTechnique => typeof(Invocation.Injection.RtlCreateUserThread);
+        private static string GetAllocationTechnique  => "NtWriteVirtualMemory";
+        private static string GetExecutionTechnique  => "RtlCreateUserThread";
     }
 }

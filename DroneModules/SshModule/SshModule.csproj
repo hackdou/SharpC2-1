@@ -10,7 +10,6 @@
         <PackageVersion />
         <Authors />
         <AssemblyName>ssh</AssemblyName>
-        <RootNamespace>Drone</RootNamespace>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">

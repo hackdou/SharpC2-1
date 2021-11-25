@@ -81,12 +81,15 @@ namespace TeamServer.Services
             {
                 drone = new Drone(message.Metadata);
                 
-                // new drone, send stdapi.dll
-                drone.TaskDrone(new DroneTask("core", "load-module")
+                // new drone, send stdapi.dll if enabled in c2 profile
+                if (_profile.Stage.SendStandardApi)
                 {
-                    Artefact = await Utilities.GetEmbeddedResource("stdapi.dll")
-                });
-                
+                    drone.TaskDrone(new DroneTask("core", "load-module")
+                    {
+                        Artefact = await Utilities.GetEmbeddedResource("stdapi.dll")
+                    });
+                }
+
                 _drones.AddDrone(drone);
             }
             

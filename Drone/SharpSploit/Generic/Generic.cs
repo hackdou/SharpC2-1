@@ -10,115 +10,86 @@ using System.Collections;
 
 namespace Drone.SharpSploit.Generic
 {
-    /// <summary>
-    /// GenericObjectResult for listing objects whose type is unknown at compile time.
-    /// </summary>
     public sealed class GenericObjectResult : SharpSploitResult
     {
         public object Result { get; }
-        protected internal override IList<SharpSploitResultProperty> ResultProperties
-        {
-            get
+        
+        public override IList<SharpSploitResultProperty> ResultProperties =>
+            new List<SharpSploitResultProperty>
             {
-                return new List<SharpSploitResultProperty>
-                    {
-                        new SharpSploitResultProperty
-                        {
-                            Name = this.Result.GetType().Name,
-                            Value = this.Result
-                        }
-                    };
-            }
-        }
+                new()
+                {
+                    Name = Result.GetType().Name,
+                    Value = Result
+                }
+            };
 
-        public GenericObjectResult(object Result)
+        public GenericObjectResult(object result)
         {
-            this.Result = Result;
+            Result = result;
         }
     }
 
-    /// <summary>
-    /// SharpSploitResultList extends the IList interface for SharpSploitResults to easily
-    /// format a list of results from various SharpSploit functions.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
     public class SharpSploitResultList<T> : IList<T> where T : SharpSploitResult
     {
-        private List<T> Results { get; } = new List<T>();
+        private List<T> Results { get; } = new();
 
         public int Count => Results.Count;
         public bool IsReadOnly => ((IList<T>)Results).IsReadOnly;
 
-
-        private const int PROPERTY_SPACE = 3;
-
-        /// <summary>
-        /// Formats a SharpSploitResultList to a string similar to PowerShell's Format-List function.
-        /// </summary>
-        /// <returns>string</returns>
-        public string FormatList()
-        {
-            return this.ToString();
-        }
-
-        private string FormatTable()
-        {
-            // TODO
-            return "";
-        }
-        
-        /// <summary>
-        /// Formats a SharpSploitResultList as a string. Overrides ToString() for convenience.
-        /// </summary>
-        /// <returns>string</returns>
         public override string ToString()
         {
-            if (this.Results.Count > 0)
+            if (Results.Count <= 0) return "";
+            
+            var labels = new StringBuilder();
+            var underlines = new StringBuilder();
+            var rows = new List<StringBuilder>();
+            
+            for (var i = 0; i < Results.Count; i++)
+                rows.Add(new StringBuilder());
+
+            for (var i = 0; i < Results[0].ResultProperties.Count; i++)
             {
-                StringBuilder labels = new StringBuilder();
-                StringBuilder underlines = new StringBuilder();
-                List<StringBuilder> rows = new List<StringBuilder>();
-                for (int i = 0; i < this.Results.Count; i++)
+                labels.Append(Results[0].ResultProperties[i].Name);
+                underlines.Append(new string('-', Results[0].ResultProperties[i].Name.Length));
+                
+                var maxproplen = 0;
+                
+                for (var j = 0; j < rows.Count; j++)
                 {
-                    rows.Add(new StringBuilder());
+                    var property = Results[j].ResultProperties[i];
+                    var valueString = property.Value is null ? "" : property.Value.ToString();
+  
+                    rows[j].Append(valueString);
+                    
+                    if (maxproplen < valueString.Length)
+                        maxproplen = valueString.Length;
                 }
-                for (int i = 0; i < this.Results[0].ResultProperties.Count; i++)
+                
+                if (i != Results[0].ResultProperties.Count - 1)
                 {
-                    labels.Append(this.Results[0].ResultProperties[i].Name);
-                    underlines.Append(new string('-', this.Results[0].ResultProperties[i].Name.Length));
-                    int maxproplen = 0;
-                    for (int j = 0; j < rows.Count; j++)
+                    labels.Append(new string(' ', Math.Max(2, maxproplen + 2 - Results[0].ResultProperties[i].Name.Length)));
+                    underlines.Append(new string(' ', Math.Max(2, maxproplen + 2 - Results[0].ResultProperties[i].Name.Length)));
+                    
+                    for (var j = 0; j < rows.Count; j++)
                     {
-                        SharpSploitResultProperty property = this.Results[j].ResultProperties[i];
-                        string ValueString = property.Value.ToString();
-                        rows[j].Append(ValueString);
-                        if (maxproplen < ValueString.Length)
-                        {
-                            maxproplen = ValueString.Length;
-                        }
-                    }
-                    if (i != this.Results[0].ResultProperties.Count - 1)
-                    {
-                        labels.Append(new string(' ', Math.Max(2, maxproplen + 2 - this.Results[0].ResultProperties[i].Name.Length)));
-                        underlines.Append(new string(' ', Math.Max(2, maxproplen + 2 - this.Results[0].ResultProperties[i].Name.Length)));
-                        for (int j = 0; j < rows.Count; j++)
-                        {
-                            SharpSploitResultProperty property = this.Results[j].ResultProperties[i];
-                            string ValueString = property.Value.ToString();
-                            rows[j].Append(new string(' ', Math.Max(this.Results[0].ResultProperties[i].Name.Length - ValueString.Length + 2, maxproplen - ValueString.Length + 2)));
-                        }
+                        var property = Results[j].ResultProperties[i];
+                        var valueString = property.Value is null ? "" : property.Value.ToString();
+                        rows[j].Append(new string(' ', Math.Max(Results[0].ResultProperties[i].Name.Length - valueString.Length + 2, maxproplen - valueString.Length + 2)));
                     }
                 }
-                labels.AppendLine();
-                labels.Append(underlines.ToString());
-                foreach (StringBuilder row in rows)
-                {
-                    labels.AppendLine();
-                    labels.Append(row.ToString());
-                }
-                return labels.ToString();
             }
-            return "";
+            
+            labels.AppendLine();
+            labels.Append(underlines);
+            
+            foreach (var row in rows)
+            {
+                labels.AppendLine();
+                labels.Append(row);
+            }
+            
+            return labels.ToString();
         }
 
         public T this[int index] { get => Results[index]; set => Results[index] = value; }
@@ -179,17 +150,11 @@ namespace Drone.SharpSploit.Generic
         }
     }
 
-    /// <summary>
-    /// Abstract class that represents a result from a SharpSploit function.
-    /// </summary>
     public abstract class SharpSploitResult
     {
-        protected internal abstract IList<SharpSploitResultProperty> ResultProperties { get; }
+        public abstract IList<SharpSploitResultProperty> ResultProperties { get; }
     }
 
-    /// <summary>
-    /// SharpSploitResultProperty represents a property that is a member of a SharpSploitResult's ResultProperties.
-    /// </summary>
     public class SharpSploitResultProperty
     {
         public string Name { get; set; }

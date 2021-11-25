@@ -127,13 +127,11 @@ namespace TeamServer.Models
 
             // allocation
             var getAllocationTech = utils.Methods.GetMethod("GetAllocationTechnique");
-            var alloc = module.Types.GetType(C2Profile.ProcessInjection.Allocation);
-            getAllocationTech.Body.Instructions[0].Operand = alloc;
+            getAllocationTech.Body.Instructions[0].Operand = C2Profile.ProcessInjection.Allocation;
             
             // execution
             var getExecutionTech = utils.Methods.GetMethod("GetExecutionTechnique");
-            var exec = module.Types.GetType(C2Profile.ProcessInjection.Execution);
-            getExecutionTech.Body.Instructions[0].Operand = exec;
+            getExecutionTech.Body.Instructions[0].Operand = C2Profile.ProcessInjection.Execution;
         }
 
         private void SetBypassAmsi(MethodDef method)

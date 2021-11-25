@@ -38,13 +38,6 @@ namespace TeamServer.Services
             if (drone is null)
             {
                 drone = new Drone(metadata);
-
-                // may need to resend this
-                drone.TaskDrone(new DroneTask("core", "load-module")
-                {
-                    Artefact = await Utilities.GetEmbeddedResource("stdapi.dll")
-                });
-
                 _drones.AddDrone(drone);
             }
 

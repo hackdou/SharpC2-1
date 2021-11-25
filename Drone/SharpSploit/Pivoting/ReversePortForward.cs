@@ -7,7 +7,6 @@ using System.Net.Sockets;
 using System.Runtime.Serialization;
 using System.Threading;
 
-using Drone.Modules;
 using Drone.SharpSploit.Generic;
 
 namespace Drone.SharpSploit.Pivoting
@@ -122,7 +121,7 @@ namespace Drone.SharpSploit.Pivoting
             _listener.Stop();
         }
 
-        protected internal override IList<SharpSploitResultProperty> ResultProperties =>
+        public override IList<SharpSploitResultProperty> ResultProperties =>
             new List<SharpSploitResultProperty>
             {
                 new() {Name = "BindPort", Value = BindPort},

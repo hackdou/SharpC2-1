@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net48</TargetFramework>
-        <LangVersion>default</LangVersion>
+        <LangVersion>10</LangVersion>
         <Company />
         <Product />
         <IsPackable>false</IsPackable>

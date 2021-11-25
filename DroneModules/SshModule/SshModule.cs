@@ -8,21 +8,22 @@ using Drone.Modules;
 
 using Renci.SshNet;
 
-namespace Drone
+namespace SshModule
 {
     public class SshModule : DroneModule
     {
         public override string Name => "ssh";
 
-        public override List<Command> Commands => new List<Command>
+        public override List<Command> Commands => new()
         {
-            new("ssh-cmd", "Execute a command via SSH", ExecuteSsh, new List<Command.Argument>
-            {
-                new("hostname", false),
-                new("username", false),
-                new("password", false),
-                new("command", false)
-            })
+            new Command("ssh-cmd", "Execute a command via SSH", ExecuteSsh,
+                new List<Command.Argument>
+                {
+                    new("hostname", false),
+                    new("username", false),
+                    new("password", false),
+                    new("command", false)
+                })
         };
 
         private void ExecuteSsh(DroneTask task, CancellationToken token)

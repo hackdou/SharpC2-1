@@ -2,6 +2,7 @@ Stage:
   SleepTime: 5
   SleepJitter: 0
   DllExport: Execute
+  SendStandardApi: true
 PostExploitation:
   BypassAmsi: false
   BypassEtw: false
