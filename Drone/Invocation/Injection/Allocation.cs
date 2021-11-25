@@ -61,6 +61,8 @@ namespace Drone.Invocation.Injection
                 baseAddress,
                 buffer,
                 (uint)payload.Length);
+            
+            Marshal.FreeHGlobal(buffer);
 
             return result > 0;
         }
