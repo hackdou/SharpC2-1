@@ -35,7 +35,7 @@ namespace Drone.Invocation.Injection
             return baseAddress;
         }
 
-        private IntPtr AllocateMemory(byte[] payload, IntPtr hProcess)
+        private static IntPtr AllocateMemory(byte[] payload, IntPtr hProcess)
         {
             var baseAddress = IntPtr.Zero;
             var regionSize = (IntPtr)payload.Length;
@@ -51,7 +51,7 @@ namespace Drone.Invocation.Injection
             return result;
         }
 
-        private bool WriteMemory(byte[] payload, IntPtr hProcess, IntPtr baseAddress)
+        private static bool WriteMemory(byte[] payload, IntPtr hProcess, IntPtr baseAddress)
         {
             var buffer = Marshal.AllocHGlobal(payload.Length);
             Marshal.Copy(payload, 0, buffer, payload.Length);
@@ -61,11 +61,13 @@ namespace Drone.Invocation.Injection
                 baseAddress,
                 buffer,
                 (uint)payload.Length);
+            
+            Marshal.FreeHGlobal(buffer);
 
             return result > 0;
         }
 
-        private void ChangeMemPermission(IntPtr hProcess, IntPtr baseAddress, int length)
+        private static void ChangeMemPermission(IntPtr hProcess, IntPtr baseAddress, int length)
         {
             var regionSize = (IntPtr)length;
             
@@ -109,7 +111,7 @@ namespace Drone.Invocation.Injection
             Marshal.Copy(payload.Payload, 0, details.BaseAddress, payload.Payload.Length);
 
             // Now that we are done with the mapped view in our own process, unmap it
-            var result = UnmapSection(
+            _ = UnmapSection(
                 hSelf,
                 details.BaseAddress);
 
@@ -152,7 +154,7 @@ namespace Drone.Invocation.Injection
             const uint disp = 2;
             const uint alloc = 0;
 
-            var result = DynamicInvoke.Native.NtMapViewOfSection(
+            _ = DynamicInvoke.Native.NtMapViewOfSection(
                 hSection, 
                 hProcess,
                 ref baseAddr,
@@ -165,9 +167,7 @@ namespace Drone.Invocation.Injection
                 protection);
 
             // Create a struct to hold the results.
-            var details = new SectionDetails(baseAddr, sizeData);
-
-            return details;
+            return new SectionDetails(baseAddr, sizeData);
         }
 
         private readonly struct SectionDetails
