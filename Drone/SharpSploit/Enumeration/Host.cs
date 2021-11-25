@@ -128,6 +128,9 @@ namespace Drone.SharpSploit.Enumeration
                     return "-";
 
                 using var identity = new WindowsIdentity(hToken);
+                
+                Invocation.DynamicInvoke.Win32.Kernel32.CloseHandle(hToken);
+
                 return identity.Name;
             }
             catch
