@@ -182,6 +182,7 @@ namespace SharpC2.Screens
                 if (existing is not null)
                 {
                     // only need to update these ones, nothing else should change
+                    existing.Parent = drone.Parent;
                     existing.Modules = drone.Modules;
                     existing.LastSeen = drone.LastSeen;
                 }

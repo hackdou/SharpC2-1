@@ -4,15 +4,16 @@ using TeamServer.Models;
 
 namespace TeamServer.Handlers
 {
-    public class DefaultSmbHandler : Handler
+    public class DefaultTcpHandler : Handler
     {
-        public override string Name { get; } = "default-smb";
+        public override string Name { get; } = "default-tcp";
 
         public override List<HandlerParameter> Parameters => new()
         {
-            new HandlerParameter("PipeName", "SharpPipe", false)
+            new HandlerParameter("BindPort", "4444", false),
+            new HandlerParameter("LocalhostOnly", "false", false)
         };
-
+        
         public override void Stop()
         {
             // does nothing

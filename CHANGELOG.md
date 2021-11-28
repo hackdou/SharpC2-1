@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.5.2] - 2021-11-28
+### Added
+- TCP Drone
+
 ## [0.5.1] - 2021-11-25
 ### Added
 - New directive in C2 Profile to disable staging the stdapi on inital Drone check-in.

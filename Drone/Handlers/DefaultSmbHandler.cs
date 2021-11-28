@@ -142,7 +142,7 @@ namespace Drone.Handlers
             return ms.ToArray();
         }
 
-        private static async Task WriteToStream(PipeStream pipeStream, byte[] data)
+        private static async Task WriteToStream(Stream pipeStream, byte[] data)
         {
             await pipeStream.WriteAsync(data, 0, data.Length);
         }
