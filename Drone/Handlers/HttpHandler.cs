@@ -8,10 +8,8 @@ using Drone.Models;
 
 namespace Drone.Handlers
 {
-    public class DefaultHttpHandler : Handler
+    public class HttpHandler : Handler
     {
-        public override string Name { get; } = "default-http";
-
         private WebClient _client;
         private bool _running;
         private int _retryNumber;
@@ -37,7 +35,6 @@ namespace Drone.Handlers
                 try
                 {
                     await CheckIn();
-                    
                     _retryNumber = 0;  // if successful, ensure retry number is set to 0
                 }
                 catch

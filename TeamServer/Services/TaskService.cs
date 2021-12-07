@@ -12,23 +12,15 @@ namespace TeamServer.Services
 {
     public class TaskService : ITaskService
     {
-        private readonly IServerService _server;
         private readonly IDroneService _drones;
         private readonly ICryptoService _crypto;
         private readonly IHubContext<MessageHub, IMessageHub> _hub;
 
-        public TaskService(IServerService server, IDroneService drones, ICryptoService crypto, IHubContext<MessageHub, IMessageHub> hub)
+        public TaskService(IDroneService drones, ICryptoService crypto, IHubContext<MessageHub, IMessageHub> hub)
         {
-            _server = server;
             _drones = drones;
             _crypto = crypto;
             _hub = hub;
-        }
-
-        public async Task RecvC2Data(IEnumerable<MessageEnvelope> messages)
-        {
-            foreach (var message in messages)
-                await _server.HandleC2Message(message);
         }
 
         public async Task<IEnumerable<MessageEnvelope>> GetDroneTasks(DroneMetadata metadata)

@@ -5,7 +5,7 @@
         private static void Main(string[] args)
         {
             # if DEBUG
-            System.Threading.Thread.Sleep(10000);
+            System.Threading.Thread.Sleep(15000);
             #endif
             
             Execute();

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 
 using SharpC2.API.V1.Responses;
 
+using TeamServer.Handlers;
 using TeamServer.Models;
 
 namespace TeamServer.Interfaces

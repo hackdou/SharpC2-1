@@ -48,9 +48,9 @@ namespace SharpC2.API.IntegrationTests
             var response = await Client.PostAsJsonAsync(Routes.V1.Credentials, oCred);
             var credential = await response.Content.ReadFromJsonAsync<CredentialRecordResponse>();
 
-            await Client.DeleteAsync($"{Routes.V1.Credentials}/{credential.Guid}");
+            await Client.DeleteAsync($"{Routes.V1.Credentials}/{credential?.Guid}");
             
-            response = await Client.GetAsync($"{Routes.V1.Credentials}/{credential.Guid}");
+            response = await Client.GetAsync($"{Routes.V1.Credentials}/{credential?.Guid}");
             
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }

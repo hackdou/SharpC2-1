@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using AutoMapper;
@@ -48,6 +50,28 @@ namespace SharpC2.Services
         {
             var handlers = await _client.GetHandlers();
             return _mapper.Map<IEnumerable<HandlerResponse>, IEnumerable<Handler>>(handlers);
+        }
+
+        public async Task<IEnumerable<string>> GetHandlerTypes()
+        {
+            return await _client.GetHandlerTypes();
+        }
+
+        public async Task<Handler> CreateHandler(string name, string type)
+        {
+            CreateHandlerRequest.HandlerType handlerType;
+            
+            if (!Enum.TryParse(type, true, out handlerType))
+                throw new ArgumentException("Invalid Handler type");
+
+            var request = new CreateHandlerRequest
+            {
+                HandlerName = name,
+                Type = handlerType
+            };
+
+            var handlerResponse = await _client.CreateHandler(request);
+            return _mapper.Map<HandlerResponse, Handler>(handlerResponse);
         }
 
         public async Task<Handler> SetHandlerParameter(string handler, string key, string value)

@@ -19,11 +19,6 @@ namespace TeamServer.Services
             _crypto = crypto;
         }
 
-        public IEnumerable<string> GetFormats()
-        {
-            return Enum.GetNames(typeof(PayloadFormat));
-        }
-
         public async Task<Payload> GeneratePayload(PayloadFormat format, Handler handler)
         {
             var profile = _server.GetC2Profile();

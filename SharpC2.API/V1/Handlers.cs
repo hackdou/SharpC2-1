@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 
+using SharpC2.API.V1.Requests;
 using SharpC2.API.V1.Responses;
 
 namespace SharpC2.API.V1
@@ -26,12 +29,30 @@ namespace SharpC2.API.V1
             return JsonConvert.DeserializeObject<HandlerResponse>(content);
         }
 
-        public async Task<HandlerResponse> LoadHandler(byte[] handlerBytes)
+        public async Task<IEnumerable<string>> GetHandlerTypes()
+        {
+            var response = await _client.GetAsync($"{Routes.V1.Handlers}/types");
+            var content = await response.Content.ReadAsStringAsync();
+
+            return JsonConvert.DeserializeObject<IEnumerable<string>>(content);
+        }
+
+        public async Task<HandlerResponse> CreateHandler(CreateHandlerRequest request)
+        {
+            var json = JsonConvert.SerializeObject(request);
+            var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _client.PostAsync(Routes.V1.Handlers, stringContent);
+            var content = await response.Content.ReadAsStringAsync();
+
+            return JsonConvert.DeserializeObject<HandlerResponse>(content);
+        }
+
+        public async Task<IEnumerable<HandlerResponse>> LoadHandler(byte[] handlerBytes)
         {
             var response = await _client.PostAsync(Routes.V1.Handlers, new ByteArrayContent(handlerBytes));
             var content = await response.Content.ReadAsStringAsync();
             
-            return JsonConvert.DeserializeObject<HandlerResponse>(content); 
+            return JsonConvert.DeserializeObject<IEnumerable<HandlerResponse>>(content); 
         }
 
         public async Task<HandlerResponse> SetHandlerParameter(string handlerName, string key, string value)

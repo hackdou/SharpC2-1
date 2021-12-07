@@ -40,4 +40,12 @@
       <_ContentIncludedByDefault Remove="Resources\net45\drone_svc.exe.config" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Services\HandlerService.cs" />
+      <Compile Remove="Services\PayloadService.cs" />
+      <Compile Remove="Services\TaskService.cs" />
+      <Compile Remove="Services\DroneService.cs" />
+      <Compile Remove="Services\ServerService.cs" />
+    </ItemGroup>
+
 </Project>

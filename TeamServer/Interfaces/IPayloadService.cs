@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 using TeamServer.Handlers;
 using TeamServer.Models;
@@ -9,7 +8,6 @@ namespace TeamServer.Interfaces
 {
     public interface IPayloadService
     {
-        IEnumerable<string> GetFormats();
-        Task<Payload> GeneratePayload(PayloadService.PayloadFormat format, Handler handler);
+        Task<Payload> GeneratePayload(SharpC2Service.PayloadFormat format, Handler handler);
     }
 }

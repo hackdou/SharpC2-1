@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 using SharpC2.API.V1;
 using SharpC2.API.V1.Responses;
 
-using TeamServer.Interfaces;
 using TeamServer.Models;
 using TeamServer.Services;
 
@@ -20,39 +19,33 @@ namespace TeamServer.Controllers
     [Route(Routes.V1.Payloads)]
     public class PayloadsController : ControllerBase
     {
-        private readonly IPayloadService _payloads;
-        private readonly IHandlerService _handlers;
-        
+        private readonly SharpC2Service _server;
         private readonly IMapper _mapper;
 
-        public PayloadsController(IHandlerService handlerService, IPayloadService payloads, IMapper mapper)
+        public PayloadsController(SharpC2Service server, IMapper mapper)
         {
-            _handlers = handlerService;
-            _payloads = payloads;
-            
+            _server = server;
             _mapper = mapper;
         }
 
         [HttpGet("formats")]
         public IActionResult GetPayloadFormats()
         {
-            var formats = _payloads.GetFormats();
-            return Ok(formats);
+            return Ok(Enum.GetNames(typeof(SharpC2Service.PayloadFormat)));
         }
-        
 
         [HttpGet("{handler}/{format}")]
         public async Task<IActionResult> GetPayload(string handler, string format)
         {
             // get the handler
-            var h = _handlers.GetHandler(handler);
+            var h = _server.GetHandler(handler);
             if (h is null) return NotFound("Handler not found");
 
             // parse the format
-            if (!Enum.TryParse(format, true, out PayloadService.PayloadFormat payloadFormat))
+            if (!Enum.TryParse(format, true, out SharpC2Service.PayloadFormat payloadFormat))
                 return BadRequest("Invalid payload format");
 
-            var payload = await _payloads.GeneratePayload(payloadFormat, h);
+            var payload = await _server.GeneratePayload(payloadFormat, h);
             
             var response = _mapper.Map<Payload, PayloadResponse>(payload);
             return Ok(response);

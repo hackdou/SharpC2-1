@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using TeamServer.Interfaces;
 using TeamServer.Models;
+using TeamServer.Services;
 
 using Xunit;
 
@@ -12,14 +13,12 @@ namespace TeamServer.UnitTests
 {
     public class TaskTests
     {
-        private readonly IDroneService _drones;
-        private readonly ITaskService _tasks;
+        private readonly SharpC2Service _server;
         private readonly ICryptoService _crypto;
 
-        public TaskTests(ITaskService tasks, IDroneService drones, ICryptoService crypto)
+        public TaskTests(SharpC2Service server, ICryptoService crypto)
         {
-            _tasks = tasks;
-            _drones = drones;
+            _server = server;
             _crypto = crypto;
         }
 
@@ -38,9 +37,9 @@ namespace TeamServer.UnitTests
             var task = new DroneTask("TestModule", "TestCommand");
             drone.TaskDrone(task);
             
-            _drones.AddDrone(drone);
+            _server.AddDrone(drone);
 
-            var envelopes = (await _tasks.GetDroneTasks(metadata)).ToArray();
+            var envelopes = (await _server.GetDroneTasks(metadata)).ToArray();
 
             Assert.NotEmpty(envelopes);
             Assert.True(envelopes.Length == 1);
@@ -69,10 +68,10 @@ namespace TeamServer.UnitTests
             var task = new DroneTask("TestModule", "TestCommand");
             childDrone.TaskDrone(task);
             
-            _drones.AddDrone(parentDrone);
-            _drones.AddDrone(childDrone);
+            _server.AddDrone(parentDrone);
+            _server.AddDrone(childDrone);
 
-            var envelopes = (await _tasks.GetDroneTasks(parentMetadata)).ToArray();
+            var envelopes = (await _server.GetDroneTasks(parentMetadata)).ToArray();
             
             Assert.NotEmpty(envelopes);
             Assert.True(envelopes.Length == 1);
@@ -109,11 +108,11 @@ namespace TeamServer.UnitTests
             childOne.TaskDrone(childOneTask);
             childTwo.TaskDrone(childTwoTask);
             
-            _drones.AddDrone(parent);
-            _drones.AddDrone(childOne);
-            _drones.AddDrone(childTwo);
+            _server.AddDrone(parent);
+            _server.AddDrone(childOne);
+            _server.AddDrone(childTwo);
             
-            var envelopes = (await _tasks.GetDroneTasks(metadata)).ToArray();
+            var envelopes = (await _server.GetDroneTasks(metadata)).ToArray();
             
             Assert.NotEmpty(envelopes);
             Assert.True(envelopes.Length == 2);
@@ -156,11 +155,11 @@ namespace TeamServer.UnitTests
             var childTwoTask = new DroneTask("TestModule", "TestCommand");
             childTwo.TaskDrone(childTwoTask);
             
-            _drones.AddDrone(parent);
-            _drones.AddDrone(childOne);
-            _drones.AddDrone(childTwo);
+            _server.AddDrone(parent);
+            _server.AddDrone(childOne);
+            _server.AddDrone(childTwo);
 
-            var envelopes = (await _tasks.GetDroneTasks(metadata)).ToArray();
+            var envelopes = (await _server.GetDroneTasks(metadata)).ToArray();
             
             Assert.NotEmpty(envelopes);
             Assert.True(envelopes.Length == 1);
@@ -197,11 +196,11 @@ namespace TeamServer.UnitTests
             var childTwoTask = new DroneTask("TestModule", "TestCommand");
             childTwo.TaskDrone(childTwoTask);
             
-            _drones.AddDrone(parent);
-            _drones.AddDrone(childOne);
-            _drones.AddDrone(childTwo);
+            _server.AddDrone(parent);
+            _server.AddDrone(childOne);
+            _server.AddDrone(childTwo);
 
-            var envelopes = (await _tasks.GetDroneTasks(metadata)).ToArray();
+            var envelopes = (await _server.GetDroneTasks(metadata)).ToArray();
             
             Assert.NotEmpty(envelopes);
             Assert.True(envelopes.Length == 2);

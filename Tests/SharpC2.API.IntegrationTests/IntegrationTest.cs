@@ -1,14 +1,18 @@
 using System;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text;
+using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
+using SharpC2.API.V1;
+using SharpC2.API.V1.Requests;
+
 using TeamServer;
 using TeamServer.Interfaces;
-using TeamServer.Models;
 using TeamServer.Services;
 
 namespace SharpC2.API.IntegrationTests
@@ -27,11 +31,8 @@ namespace SharpC2.API.IntegrationTests
                     builder.ConfigureServices(ConfigureServices);
                 });
 
-            var handlerService = factory.Services.GetRequiredService<IHandlerService>();
-            handlerService.LoadDefaultHandlers();
-
-            var serverService = factory.Services.GetRequiredService<IServerService>();
-            serverService.SetC2Profile(new C2Profile());
+            var serverService = factory.Services.GetRequiredService<SharpC2Service>();
+            serverService.LoadDefaultModules();
 
             Client = factory.CreateClient();
             Client.DefaultRequestHeaders.Add("Authorization", $"Basic {basic}");
@@ -45,6 +46,17 @@ namespace SharpC2.API.IntegrationTests
             userService.SetPassword("Passw0rd!");
 
             services.AddSingleton<IUserService>(userService);
+        }
+        
+        protected async Task CreateHandler(string name)
+        {
+            var request = new CreateHandlerRequest
+            {
+                HandlerName = name,
+                Type = CreateHandlerRequest.HandlerType.HTTP
+            };
+
+            await Client.PostAsJsonAsync(Routes.V1.Handlers, request);
         }
     }    
 }

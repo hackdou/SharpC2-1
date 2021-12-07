@@ -52,13 +52,10 @@ namespace TeamServer.Controllers
         [HttpPost("{modules}")]
         public IActionResult LoadServerModule([FromBody] LoadAssemblyRequest request)
         {
-            var module = _server.LoadModule(request.Bytes);
-            var response = _mapper.Map<Module, ModuleResponse>(module);
-            
-            var root = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Path.ToUriComponent()}";
-            var path = $"{root}/{response.Name}";
+            var modules = _server.LoadModule(request.Bytes);
+            var response = _mapper.Map<IEnumerable<Module>, IEnumerable<ModuleResponse>>(modules);
 
-            return Created(path, response);
+            return Ok(response);
         }
     }
 }

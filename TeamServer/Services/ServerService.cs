@@ -4,9 +4,13 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+
 using AutoMapper;
+
 using Microsoft.AspNetCore.SignalR;
+
 using SharpC2.API.V1.Responses;
+
 using TeamServer.Hubs;
 using TeamServer.Interfaces;
 using TeamServer.Models;
@@ -20,6 +24,7 @@ namespace TeamServer.Services
         private C2Profile _profile; 
 
         private readonly IDroneService _drones;
+        private readonly IHandlerService _handlers;
         private readonly ICryptoService _crypto;
         private readonly ICredentialService _credentials;
         private readonly IMapper _mapper;
@@ -27,11 +32,12 @@ namespace TeamServer.Services
         
         private readonly List<Module> _modules = new();
 
-        public ServerService(IDroneService drones, ICredentialService credentials, IHubContext<MessageHub, IMessageHub> hub, ICryptoService crypto, IMapper mapper)
+        public ServerService(IDroneService drones, ICredentialService credentials, IHubContext<MessageHub, IMessageHub> hub, ICryptoService crypto, IMapper mapper, IHandlerService handlers)
         {
             _drones = drones;
             _crypto = crypto;
             _mapper = mapper;
+            _handlers = handlers;
             _credentials = credentials;
             _hub = hub;
 
@@ -72,7 +78,13 @@ namespace TeamServer.Services
             return _modules;
         }
 
-        public async Task HandleC2Message(MessageEnvelope envelope)
+        public async Task HandleC2Envelopes(IEnumerable<MessageEnvelope> envelopes)
+        {
+            foreach (var envelope in envelopes)
+                await HandleC2Envelope(envelope);
+        }
+
+        private async Task HandleC2Envelope(MessageEnvelope envelope)
         {
             var message = _crypto.DecryptEnvelope(envelope);
             var drone = _drones.GetDrone(message.Metadata.Guid);
@@ -159,7 +171,7 @@ namespace TeamServer.Services
 
         private void RegisterModule(Module module)
         {
-            module.Init(_drones, _hub);
+            module.Init(_drones, _handlers, _hub);
             _modules.Add(module);
         }
     }

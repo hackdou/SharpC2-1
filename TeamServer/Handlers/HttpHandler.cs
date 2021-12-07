@@ -15,15 +15,16 @@ using TeamServer.Models;
 
 namespace TeamServer.Handlers
 {
-    public class DefaultHttpHandler : Handler
+    public class HttpHandler : Handler
     {
-        public sealed override string Name { get; } = "default-http";
-        
+        public override string Name { get; }
         private readonly string _workingDirectory;
 
-        public DefaultHttpHandler()
+        public HttpHandler(string handlerName)
         {
-            _workingDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Handlers", Name);
+            Name = handlerName;
+            
+            _workingDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Handlers", handlerName);
             if (!Directory.Exists(_workingDirectory)) Directory.CreateDirectory(_workingDirectory);
         }
 
@@ -64,7 +65,7 @@ namespace TeamServer.Handlers
             {
                 e.MapControllerRoute("/", "/", new
                 {
-                    controller = "DefaultHttpHandler",
+                    controller = "HttpHandler",
                     action = "RouteDrone"
                 });
             });
@@ -80,9 +81,7 @@ namespace TeamServer.Handlers
         private void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddSingleton(MessageHub);
-            services.AddSingleton(TaskService);
-            services.AddSingleton(CredentialService);
+            services.AddSingleton(Server);
         }
 
         public async Task AddHostedFile(byte[] content, string filename)
@@ -108,8 +107,8 @@ namespace TeamServer.Handlers
 
         public override void Stop()
         {
-            TokenSource.Cancel();
-            TokenSource.Dispose();
+            TokenSource?.Cancel();
+            TokenSource?.Dispose();
         }
     }
 }

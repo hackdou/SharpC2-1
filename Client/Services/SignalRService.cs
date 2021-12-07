@@ -29,6 +29,7 @@ namespace SharpC2.Services
         }
         
         // Handler Events
+        public event Action<Handler> HandlerLoaded; 
         public event Action<Handler> HandlerStarted;
         public event Action<Handler> HandlerStopped;
         public event Action<string, string> HandlerParameterSet;
@@ -63,6 +64,7 @@ namespace SharpC2.Services
 
             await connection.StartAsync();
 
+            connection.On<HandlerResponse>("HandlerLoaded", OnHandlerLoaded);
             connection.On<string, string>("HandlerParameterSet", OnHandlerParameterSet);
             connection.On<HandlerResponse>("HandlerStarted", OnHandlerStarted);
             connection.On<HandlerResponse>("HandlerStopped", OnHandlerStopped);
@@ -78,6 +80,12 @@ namespace SharpC2.Services
             connection.On<DroneMetadata, DroneTaskUpdate>("DroneTaskCancelled", OnDroneTaskCancelled);
             connection.On<DroneMetadata, DroneTaskUpdate>("DroneTaskAborted", OnDroneTaskAborted);
             connection.On<DroneMetadata, DroneModuleResponse>("DroneModuleLoaded", OnDroneModuleLoaded);
+        }
+
+        private void OnHandlerLoaded(HandlerResponse handlerResponse)
+        {
+            var handler = _mapper.Map<HandlerResponse, Handler>(handlerResponse);
+            HandlerLoaded?.Invoke(handler);
         }
 
         private void OnHandlerStarted(HandlerResponse handlerResponse)

@@ -19,6 +19,7 @@ namespace SharpC2.Screens
         private readonly SignalRService _signalRService;
 
         private List<Handler> _handlers;
+        private IEnumerable<string> _handlerTypes;
 
         public HandlerScreen(ApiService apiService, SignalRService signalRService)
         {
@@ -26,13 +27,16 @@ namespace SharpC2.Screens
             _signalRService = signalRService;
 
             Commands.Add(new GenericCommand("list", "List Handlers", ListHandlers));
+            Commands.Add(new CreateHandler(CreateHandler));
             Commands.Add(new SetHandler(SetHandlerParameter));
             Commands.Add(new StartHandler(StartHandler));
             Commands.Add(new StopHandler(StopHandler));
             Commands.Add(new BackScreen(StopScreen));
 
+            _handlerTypes = _apiService.GetHandlerTypes().GetAwaiter().GetResult();
             _handlers = _apiService.GetHandlers().GetAwaiter().GetResult().ToList();
 
+            _signalRService.HandlerLoaded += OnHandlerLoaded;
             _signalRService.HandlerParameterSet += OnHandlerParameterSet;
             _signalRService.HandlerStarted += OnHandlerStarted;
             _signalRService.HandlerStopped += OnHandlerStopped;
@@ -70,7 +74,18 @@ namespace SharpC2.Screens
             
             CompletionItem[] result = null;
 
-            if (argument.Name.Equals("handler", StringComparison.OrdinalIgnoreCase))
+            if (argument.Name.Equals("type", StringComparison.OrdinalIgnoreCase))
+            {
+                result = _handlerTypes.Where(t => t.StartsWith(typedWord, StringComparison.OrdinalIgnoreCase))
+                    .Select(t => new CompletionItem
+                    {
+                        StartIndex = previousWordStart + 1,
+                        ReplacementText = t,
+                        DisplayText = t,
+                        ExtendedDescription = new Lazy<Task<string>>(() => Task.FromResult(""))
+                    }).ToArray();
+            }
+            else if (argument.Name.Equals("handler", StringComparison.OrdinalIgnoreCase))
             {
                 result = _handlers.Where(h => h.Name.StartsWith(typedWord))
                     .Select(h => new CompletionItem
@@ -102,12 +117,26 @@ namespace SharpC2.Screens
                 : Task.FromResult<IReadOnlyList<CompletionItem>>(result);
         }
 
+        private async Task CreateHandler(string[] args)
+        {
+            var name = args[1];
+            var type = args[2];
+
+            await _apiService.CreateHandler(name, type);
+        }
+
         private async Task ListHandlers(string[] args)
         {
             _handlers = (await _apiService.GetHandlers()).ToList();
 
             var list = new ResultList<Handler>();
             list.AddRange(_handlers);
+
+            if (!list.Any())
+            {
+                Console.PrintOutput("No Handlers");
+                return;
+            }
             
             Console.PrintOutput(list.ToString());
         }
@@ -129,6 +158,12 @@ namespace SharpC2.Screens
         private async Task StopHandler(string[] args)
             => await _apiService.StopHandler(args[1]);
 
+        private void OnHandlerLoaded(Handler handler)
+        {
+            Console.PrintSuccess($"Handler \"{handler.Name}\" created.");
+            _handlers.Add(handler);
+        }
+
         private void OnHandlerStarted(Handler handler)
             => Console.PrintSuccess($"Handler \"{handler.Name}\" started.");
 
@@ -140,6 +175,7 @@ namespace SharpC2.Screens
 
         public void Dispose()
         {
+            _signalRService.HandlerLoaded -= OnHandlerLoaded;
             _signalRService.HandlerParameterSet -= OnHandlerParameterSet;
             _signalRService.HandlerStarted -= OnHandlerStarted;
             _signalRService.HandlerStopped -= OnHandlerStopped;

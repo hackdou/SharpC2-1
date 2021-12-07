@@ -13,6 +13,7 @@ using SharpC2.API.V1.Responses;
 using TeamServer.Handlers;
 using TeamServer.Hubs;
 using TeamServer.Interfaces;
+using TeamServer.Services;
 
 namespace TeamServer.Controllers
 {
@@ -21,19 +22,19 @@ namespace TeamServer.Controllers
     [Route(Routes.V1.HostedFiles)]
     public class HostedFilesController : ControllerBase
     {
-        private readonly IHandlerService _handlers;
+        private readonly SharpC2Service _server;
         private readonly IHubContext<MessageHub, IMessageHub> _hub;
 
-        public HostedFilesController(IHandlerService handlers, IHubContext<MessageHub, IMessageHub> hub)
+        public HostedFilesController(SharpC2Service server, IHubContext<MessageHub, IMessageHub> hub)
         {
-            _handlers = handlers;
+            _server = server;
             _hub = hub;
         }
 
-        [HttpGet]
-        public IActionResult GetHostedFiles()
+        [HttpGet("{handlerName}")]
+        public IActionResult GetHostedFiles(string handlerName)
         {
-            var handler = (DefaultHttpHandler) _handlers.GetHandler("default-http");
+            var handler = (HttpHandler) _server.GetHandler(handlerName);
             var fileInfos = handler.GetHostedFiles();
             var response = fileInfos.Select(fileInfo =>
                 new HostedFileResponse { Filename = fileInfo.Name, Size = fileInfo.Length }).ToList();
@@ -41,13 +42,14 @@ namespace TeamServer.Controllers
             return Ok(response);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> UploadFile([FromBody] AddHostedFileRequest request)
+        [HttpPost("{handlerName}")]
+        public async Task<IActionResult> UploadFile(string handlerName, [FromBody] AddHostedFileRequest request)
         {
-            var handler = (DefaultHttpHandler) _handlers.GetHandler("default-http");
+            var handler = (HttpHandler) _server.GetHandler(handlerName);
 
             if (!handler.Running)
             {
+                handler.Init(_server);
                 var task = handler.Start();
                 if (task.IsFaulted) return BadRequest(task.Exception?.Message);
             }
@@ -65,13 +67,13 @@ namespace TeamServer.Controllers
             return Created(path, request.Content);
         }
 
-        [HttpDelete("{filename}")]
-        public IActionResult DeleteFile(string filename)
+        [HttpDelete("{handlerName}/{filename}")]
+        public async Task<IActionResult> DeleteFile(string handlerName, string filename)
         {
-            var handler = (DefaultHttpHandler)_handlers.GetHandler("default-http");
+            var handler = (HttpHandler)_server.GetHandler(handlerName);
             if (!handler.RemoveHostedFile(filename)) return NotFound();
 
-            _hub.Clients.All.HostedFileDeleted(filename);
+            await _hub.Clients.All.HostedFileDeleted(filename);
             return NoContent();
         }
     }

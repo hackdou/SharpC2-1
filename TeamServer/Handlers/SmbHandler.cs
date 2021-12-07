@@ -4,11 +4,16 @@ using TeamServer.Models;
 
 namespace TeamServer.Handlers
 {
-    public class DefaultSmbHandler : Handler
+    public class SmbHandler : Handler
     {
-        public override string Name { get; } = "default-smb";
+        public override string Name { get; }
 
-        public override List<HandlerParameter> Parameters => new()
+        public SmbHandler(string handlerName)
+        {
+            Name = handlerName;
+        }
+
+        public override List<HandlerParameter> Parameters { get; } = new()
         {
             new HandlerParameter("PipeName", "SharpPipe", false)
         };

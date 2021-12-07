@@ -12,10 +12,8 @@ using Drone.Models;
 
 namespace Drone.Handlers
 {
-    public class DefaultSmbHandler : Handler
+    public class SmbHandler : Handler
     {
-        public override string Name { get; } = "default-smb";
-
         private readonly HandlerMode _mode;
         private readonly string _target;
         
@@ -24,12 +22,12 @@ namespace Drone.Handlers
         private NamedPipeServerStream _pipeServer;
         private NamedPipeClientStream _pipeClient;
 
-        public DefaultSmbHandler()
+        public SmbHandler()
         {
             _mode = HandlerMode.Server;
         }
 
-        public DefaultSmbHandler(string target)
+        public SmbHandler(string target)
         {
             _mode = HandlerMode.Client;
             _target = target;

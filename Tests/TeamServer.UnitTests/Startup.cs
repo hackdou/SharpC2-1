@@ -11,12 +11,9 @@ namespace TeamServer.UnitTests
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IUserService, UserService>();
-            services.AddSingleton<IHandlerService, HandlerService>();
-            services.AddSingleton<ITaskService, TaskService>();
-            services.AddSingleton<IDroneService, DroneService>();
-            services.AddSingleton<IServerService, ServerService>();
-            services.AddSingleton<ICredentialService, CredentialService>();
+            services.AddSingleton<SharpC2Service>();
             services.AddSingleton<ICryptoService, CryptoService>();
+            services.AddSingleton<ICredentialService, CredentialService>();
 
             services.AddAutoMapper(typeof(Program));
             services.AddSignalR();

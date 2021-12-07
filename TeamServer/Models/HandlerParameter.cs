@@ -14,6 +14,8 @@
         }
 
         public void SetValue(string value)
-            => Value = value;
+        {
+            Value = value;
+        }
     }
 }

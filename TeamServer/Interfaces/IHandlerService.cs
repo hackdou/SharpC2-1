@@ -6,10 +6,10 @@ namespace TeamServer.Interfaces
 {
     public interface IHandlerService
     {
-        Handler LoadHandler(byte[] bytes);
-        void LoadDefaultHandlers();
+        void AddHandler(Handler handler);
+        IEnumerable<Handler> LoadHandlers(byte[] bytes);
         IEnumerable<Handler> GetHandlers();
         Handler GetHandler(string name);
-        bool RemoveHandler(string name);
+        void RemoveHandler(Handler handler);
     }
 }

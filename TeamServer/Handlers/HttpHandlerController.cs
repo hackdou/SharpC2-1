@@ -11,19 +11,18 @@ using Microsoft.AspNetCore.SignalR;
 using TeamServer.Hubs;
 using TeamServer.Interfaces;
 using TeamServer.Models;
+using TeamServer.Services;
 
 namespace TeamServer.Handlers
 {
     [Controller]
-    public class DefaultHttpHandlerController : ControllerBase
+    public class HttpHandlerController : ControllerBase
     {
-        private readonly ITaskService _tasks;
-        private readonly IHubContext<MessageHub, IMessageHub> _hub;
+        private readonly SharpC2Service _server;
 
-        public DefaultHttpHandlerController(ITaskService taskService, IHubContext<MessageHub, IMessageHub> hub)
+        public HttpHandlerController(SharpC2Service server)
         {
-            _tasks = taskService;
-            _hub = hub;
+            _server = server;
         }
 
         public async Task<IActionResult> RouteDrone()
@@ -47,12 +46,9 @@ namespace TeamServer.Handlers
             }
 
             // get anything outbound
-            var envelopes = (await _tasks.GetDroneTasks(metadata)).ToArray();
+            var envelopes = (await _server.GetDroneTasks(metadata)).ToArray();
 
             if (!envelopes.Any()) return NoContent();
-
-            var dataLength = envelopes.Sum(e => e.Data.Length);
-            await _hub.Clients.All.DroneDataSent(metadata, dataLength);
             return Ok(envelopes);
         }
 
@@ -73,7 +69,7 @@ namespace TeamServer.Handlers
             var envelopes = body.Deserialize<IEnumerable<MessageEnvelope>>();
             if (envelopes is null) return;
 
-            await _tasks.RecvC2Data(envelopes);
+            await _server.HandleC2Envelopes(envelopes);
         }
     }
 }

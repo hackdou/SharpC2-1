@@ -34,7 +34,7 @@ namespace TeamServer.Models
         private void SetSpawnTo(ModuleDef module)
         {
             var service = module.Types.GetType("Service");
-            var method = service.Methods.GetMethod("SpawnTo");
+            var method = service.Methods.GetMethod("get_SpawnTo");
             method.Body.Instructions[0].Operand = C2Profile.PostExploitation.SpawnTo;
         }
 
@@ -42,7 +42,7 @@ namespace TeamServer.Models
         {
             var alloc = module.Types.GetType(C2Profile.ProcessInjection.Allocation);
             var service = module.Types.GetType("Service");
-            var method = service.Methods.GetMethod("Allocation");
+            var method = service.Methods.GetMethod("get_Allocation");
             method.Body.Instructions[0].Operand = alloc;
         }
 
@@ -50,7 +50,7 @@ namespace TeamServer.Models
         {
             var exec = module.Types.GetType(C2Profile.ProcessInjection.Execution);
             var service = module.Types.GetType("Service");
-            var method = service.Methods.GetMethod("Execution");
+            var method = service.Methods.GetMethod("get_Execution");
             method.Body.Instructions[0].Operand = exec;
         }
     }

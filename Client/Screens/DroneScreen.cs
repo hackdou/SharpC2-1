@@ -20,9 +20,9 @@ namespace SharpC2.Screens
         private readonly SignalRService _signalRService;
         private readonly ScreenService _screenService;
 
-        private readonly List<Handler> _handlers;
         private readonly IEnumerable<string> _payloadFormats;
         
+        private List<Handler> _handlers;
         private readonly List<Drone> _drones;
 
         public DroneScreen(ApiService apiService, SignalRService signalRService, ScreenService screenService)
@@ -101,6 +101,7 @@ namespace SharpC2.Screens
             }
             else if (argument.Name.Equals("handler", StringComparison.OrdinalIgnoreCase))
             {
+                _handlers = _apiService.GetHandlers().GetAwaiter().GetResult().ToList();
                 result = _handlers.Where(h => h.Name.StartsWith(typedWord))
                     .Select(h => new CompletionItem
                     {
@@ -222,9 +223,16 @@ namespace SharpC2.Screens
             var path = args[3];
 
             var payload = await _apiService.GeneratePayload(format, handler);
-            await File.WriteAllBytesAsync(path, payload.Bytes);
-            
-            Console.PrintSuccess($"{payload.Bytes.Length} bytes saved.");
+
+            try
+            {
+                await File.WriteAllBytesAsync(path, payload.Bytes);
+                Console.PrintSuccess($"{payload.Bytes.Length} bytes saved.");
+            }
+            catch (Exception e)
+            {
+                Console.PrintError(e.Message);
+            }
         }
 
         private async Task InteractWithDrone(string[] args)
@@ -237,8 +245,7 @@ namespace SharpC2.Screens
                 return;
             }
 
-            using var handlerScreen =
-                (DroneInteraction)_screenService.GetScreen(ScreenService.ScreenType.DroneInteract);
+            using var handlerScreen = (DroneInteraction)_screenService.GetScreen(ScreenService.ScreenType.DroneInteract);
             await handlerScreen.SetScreenName(droneGuid);
             await handlerScreen.Show();
         }

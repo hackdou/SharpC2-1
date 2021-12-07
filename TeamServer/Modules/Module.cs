@@ -5,21 +5,21 @@ using Microsoft.AspNetCore.SignalR;
 using TeamServer.Hubs;
 using TeamServer.Interfaces;
 using TeamServer.Models;
+using TeamServer.Services;
 
 namespace TeamServer.Modules
 {
     public abstract class Module
     {
         public abstract string Name { get; }
-        public abstract string Description { get; }
 
-        protected IDroneService Drones;
-        protected IHubContext<MessageHub, IMessageHub> Hub;
+        protected SharpC2Service Server;
+        protected IHubContext<MessageHub, IMessageHub> MessageHub;
 
-        public void Init(IDroneService drones, IHubContext<MessageHub, IMessageHub> hub)
+        public void Init(SharpC2Service server, IHubContext<MessageHub, IMessageHub> hub)
         {
-            Drones = drones;
-            Hub = hub;
+            Server = server;
+            MessageHub = hub;
         }
         
         public abstract Task Execute(DroneMetadata metadata, DroneTaskUpdate update);

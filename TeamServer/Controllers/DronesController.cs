@@ -14,6 +14,7 @@ using SharpC2.API.V1.Responses;
 using TeamServer.Hubs;
 using TeamServer.Interfaces;
 using TeamServer.Models;
+using TeamServer.Services;
 
 namespace TeamServer.Controllers
 {
@@ -22,13 +23,13 @@ namespace TeamServer.Controllers
     [Route(Routes.V1.Drones)]
     public class DronesController : ControllerBase
     {
-        private readonly IDroneService _drones;
+        private readonly SharpC2Service _server;
         private readonly IMapper _mapper;
         private readonly IHubContext<MessageHub, IMessageHub> _hub;
 
-        public DronesController(IDroneService drones, IMapper mapper, IHubContext<MessageHub, IMessageHub> hub)
+        public DronesController(SharpC2Service server, IMapper mapper, IHubContext<MessageHub, IMessageHub> hub)
         {
-            _drones = drones;
+            _server = server;
             _mapper = mapper;
             _hub = hub;
         }
@@ -36,7 +37,7 @@ namespace TeamServer.Controllers
         [HttpGet]
         public IActionResult GetDrones()
         {
-            var drones = _drones.GetDrones();
+            var drones = _server.GetDrones();
             var response = _mapper.Map<IEnumerable<Drone>, IEnumerable<DroneResponse>>(drones);
 
             return Ok(response);
@@ -45,7 +46,7 @@ namespace TeamServer.Controllers
         [HttpGet("{droneGuid}")]
         public IActionResult GetDrone(string droneGuid)
         {
-            var drone = _drones.GetDrone(droneGuid);
+            var drone = _server.GetDrone(droneGuid);
             if (drone is null) return NotFound();
 
             var response = _mapper.Map<Drone, DroneResponse>(drone);
@@ -55,7 +56,7 @@ namespace TeamServer.Controllers
         [HttpPost("{droneGuid}/tasks")]
         public async Task<IActionResult> TaskDrone(string droneGuid, [FromBody] DroneTaskRequest request)
         {
-            var drone = _drones.GetDrone(droneGuid);
+            var drone = _server.GetDrone(droneGuid);
             if (drone is null) return NotFound();
             
             var task = _mapper.Map<DroneTaskRequest, DroneTask>(request);
@@ -72,7 +73,7 @@ namespace TeamServer.Controllers
         [HttpGet("{droneGuid}/tasks")]
         public IActionResult GetDroneTasks(string droneGuid)
         {
-            var drone = _drones.GetDrone(droneGuid);
+            var drone = _server.GetDrone(droneGuid);
             if (drone is null) return NotFound();
 
             var tasks = drone.GetTasks();
@@ -84,7 +85,7 @@ namespace TeamServer.Controllers
         [HttpGet("{droneGuid}/tasks/{taskGuid}")]
         public IActionResult GetDroneTask(string droneGuid, string taskGuid)
         {
-            var drone = _drones.GetDrone(droneGuid);
+            var drone = _server.GetDrone(droneGuid);
             if (drone is null) return NotFound();
 
             var task = drone.GetTask(taskGuid);
@@ -97,8 +98,12 @@ namespace TeamServer.Controllers
         [HttpDelete("{droneGuid}")]
         public async Task<IActionResult> RemoveDrone(string droneGuid)
         {
-            var result = _drones.RemoveDrone(droneGuid);
-            if (!result) return NotFound();
+            var drone = _server.GetDrone(droneGuid);
+
+            if (drone is null)
+                return NotFound("Drone not found");
+            
+            _server.RemoveDrone(drone);
 
             await _hub.Clients.All.DroneDeleted(droneGuid);
             return NoContent();
@@ -107,7 +112,7 @@ namespace TeamServer.Controllers
         [HttpDelete("{droneGuid}/tasks/{taskGuid}")]
         public IActionResult DeletePendingTask(string droneGuid, string taskGuid)
         {
-            var drone = _drones.GetDrone(droneGuid);
+            var drone = _server.GetDrone(droneGuid);
             if (drone is null) return NotFound();
 
             var task = drone.GetTask(taskGuid);

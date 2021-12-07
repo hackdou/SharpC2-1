@@ -5,8 +5,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Drone.Evasion;
 
+using Drone.Evasion;
 using Drone.Invocation.DynamicInvoke;
 using Drone.Handlers;
 using Drone.Models;
@@ -327,6 +327,6 @@ namespace Drone
             LoadDroneModule(self);
         }
 
-        private static Handler GetHandler => new DefaultHttpHandler();
+        private static Handler GetHandler => new HttpHandler();
     }
 }

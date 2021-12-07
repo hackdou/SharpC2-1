@@ -11,14 +11,12 @@ using Microsoft.Extensions.Hosting;
 
 using TeamServer.Interfaces;
 using TeamServer.Models;
+using TeamServer.Services;
 
 namespace TeamServer
 {
     internal static class Program
     {
-        private static IHandlerService _handlerService;
-        private static IServerService _serverService;
-        
         public static async Task Main(string[] args)
         {
             await Parser.Default.ParseArguments<Options>(args)
@@ -29,37 +27,28 @@ namespace TeamServer
         {
             var host = CreateHostBuilder(Array.Empty<string>()).Build();
 
-            // Set the server password for user auth
+            // set the server password for user auth
             var userService = host.Services.GetRequiredService<IUserService>();
             userService.SetPassword(opts.SharedPassword);
 
-            // Always load the default handlers
-            _handlerService = host.Services.GetRequiredService<IHandlerService>();
-            _handlerService.LoadDefaultHandlers();
+            var server = host.Services.GetRequiredService<SharpC2Service>();
+            server.LoadDefaultModules();
 
-            // If custom Handler
-            if (!string.IsNullOrEmpty(opts.HandlerPath))
-                await LoadHandler(opts.HandlerPath);
+            // if custom Handler
+            if (!string.IsNullOrWhiteSpace(opts.HandlerPath))
+            {
+                var bytes = await File.ReadAllBytesAsync(opts.HandlerPath);
+                server.LoadHandlers(bytes);
+            }
 
-            _serverService = host.Services.GetRequiredService<IServerService>();
-
-            C2Profile profile;
-            
-            // If custom C2 profile
-            if (!string.IsNullOrEmpty(opts.ProfilePath))
-                profile = await LoadC2Profile(opts.ProfilePath);
-            else // otherwise load the default
-                profile = new C2Profile();
-            
-            _serverService.SetC2Profile(profile);
+            // if custom C2 profile
+            if (!string.IsNullOrWhiteSpace(opts.ProfilePath))
+            {
+                var profile = await LoadC2Profile(opts.ProfilePath);
+                server.SetC2Profile(profile);
+            }
 
             await host.RunAsync();
-        }
-
-        private static async Task LoadHandler(string path)
-        {
-            var bytes = await File.ReadAllBytesAsync(path);
-            _handlerService.LoadHandler(bytes);
         }
 
         private static async Task<C2Profile> LoadC2Profile(string path)

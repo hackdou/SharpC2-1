@@ -4,10 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.SignalR;
-
-using TeamServer.Hubs;
-using TeamServer.Interfaces;
 using TeamServer.Models;
 using TeamServer.Services;
 
@@ -18,16 +14,12 @@ namespace TeamServer.Handlers
         public abstract string Name { get; }
         public abstract List<HandlerParameter> Parameters { get; }
         
-        protected ITaskService TaskService;
-        protected ICredentialService CredentialService;
-        protected IHubContext<MessageHub, IMessageHub> MessageHub;
+        protected SharpC2Service Server;
         protected CancellationTokenSource TokenSource;
 
-        public void Init(ITaskService taskService, ICredentialService credentialService, IHubContext<MessageHub, IMessageHub> messageHub)
+        public void Init(SharpC2Service server)
         {
-            TaskService = taskService;
-            CredentialService = credentialService;
-            MessageHub = messageHub;
+            Server = server;
         }
 
         public bool Running
@@ -48,7 +40,11 @@ namespace TeamServer.Handlers
         }
 
         protected string GetParameter(string key)
-            => Parameters.Single(p => p.Name.Equals(key, StringComparison.OrdinalIgnoreCase)).Value;
+        {
+            return Parameters.FirstOrDefault(p =>
+                p.Name.Equals(key, StringComparison.OrdinalIgnoreCase))?.Value;
+        }
+            
 
         public virtual Task Start()
         {

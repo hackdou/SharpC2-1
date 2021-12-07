@@ -16,13 +16,13 @@ namespace TeamServer.Services
         private readonly List<Handler> _handlers = new();
         
         private readonly ITaskService _taskService;
-        private readonly ICredentialService _credentials;
+        private readonly IServerService _serverService;
         private readonly IHubContext<MessageHub, IMessageHub> _hubContext;
 
-        public HandlerService(ITaskService taskService, ICredentialService credentialService, IHubContext<MessageHub, IMessageHub> hubContext)
+        public HandlerService(ITaskService taskService, IServerService serverService, IHubContext<MessageHub, IMessageHub> hubContext)
         {
             _taskService = taskService;
-            _credentials = credentialService;
+            _serverService = serverService;
             _hubContext = hubContext;
         }
 
@@ -44,10 +44,9 @@ namespace TeamServer.Services
             return handlers;
         }
 
-        public void LoadDefaultHandlers()
+        public void AddHandler(Handler handler)
         {
-            var self = Assembly.GetExecutingAssembly();
-            _ = LoadHandler(self);
+            _handlers.Add(handler);
         }
 
         public Handler LoadHandler(byte[] bytes)
@@ -60,7 +59,7 @@ namespace TeamServer.Services
 
         private void RegisterHandler(Handler handler)
         {
-            handler.Init(_taskService, _credentials, _hubContext);
+            handler.Init(_taskService, _serverService, _hubContext);
             _handlers.Add(handler);
         }
 

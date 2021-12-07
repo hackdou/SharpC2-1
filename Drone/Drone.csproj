@@ -10,10 +10,16 @@
         <PackageVersion />
         <Authors />
         <AssemblyName>drone</AssemblyName>
+        <OutputType>Exe</OutputType>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <OutputPath>..\TeamServer\Resources\</OutputPath>
+      <PlatformTarget>AnyCPU</PlatformTarget>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <PlatformTarget>AnyCPU</PlatformTarget>
     </PropertyGroup>
 
     <ItemGroup>

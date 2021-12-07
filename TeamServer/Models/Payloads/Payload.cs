@@ -44,40 +44,25 @@ namespace TeamServer.Models
         private void EmbedCryptoKey(ModuleDef module)
         {
             var type = module.Types.GetType("Crypto");
-            var method = type.Methods.GetMethod("Key");
+            var method = type.Methods.GetMethod("get_Key");
             method.Body.Instructions[0].Operand = CryptoKey;
         }
 
         private void EmbedHandler(ModuleDef module)
         {
-            // get handlers (not including the abstract)
-            var handlers = module.Types
-                .Where(t => t.FullName.Contains("Drone.Handlers", StringComparison.OrdinalIgnoreCase))
-                .Where(t => !t.FullName.Equals("Drone.Handlers.Handler", StringComparison.OrdinalIgnoreCase));
-            
-            // match the one that matches the abstract name
-            // it's actually set in the ctor of all places
-            TypeDef targetHandler = null;
-            
-            foreach (var handler in handlers)
-            {
-                var ctor = handler.Methods.GetConstructor();
-                if (ctor is null) continue;
-                
-                var instructions = ctor.Body.Instructions.Where(i => i.OpCode == OpCodes.Ldstr);
-                
-                foreach (var instruction in instructions)
-                {
-                    if (instruction.Operand is null) continue;
-                    var operand = (string) instruction.Operand;
-                    if (!operand.Equals(Handler.Name, StringComparison.OrdinalIgnoreCase)) continue;
-                    
-                    targetHandler = handler;
-                    break;
-                }
-            }
+            // first get the type of the handler
+            var handlerType = Handler.GetType().Name;
 
-            if (targetHandler is null) throw new Exception("Could not find matching Handler");
+            // get drone handlers (not including the abstract)
+            var handlers = module.Types
+                .Where(t => t.BaseType is not null)
+                .Where(t => t.BaseType.Name.Equals("Handler"))
+                .ToArray();
+
+            // get the drone handler which matches the type of the server handler
+            var targetHandler = handlers.FirstOrDefault(h => h.Name.Equals(handlerType));
+            if (targetHandler is null)
+                throw new Exception("Could not find matching Handler");
 
             if (Handler.Parameters is not null)
             {
@@ -86,7 +71,7 @@ namespace TeamServer.Models
                     if (string.IsNullOrWhiteSpace(handlerParameter.Value)) continue;
                     
                     // get matching method in handler
-                    var method = targetHandler.Methods.GetMethod(handlerParameter.Name);
+                    var method = targetHandler.Methods.GetMethod($"get_{handlerParameter.Name}");
                     var instruction = method?.Body.Instructions.FirstOrDefault(i => i.OpCode == OpCodes.Ldstr);
                     if (instruction is null) continue;
                     instruction.Operand = handlerParameter.Value;
@@ -94,19 +79,23 @@ namespace TeamServer.Models
             }
 
             // finally, ensure that the drone is creating an instance of the correct handler
+            var defaultConstructor = targetHandler.Methods.GetEmptyConstructor();
+            if (defaultConstructor is null)
+                throw new Exception("Could not locate an empty ctor");
+            
             var droneType = module.Types.GetType("Drone");
             var getHandler = droneType.Methods.GetMethod("get_GetHandler");
-            getHandler.Body.Instructions[0].Operand = targetHandler.Methods.GetConstructor();
+            getHandler.Body.Instructions[0].Operand = defaultConstructor;
         }
 
         private void SetSleepTime(ModuleDef module)
         {
             var type = module.Types.GetType("Utilities");
             
-            var sleepInterval = type.Methods.GetMethod("GetSleepInterval");
+            var sleepInterval = type.Methods.GetMethod("get_GetSleepInterval");
             sleepInterval.Body.Instructions[0].Operand = C2Profile.Stage.SleepTime;
             
-            var sleepJitter = type.Methods.GetMethod("GetSleepJitter");
+            var sleepJitter = type.Methods.GetMethod("get_GetSleepJitter");
             sleepJitter.Body.Instructions[0].Operand = C2Profile.Stage.SleepJitter;
         }
 
@@ -114,10 +103,10 @@ namespace TeamServer.Models
         {
             var utils = module.Types.GetType("Utilities");
 
-            var getBypassAmsi = utils.Methods.GetMethod("GetBypassAmsi");
+            var getBypassAmsi = utils.Methods.GetMethod("get_GetBypassAmsi");
             SetBypassAmsi(getBypassAmsi);
             
-            var getBypassEtw = utils.Methods.GetMethod("GetBypassEtw");
+            var getBypassEtw = utils.Methods.GetMethod("get_GetBypassEtw");
             SetBypassEtw(getBypassEtw);
         }
 
@@ -126,11 +115,11 @@ namespace TeamServer.Models
             var utils = module.Types.GetType("Utilities");
 
             // allocation
-            var getAllocationTech = utils.Methods.GetMethod("GetAllocationTechnique");
+            var getAllocationTech = utils.Methods.GetMethod("get_GetAllocationTechnique");
             getAllocationTech.Body.Instructions[0].Operand = C2Profile.ProcessInjection.Allocation;
             
             // execution
-            var getExecutionTech = utils.Methods.GetMethod("GetExecutionTechnique");
+            var getExecutionTech = utils.Methods.GetMethod("get_GetExecutionTechnique");
             getExecutionTech.Body.Instructions[0].Operand = C2Profile.ProcessInjection.Execution;
         }
 

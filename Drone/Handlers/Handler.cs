@@ -8,8 +8,6 @@ namespace Drone.Handlers
 {
     public abstract class Handler
     {
-        public abstract string Name { get; }
-        
         protected readonly ConcurrentQueue<MessageEnvelope> InboundQueue = new();
         protected readonly ConcurrentQueue<MessageEnvelope> OutboundQueue = new();
 

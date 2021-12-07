@@ -1,6 +1,10 @@
-using System.Linq;
+using System;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 
-using TeamServer.Interfaces;
+using TeamServer.Handlers;
+using TeamServer.Services;
 
 using Xunit;
 
@@ -8,31 +12,53 @@ namespace TeamServer.UnitTests
 {
     public class HandlerTests
     {
-        private readonly IHandlerService _handlers;
+        private readonly SharpC2Service _server;
 
-        public HandlerTests(IHandlerService handlers)
+        public HandlerTests(SharpC2Service server)
         {
-            handlers.LoadDefaultHandlers();
-            _handlers = handlers;
+            _server = server;
         }
 
         [Fact]
-        public void GetHandlers()
+        public void CreateHandler()
         {
-            var handlers = _handlers.GetHandlers();
+            const string handlerName = "test";
             
-            Assert.True(handlers.Any());
+            var httpHandler = new HttpHandler(handlerName);
+            _server.AddHandler(httpHandler);
+
+            var handler = _server.GetHandler(handlerName);
+            
+            Assert.Equal(httpHandler, handler);
         }
 
         [Fact]
-        public void GetHandler()
+        public void RemoveHandler()
         {
-            const string handlerName = "default-http";
-
-            var handler = _handlers.GetHandler(handlerName);
+            const string handlerName = "test";
             
-            Assert.NotNull(handler);
-            Assert.Equal(handlerName, handler.Name);
+            var httpHandler = new HttpHandler(handlerName);
+            _server.AddHandler(httpHandler);
+            _server.RemoveHandler(httpHandler);
+
+            var handler = _server.GetHandler(handlerName);
+            
+            Assert.Null(handler);
+        }
+
+        [Fact]
+        public async Task StartHttpHandler()
+        {
+            const string handlerName = "test";
+            
+            var httpHandler = new HttpHandler(handlerName);
+            httpHandler.Init(_server);
+            httpHandler.Start();
+
+            using var client = new HttpClient { BaseAddress = new Uri("http://localhost") };
+            var response = await client.GetAsync("/");
+            
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
     }
 }

@@ -9,6 +9,6 @@ namespace TeamServer.Interfaces
         void AddDrone(Drone drone);
         IEnumerable<Drone> GetDrones();
         Drone GetDrone(string guid);
-        bool RemoveDrone(string guid);
+        void RemoveDrone(Drone drone);
     }
 }

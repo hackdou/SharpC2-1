@@ -10,27 +10,59 @@ using Drone.Models;
 
 namespace Drone.Handlers
 {
-    public class DefaultTcpHandler : Handler
+    public class TcpHandler : Handler
     {
-        public override string Name { get; } = "default-tcp";
-
-        private readonly HandlerMode _mode;
+        // server mode
+        private static bool LocalhostOnly => bool.Parse("false");
+        private static int BindPort => int.Parse("4444");
+        
+        // pivot mode
+        private static string ConnectAddress => "";
+        
+        // client mode
         private readonly string _target;
+        private readonly int _port;
+        
+        private readonly HandlerMode _mode;
+        private readonly IPEndPoint _endPoint;
         
         private CancellationTokenSource _tokenSource;
 
         private TcpListener _tcpListener;
         private TcpClient _tcpClient;
-
-        public DefaultTcpHandler()
+        
+        // pivot server mode
+        public TcpHandler(int bindPort)
         {
             _mode = HandlerMode.Server;
+            _endPoint = new IPEndPoint(IPAddress.Any, bindPort);
         }
 
-        public DefaultTcpHandler(string target)
+        // server mode + pivot client mode
+        public TcpHandler()
+        {
+            if (string.IsNullOrWhiteSpace(ConnectAddress))
+            {
+                _mode = HandlerMode.Server;
+
+                var ipAddress = LocalhostOnly ? IPAddress.Loopback : IPAddress.Any;
+                _endPoint = new IPEndPoint(ipAddress, BindPort);
+            }
+            else
+            {
+                _mode = HandlerMode.Client;
+                _target = ConnectAddress;
+                _port = BindPort;
+            }
+        }
+
+        // client mode
+        public TcpHandler(string target, int port)
         {
             _mode = HandlerMode.Client;
+            
             _target = target;
+            _port = port;
         }
 
         public override async Task Start()
@@ -40,11 +72,10 @@ namespace Drone.Handlers
             switch (_mode)
             {
                 case HandlerMode.Client:
+                    
                     _tcpClient = new TcpClient();
 
-                    IPAddress target;
-
-                    if (!IPAddress.TryParse(_target, out target))
+                    if (!IPAddress.TryParse(_target, out var target))
                     {
                         // do a DNS lookup
                         var dns = await Dns.GetHostAddressesAsync(_target);
@@ -54,16 +85,13 @@ namespace Drone.Handlers
                     }
                     
                     // blocks until connected
-                    await _tcpClient.ConnectAsync(target, BindPort);
+                    await _tcpClient.ConnectAsync(target, _port);
                     await RunReadWriteLoop(_tcpClient.GetStream());
                     break;
                 
                 case HandlerMode.Server:
 
-                    var ipAddress = LocalhostOnly ? IPAddress.Loopback : IPAddress.Any;
-                    var endPoint = new IPEndPoint(ipAddress, BindPort);
-
-                    _tcpListener = new TcpListener(endPoint);
+                    _tcpListener = new TcpListener(_endPoint);
                     _tcpListener.Start(100);
                     
                     // blocks until client connects
@@ -162,8 +190,5 @@ namespace Drone.Handlers
                     throw new ArgumentOutOfRangeException();
             }
         }
-
-        private static bool LocalhostOnly => bool.Parse("false");
-        private static int BindPort => int.Parse("4444");
     }
 }

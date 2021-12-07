@@ -11,9 +11,8 @@ namespace TeamServer.Modules
 {
     public class ReversePortForwardModule : Module
     {
-        public override string Name { get; } = "rportfwd";
-        public override string Description { get; } = "Handle reverse port forwards";
-        
+        public override string Name => "rportfwd";
+
         public override async Task Execute(DroneMetadata metadata, DroneTaskUpdate update)
         {
             var packet = update.Result.Deserialize<ReversePortForwardPacket>();
@@ -39,7 +38,7 @@ namespace TeamServer.Modules
 
             var inData = await ReadFromStream(stream);
 
-            var drone = Drones.GetDrone(metadata.Guid);
+            var drone = Server.GetDrone(metadata.Guid);
             drone?.TaskDrone(new DroneTask("core", "rportfwd-inbound")
             {
                 Arguments = new [] { packet.BindPort.ToString(), Convert.ToBase64String(inData) }
