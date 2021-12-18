@@ -51,7 +51,7 @@ namespace Drone
             while (_running)
             {
                 // check if handler has given up
-                if (t.IsCompleted) return;
+                if (t.IsFaulted) return;
                 
                 // check children
                 foreach (var child in _children)
@@ -282,6 +282,27 @@ namespace Drone
                 if (!type.IsSubclassOf(typeof(DroneModule))) continue;
                 var module = (DroneModule) Activator.CreateInstance(type);
                 LoadDroneModule(module);
+            }
+        }
+
+        private void LoadDroneHandler(Handler handler, string[] args)
+        {
+            // stop the current handler
+            _handler?.Stop();
+            
+            // replace and start the new handler
+            _handler = handler;
+            _handler.Init(_config, _metadata);
+            _handler.Start(args);
+        }
+
+        public void LoadDroneHandler(Assembly asm, string[] args)
+        {
+            foreach (var type in asm.GetTypes())
+            {
+                if (!type.IsSubclassOf(typeof(Handler))) continue;
+                var handler = (Handler) Activator.CreateInstance(type);
+                LoadDroneHandler(handler, args);
             }
         }
 

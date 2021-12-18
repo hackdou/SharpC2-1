@@ -26,7 +26,7 @@ namespace Drone.Handlers
             _client.Headers.Add("Authorization", $"Bearer {encodedMetadata}");
         }
 
-        public override async Task Start()
+        public override async Task Start(string[] args = null)
         {
             _running = true;
 
@@ -56,7 +56,7 @@ namespace Drone.Handlers
             }
         }
 
-        private int CalculateSleepTime(int interval, int jitter)
+        private static int CalculateSleepTime(int interval, int jitter)
         {
             var diff = (int)Math.Round((double)interval / 100 * jitter);
 
@@ -102,6 +102,7 @@ namespace Drone.Handlers
         public override void Stop()
         {
             _running = false;
+            _client.Dispose();
         }
 
         private readonly Dictionary<int, int> _backoff = new()

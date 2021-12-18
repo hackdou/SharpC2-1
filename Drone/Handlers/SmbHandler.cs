@@ -33,7 +33,7 @@ namespace Drone.Handlers
             _target = target;
         }
         
-        public override async Task Start()
+        public override async Task Start(string[] args = null)
         {
             _tokenSource = new CancellationTokenSource();
             

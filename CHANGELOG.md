@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.5.3] - 2021-12-18
+### Added
+- Hot Swappable Drone C2 Handlers
+
 ## [0.5.2] - 2021-11-28
 ### Added
 - TCP Drone

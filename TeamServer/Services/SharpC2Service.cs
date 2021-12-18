@@ -270,7 +270,7 @@ namespace TeamServer.Services
                 currentParents = allChildren.ToArray();
             }
 
-            var messageSize = envelopes.Sum(e => e.Drone.Length);
+            var messageSize = envelopes.Sum(e => e.Data.Length);
             
             if (messageSize > 0)
                 await _hub.Clients.All.DroneDataSent(metadata, messageSize);

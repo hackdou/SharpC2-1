@@ -52,7 +52,7 @@ namespace Drone.Handlers
             return temp.ToArray();
         }
 
-        public abstract Task Start();
+        public abstract Task Start(string[] args = null);
         public abstract void Stop();
 
         protected enum HandlerMode
