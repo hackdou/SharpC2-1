@@ -120,7 +120,7 @@ namespace TeamServer.Services
                 drone = new Drone(message.Metadata);
                 
                 // new drone, send stdapi.dll if enabled in c2 profile
-                if (_profile.Stage.SendStandardApi)
+                if (GetC2Profile().Stage.SendStandardApi)
                 {
                     drone.TaskDrone(new DroneTask("core", "load-module")
                     {
