@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.5.4] - 2021-12-19
+### Added
+- `dllinject` command. Converts a native DLL via [sRDI](https://github.com/monoxgas/sRDI) and injects it into the specified process.
+
 ## [0.5.3] - 2021-12-18
 ### Added
 - Hot Swappable Drone C2 Handlers
