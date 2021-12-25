@@ -64,6 +64,10 @@ namespace SharpC2.Screens
             // not sure this should happen, but meh
             if (command is null)
                 return base.GetAutoComplete(input, caret);
+
+            // if command has no args, return empty result
+            if (command.Arguments is null)
+                return Task.FromResult<IReadOnlyList<CompletionItem>>(Array.Empty<CompletionItem>());
             
             // return arguments based on split length
             var argPosition = splitInput.Length - 2;
