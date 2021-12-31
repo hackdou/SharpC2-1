@@ -1,7 +1,7 @@
 ---
 name: Feature request
 about: Suggest an idea for this project
-title: "[FEATURE]"
+title: "[FEATURE] <INSERT DESCRIPTIVE TITLE>"
 labels: enhancement
 assignees: rasta-mouse
 
