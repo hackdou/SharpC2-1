@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace StandardApi;
+namespace StandardModule;
 
 public class ShellcodeReflectiveDllInjection
 {

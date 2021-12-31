@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace StandardApi.Invocation.DynamicInvoke
+namespace StandardModule.Invocation.DynamicInvoke
 {
     public static class Win32
     {
@@ -47,42 +47,6 @@ namespace StandardApi.Invocation.DynamicInvoke
 
         public static class Advapi32
         {
-            public static bool LogonUserA(string lpszUsername, string lpszDomain, string lpszPassword,
-                Data.Win32.Advapi32.LogonUserType dwLogonType, Data.Win32.Advapi32.LogonUserProvider dwLogonProvider,
-                ref IntPtr phToken)
-            {
-                object[] parameters =
-                {
-                    lpszUsername, lpszDomain, lpszPassword, dwLogonType, dwLogonProvider, phToken
-                };
-
-                var result = (bool)Drone.Invocation.DynamicInvoke.Generic.DynamicApiInvoke("advapi32.dll",
-                    "LogonUserA", typeof(Delegates.LogonUserA), ref parameters);
-
-                phToken = (IntPtr)parameters[5];
-                return result;
-            }
-
-            public static bool ImpersonateLoggedOnUser(IntPtr hToken)
-            {
-                object[] parameters = { hToken };
-
-                var retVal = (bool)Drone.Invocation.DynamicInvoke.Generic.DynamicApiInvoke("advapi32.dll",
-                    "ImpersonateLoggedOnUser", typeof(Delegates.ImpersonateLoggedOnUser), ref parameters);
-
-                return retVal;
-            }
-
-            public static bool RevertToSelf()
-            {
-                object[] parameters = { };
-
-                var retVal = (bool)Drone.Invocation.DynamicInvoke.Generic.DynamicApiInvoke("advapi32.dll",
-                    "RevertToSelf", typeof(Delegates.RevertToSelf), ref parameters);
-
-                return retVal;
-            }
-
             public static bool OpenProcessToken(IntPtr hProcess, Data.Win32.Advapi32.TokenAccess tokenAccess,
                 ref IntPtr hToken)
             {
@@ -179,18 +143,6 @@ namespace StandardApi.Invocation.DynamicInvoke
                 out IntPtr lpThreadId);
 
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-            public delegate bool LogonUserA(
-                string lpszUsername,
-                string lpszDomain,
-                string lpszPassword,
-                Data.Win32.Advapi32.LogonUserType dwLogonType,
-                Data.Win32.Advapi32.LogonUserProvider dwLogonProvider,
-                ref IntPtr phToken);
-
-            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-            public delegate bool ImpersonateLoggedOnUser(IntPtr hToken);
-
-            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate bool OpenProcessToken(
                 IntPtr processHandle,
                 Data.Win32.Advapi32.TokenAccess desiredAccess,
@@ -204,64 +156,6 @@ namespace StandardApi.Invocation.DynamicInvoke
                 Data.Win32.WinNT.SECURITY_IMPERSONATION_LEVEL impersonationLevel,
                 Data.Win32.WinNT.TOKEN_TYPE tokenType,
                 ref IntPtr phNewToken);
-
-            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-            public delegate bool RevertToSelf();
-
-            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-            public delegate IntPtr CreateFileW(
-                [MarshalAs(UnmanagedType.LPWStr)] string lpFileName,
-                uint dwDesiredAccess,
-                uint dwShareMode,
-                IntPtr lpSecurityAttributes,
-                uint dwCreationDisposition,
-                uint dwFlagsAndAttributes,
-                IntPtr hTemplateFile);
-
-            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-            public delegate uint GetFileAttributesW(IntPtr lpFileName);
-
-            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-            public delegate bool GetFileAttributesExW(
-                IntPtr lpFileName,
-                uint fInfoLevelId,
-                IntPtr lpFileInformation);
-
-            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-            public delegate bool GetFileInformationByHandle(
-                IntPtr hFile,
-                IntPtr lpFileInformation);
-
-            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-            public delegate IntPtr CreateTransaction(
-                IntPtr lpTransactionAttributes,
-                IntPtr uow,
-                int createOptions,
-                int isolationLevel,
-                int isolationFlags,
-                int timeout,
-                [MarshalAs(UnmanagedType.LPWStr)] System.Text.StringBuilder description);
-
-            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-            public delegate IntPtr CreateFileTransactedW(
-                [MarshalAs(UnmanagedType.LPWStr)] string lpFileName,
-                uint dwDesiredAccess,
-                uint dwShareMode,
-                IntPtr lpSecurityAttributes,
-                uint dwCreationDisposition,
-                uint dwFlagsAndAttributes,
-                IntPtr hTemplateFile,
-                IntPtr hTransaction,
-                ref ushort pusMiniVersion,
-                IntPtr nullValue);
-
-            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-            public delegate bool WriteFile(
-                IntPtr hFile,
-                byte[] lpBuffer,
-                uint nNumberOfBytesToWrite,
-                ref uint lpNumberOfBytesWritten,
-                IntPtr lpOverlapped);
 
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate bool IsWow64Process(

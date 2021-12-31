@@ -2,15 +2,14 @@
 
     <PropertyGroup>
         <TargetFramework>net48</TargetFramework>
-        <LangVersion>default</LangVersion>
+        <LangVersion>latest</LangVersion>
         <Company>RastaMouse</Company>
         <Product>SharpC2</Product>
         <IsPackable>false</IsPackable>
         <PackageId />
         <PackageVersion />
         <Authors />
-        <AssemblyName>stdapi</AssemblyName>
-        <RootNamespace>StandardApi</RootNamespace>
+        <AssemblyName>std</AssemblyName>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -22,9 +21,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-        <HintPath>System.Management.Automation.dll</HintPath>
-      </Reference>
       <Reference Include="System.ServiceProcess" />
     </ItemGroup>
 

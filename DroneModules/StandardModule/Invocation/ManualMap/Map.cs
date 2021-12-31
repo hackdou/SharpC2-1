@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace StandardApi.Invocation.ManualMap
+namespace StandardModule.Invocation.ManualMap
 {
     public static class Map
     {

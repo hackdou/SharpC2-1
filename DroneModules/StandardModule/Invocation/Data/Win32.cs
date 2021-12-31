@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace StandardApi.Invocation.Data
+namespace StandardModule.Invocation.Data
 {
     public static class Win32
     {
@@ -101,26 +101,6 @@ namespace StandardApi.Invocation.Data
 
         public static class Advapi32
         {
-            public enum LogonUserProvider
-            {
-                LOGON32_PROVIDER_DEFAULT = 0,
-                LOGON32_PROVIDER_WINNT35 = 1,
-                LOGON32_PROVIDER_WINNT40 = 2,
-                LOGON32_PROVIDER_WINNT50 = 3,
-                LOGON32_PROVIDER_VIRTUAL = 4
-            }
-
-            public enum LogonUserType
-            {
-                LOGON32_LOGON_INTERACTIVE = 2,
-                LOGON32_LOGON_NETWORK = 3,
-                LOGON32_LOGON_BATCH = 4,
-                LOGON32_LOGON_SERVICE = 5,
-                LOGON32_LOGON_UNLOCK = 7,
-                LOGON32_LOGON_NETWORK_CLEARTEXT = 8,
-                LOGON32_LOGON_NEW_CREDENTIALS = 9
-            }
-
             [Flags]
             public enum TokenAccess : uint
             {

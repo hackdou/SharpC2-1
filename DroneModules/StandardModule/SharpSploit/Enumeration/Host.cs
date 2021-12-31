@@ -7,7 +7,7 @@ using System.ServiceProcess;
 
 using Drone.SharpSploit.Generic;
 
-namespace StandardApi.SharpSploit.Enumeration
+namespace StandardModule.SharpSploit.Enumeration
 {
     public static class Host
     {

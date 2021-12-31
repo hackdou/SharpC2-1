@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace StandardApi.Invocation.DynamicInvoke
+namespace StandardModule.Invocation.DynamicInvoke
 {
     public static class Generic
     {

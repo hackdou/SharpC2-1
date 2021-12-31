@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 using Drone.Invocation.Data;
 
-namespace StandardApi.Invocation.Injection
+namespace StandardModule.Invocation.Injection
 {
     public abstract class AllocationTechnique
     {

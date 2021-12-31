@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace StandardApi.Invocation.Injection
+namespace StandardModule.Invocation.Injection
 {
     public static class Injector
     {

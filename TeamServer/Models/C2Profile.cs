@@ -11,7 +11,9 @@ namespace TeamServer.Models
             public string SleepTime { get; set; } = "5";
             public string SleepJitter { get; set; } = "0";
             public string DllExport { get; set; } = "Execute";
-            public bool SendStandardApi { get; set; } = true;
+            public bool SendStandardModule { get; set; } = true;
+            public bool SendPowerShellModule { get; set; } = true;
+            public bool SendTokenModule { get; set; } = true;
         }
 
         public class PostExploitationBlock

@@ -119,15 +119,8 @@ namespace TeamServer.Services
             {
                 drone = new Drone(message.Metadata);
                 
-                // new drone, send stdapi.dll if enabled in c2 profile
-                if (GetC2Profile().Stage.SendStandardApi)
-                {
-                    drone.TaskDrone(new DroneTask("core", "load-module")
-                    {
-                        Artefact = await Utilities.GetEmbeddedResource("stdapi.dll")
-                    });
-                }
-
+                // new drone, send modules enabled in c2 profile
+                await SendPostExModules(drone);
                 AddDrone(drone);
             }
             
@@ -153,6 +146,35 @@ namespace TeamServer.Services
                 
                 default:
                     return;
+            }
+        }
+
+        private async Task SendPostExModules(Drone drone)
+        {
+            var profile = GetC2Profile();
+                
+            if (profile.Stage.SendStandardModule)
+            {
+                drone.TaskDrone(new DroneTask("core", "load-module")
+                {
+                    Artefact = await Utilities.GetEmbeddedResource("std.dll")
+                });
+            }
+
+            if (profile.Stage.SendTokenModule)
+            {
+                drone.TaskDrone(new DroneTask("core", "load-module")
+                {
+                    Artefact = await Utilities.GetEmbeddedResource("tokens.dll")
+                });    
+            }
+
+            if (profile.Stage.SendPowerShellModule)
+            {
+                drone.TaskDrone(new DroneTask("core", "load-module")
+                {
+                    Artefact = await Utilities.GetEmbeddedResource("posh.dll")
+                });  
             }
         }
         

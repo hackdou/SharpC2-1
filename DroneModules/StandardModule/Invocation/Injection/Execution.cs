@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
 
-namespace StandardApi.Invocation.Injection
+namespace StandardModule.Invocation.Injection
 {
     public abstract class ExecutionTechnique
     {

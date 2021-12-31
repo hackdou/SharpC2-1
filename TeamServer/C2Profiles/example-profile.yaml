@@ -2,7 +2,9 @@ Stage:
   SleepTime: 5
   SleepJitter: 0
   DllExport: Execute
-  SendStandardApi: true
+  SendStandardModule: true
+  SendPowerShellModule: true
+  SendTokenModule: true
 PostExploitation:
   BypassAmsi: false
   BypassEtw: false

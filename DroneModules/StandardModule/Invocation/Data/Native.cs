@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace StandardApi.Invocation.Data
+namespace StandardModule.Invocation.Data
 {
     public static class Native
     {
