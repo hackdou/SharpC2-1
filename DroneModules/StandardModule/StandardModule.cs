@@ -50,6 +50,7 @@ public partial class StandardApi : DroneModule
             {
                 new("pid", false),
                 new("/path/to/file.dll", false, true)
-            })
+            }),
+        new Command("hooks-detect", "Detect hooks in NTDLL", DetectHooks)
     };
 }

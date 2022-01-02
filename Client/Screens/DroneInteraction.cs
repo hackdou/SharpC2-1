@@ -227,7 +227,7 @@ namespace SharpC2.Screens
         private void OnDroneTaskAborted(DroneMetadata metadata, DroneTaskUpdate update)
         {
             if (!metadata.Guid.Equals(_drone.Guid)) return;
-            Console.PrintWarning($"Drone task {update.TaskGuid} has thrown an exception.");
+            Console.PrintWarning($"Drone task {update.TaskGuid} returned an error.");
             
             if (update.Result?.Length > 0)
                 Console.PrintOutput(Encoding.UTF8.GetString(update.Result));

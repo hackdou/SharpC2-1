@@ -18,10 +18,12 @@ namespace Drone
             var addresses = Dns.GetHostAddresses(hostname);
             var process = Process.GetCurrentProcess();
 
+            using var identity = WindowsIdentity.GetCurrent();
+
             return new Metadata
             {
                 Guid = Guid.NewGuid().ToShortGuid(),
-                Username = Environment.UserName,
+                Username = identity.Name,
                 Hostname = hostname,
                 Address = addresses.LastOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork)?.ToString(),
                 Process = process.ProcessName,
