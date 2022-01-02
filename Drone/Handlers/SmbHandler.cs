@@ -45,7 +45,7 @@ public class SmbHandler : Handler
             {
                 _pipeClient = new NamedPipeClientStream(_target, PipeName);
 
-                // blocks until connected, we give it 5 seconds before aborting
+                // blocks until connected, give it 5 seconds before aborting
                 var token = new CancellationTokenSource(new TimeSpan(0, 0, 5));
                 await _pipeClient.ConnectAsync(token.Token);
                 await RunReadWriteLoop(_pipeClient);

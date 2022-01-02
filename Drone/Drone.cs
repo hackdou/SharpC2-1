@@ -264,7 +264,16 @@ namespace Drone
             var envelope = _crypto.EncryptMessage(message);
             
             handler.QueueOutbound(envelope);
-            handler.Start();
+            var t = handler.Start();
+            
+            Thread.Sleep(new TimeSpan(0, 0, 0, 7));
+            
+            if (t.IsCanceled || t.IsFaulted)
+            {
+                var ex = t.Exception?.InnerExceptions[0].Message;
+                throw new Exception($"Error connecting to child. {ex}.");
+            }
+            
             _children.Add(handler);
         }
 
