@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -44,7 +45,10 @@ namespace SharpC2.API.V1
             var response = await _client.PostAsync(Routes.V1.Handlers, stringContent);
             var content = await response.Content.ReadAsStringAsync();
 
-            return JsonConvert.DeserializeObject<HandlerResponse>(content);
+            if (response.IsSuccessStatusCode)
+                return JsonConvert.DeserializeObject<HandlerResponse>(content);
+
+            throw new HandlerException(content);
         }
 
         public async Task<IEnumerable<HandlerResponse>> LoadHandler(byte[] handlerBytes)
@@ -74,7 +78,10 @@ namespace SharpC2.API.V1
             var response = await _client.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
             
-            return JsonConvert.DeserializeObject<HandlerResponse>(content);
+            if (response.IsSuccessStatusCode)
+                return JsonConvert.DeserializeObject<HandlerResponse>(content);
+
+            throw new HandlerException(content);
         }
 
         public async Task<HandlerResponse> StopHandler(string handlerName)
@@ -85,7 +92,19 @@ namespace SharpC2.API.V1
             var response = await _client.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
             
-            return JsonConvert.DeserializeObject<HandlerResponse>(content); 
+            if (response.IsSuccessStatusCode)
+                return JsonConvert.DeserializeObject<HandlerResponse>(content);
+
+            throw new HandlerException(content);
         }
+    }
+
+    public class HandlerException : Exception
+    {
+        public HandlerException() { }
+
+        public HandlerException(string message) : base(message) { }
+
+        public HandlerException(string message, Exception inner) : base(message, inner) { }
     }
 }

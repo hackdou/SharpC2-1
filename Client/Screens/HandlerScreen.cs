@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using PrettyPrompt.Completion;
-
+using SharpC2.API.V1;
 using SharpC2.Models;
 using SharpC2.ScreenCommands;
 using SharpC2.Services;
@@ -126,7 +126,8 @@ namespace SharpC2.Screens
             var name = args[1];
             var type = args[2];
 
-            await _apiService.CreateHandler(name, type);
+            try { await _apiService.CreateHandler(name, type); }
+            catch (HandlerException e) { Console.PrintError(e.Message); }
         }
 
         private async Task ListHandlers(string[] args)
@@ -157,10 +158,16 @@ namespace SharpC2.Screens
         }
 
         private async Task StartHandler(string[] args)
-            => await _apiService.StartHandler(args[1]);
+        {
+            try { await _apiService.StartHandler(args[1]); }
+            catch (HandlerException e) { Console.PrintError(e.Message); }
+        }
 
         private async Task StopHandler(string[] args)
-            => await _apiService.StopHandler(args[1]);
+        {
+            try { await _apiService.StopHandler(args[1]); }
+            catch (HandlerException e) { Console.PrintError(e.Message); }
+        }
 
         private void OnHandlerLoaded(Handler handler)
         {

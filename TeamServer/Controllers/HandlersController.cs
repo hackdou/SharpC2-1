@@ -76,26 +76,23 @@ namespace TeamServer.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateHandler([FromBody] CreateHandlerRequest request)
         {
-            Handler handler;
+            // check if handler name already exists
+            var existing = _server.GetHandler(request.HandlerName);
             
-            switch (request.Type)
+            if (existing is not null)
+                return BadRequest($"Handler with name '{request.HandlerName}' already exists");
+            
+            // create new handler
+            Handler handler = request.Type switch
             {
-                case CreateHandlerRequest.HandlerType.HTTP:
-                    handler = new HttpHandler(request.HandlerName);
-                    break;
+                CreateHandlerRequest.HandlerType.HTTP => new HttpHandler(request.HandlerName),
+                CreateHandlerRequest.HandlerType.SMB => new SmbHandler(request.HandlerName),
+                CreateHandlerRequest.HandlerType.TCP => new TcpHandler(request.HandlerName),
                 
-                case CreateHandlerRequest.HandlerType.SMB:
-                    handler = new SmbHandler(request.HandlerName);
-                    break;
-                
-                case CreateHandlerRequest.HandlerType.TCP:
-                    handler = new TcpHandler(request.HandlerName);
-                    break;
-                
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            // add and return path
             _server.AddHandler(handler);
             
             var root = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Path.ToUriComponent()}";
@@ -170,7 +167,7 @@ namespace TeamServer.Controllers
         {
             var handler = _server.GetHandler(name);
             if (handler is null)
-                return NotFound($"Handler {name} not found");
+                return NotFound($"Handler '{name}' not found");
             
             handler.Stop();
             _server.RemoveHandler(handler);
