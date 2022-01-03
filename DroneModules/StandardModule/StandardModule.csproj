@@ -9,7 +9,7 @@
         <PackageId />
         <PackageVersion />
         <Authors />
-        <AssemblyName>std</AssemblyName>
+        <AssemblyName>stdapi</AssemblyName>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">

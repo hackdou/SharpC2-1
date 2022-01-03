@@ -153,11 +153,11 @@ namespace TeamServer.Services
         {
             var profile = GetC2Profile();
                 
-            if (profile.Stage.SendStandardModule)
+            if (profile.Stage.SendStandardApi)
             {
                 drone.TaskDrone(new DroneTask("core", "load-module")
                 {
-                    Artefact = await Utilities.GetEmbeddedResource("std.dll")
+                    Artefact = await Utilities.GetEmbeddedResource("stdapi.dll")
                 });
             }
 

