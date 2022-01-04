@@ -60,7 +60,7 @@ namespace SharpC2.Screens
             
             // return arguments based on split length
             var argPosition = splitInput.Length - 2;
-            if (argPosition > command.Arguments.Count)
+            if (argPosition >= command.Arguments.Count)
                 return base.GetAutoComplete(input, caret);
                 
             var argument = command.Arguments[argPosition];

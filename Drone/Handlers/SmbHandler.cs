@@ -23,7 +23,7 @@ public class SmbHandler : Handler
     private NamedPipeServerStream _pipeServer;
     private NamedPipeClientStream _pipeClient;
 
-    private const int ChunkSize = 1024;
+    private const int CHUNK_SIZE = 1024;
 
     public SmbHandler()
     {
@@ -72,7 +72,7 @@ public class SmbHandler : Handler
 
                 _pipeServer = new NamedPipeServerStream(PipeName, PipeDirection.InOut,
                     NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte,
-                    PipeOptions.Asynchronous, ChunkSize, ChunkSize, ps);
+                    PipeOptions.Asynchronous, CHUNK_SIZE, CHUNK_SIZE, ps);
 
                 // blocks until connection is received
                 await _pipeServer.WaitForConnectionAsync();
@@ -164,7 +164,7 @@ public class SmbHandler : Handler
         do
         {
             // create mini buffer
-            var length = bytesLeft < ChunkSize ? bytesLeft : ChunkSize;
+            var length = bytesLeft < CHUNK_SIZE ? bytesLeft : CHUNK_SIZE;
             var buf = new byte[length];
             Buffer.BlockCopy(origBuf, 0, buf, 0, length);
 
