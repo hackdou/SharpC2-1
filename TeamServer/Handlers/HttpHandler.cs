@@ -74,14 +74,13 @@ namespace TeamServer.Handlers
                 FileProvider = new PhysicalFileProvider(_workingDirectory),
                 ServeUnknownFileTypes = true
             });
-            
-            Debug.WriteLine(_workingDirectory);
         }
 
         private void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
             services.AddSingleton(Server);
+            services.AddSingleton(Crypto);
         }
 
         public async Task AddHostedFile(byte[] content, string filename)

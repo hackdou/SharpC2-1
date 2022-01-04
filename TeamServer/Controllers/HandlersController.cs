@@ -25,14 +25,16 @@ namespace TeamServer.Controllers
     public class HandlersController : ControllerBase
     {
         private readonly SharpC2Service _server;
+        private readonly ICryptoService _crypto;
         
         private readonly IMapper _mapper;
         private readonly IHubContext<MessageHub, IMessageHub> _hub;
 
-        public HandlersController(SharpC2Service server, IMapper mapper, IHubContext<MessageHub, IMessageHub> hub)
+        public HandlersController(SharpC2Service server, IMapper mapper, IHubContext<MessageHub, IMessageHub> hub, ICryptoService crypto)
         {
             _mapper = mapper;
             _hub = hub;
+            _crypto = crypto;
             _server = server;
         }
 
@@ -137,7 +139,7 @@ namespace TeamServer.Controllers
             if (handler is null) return NotFound();
             if (handler.Running) return BadRequest("Handler is already running");
 
-            handler.Init(_server);
+            handler.Init(_server, _crypto);
             var task = handler.Start();
 
             if (task.IsFaulted) return BadRequest(task.Exception?.Message);

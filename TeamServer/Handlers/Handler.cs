@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
+using TeamServer.Interfaces;
 using TeamServer.Models;
 using TeamServer.Services;
 
@@ -15,11 +15,13 @@ namespace TeamServer.Handlers
         public abstract List<HandlerParameter> Parameters { get; }
         
         protected SharpC2Service Server;
+        protected ICryptoService Crypto;
         protected CancellationTokenSource TokenSource;
 
-        public void Init(SharpC2Service server)
+        public void Init(SharpC2Service server, ICryptoService crypto)
         {
             Server = server;
+            Crypto = crypto;
         }
 
         public bool Running

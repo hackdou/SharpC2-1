@@ -6,6 +6,7 @@ namespace TeamServer.Interfaces
     {
         MessageEnvelope EncryptMessage(C2Message message);
         C2Message DecryptEnvelope(MessageEnvelope envelope);
+        T DecryptData<T>(byte[] data);
         string GetEncodedKey();
     }
 }

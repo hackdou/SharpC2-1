@@ -23,12 +23,14 @@ namespace TeamServer.Controllers
     public class HostedFilesController : ControllerBase
     {
         private readonly SharpC2Service _server;
+        private readonly ICryptoService _crypto;
         private readonly IHubContext<MessageHub, IMessageHub> _hub;
 
-        public HostedFilesController(SharpC2Service server, IHubContext<MessageHub, IMessageHub> hub)
+        public HostedFilesController(SharpC2Service server, IHubContext<MessageHub, IMessageHub> hub, ICryptoService crypto)
         {
             _server = server;
             _hub = hub;
+            _crypto = crypto;
         }
 
         [HttpGet("{handlerName}")]
@@ -49,7 +51,7 @@ namespace TeamServer.Controllers
 
             if (!handler.Running)
             {
-                handler.Init(_server);
+                handler.Init(_server, _crypto);
                 var task = handler.Start();
                 if (task.IsFaulted) return BadRequest(task.Exception?.Message);
             }

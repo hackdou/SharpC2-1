@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 
 using TeamServer.Handlers;
+using TeamServer.Interfaces;
 using TeamServer.Services;
 
 using Xunit;
@@ -13,10 +14,12 @@ namespace TeamServer.UnitTests
     public class HandlerTests
     {
         private readonly SharpC2Service _server;
+        private readonly ICryptoService _crypto;
 
-        public HandlerTests(SharpC2Service server)
+        public HandlerTests(SharpC2Service server, ICryptoService crypto)
         {
             _server = server;
+            _crypto = crypto;
         }
 
         [Fact]
@@ -52,7 +55,7 @@ namespace TeamServer.UnitTests
             const string handlerName = "test";
             
             var httpHandler = new HttpHandler(handlerName);
-            httpHandler.Init(_server);
+            httpHandler.Init(_server, _crypto);
             httpHandler.Start();
 
             using var client = new HttpClient { BaseAddress = new Uri("http://localhost") };

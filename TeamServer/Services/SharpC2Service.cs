@@ -224,7 +224,7 @@ namespace TeamServer.Services
 
         private void RegisterHandler(Handler handler)
         {
-            handler.Init(this);
+            handler.Init(this, _cryptoService);
             _handlers.Add(handler);
         }
 
