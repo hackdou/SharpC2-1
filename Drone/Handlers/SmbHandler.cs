@@ -2,6 +2,7 @@
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
+using System.Net;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
@@ -32,7 +33,17 @@ public class SmbHandler : Handler
     public SmbHandler(string target)
     {
         _mode = HandlerMode.Client;
-        _target = target;
+
+        // target needs to be a hostname
+        if (IPAddress.TryParse(target, out var address))
+        {
+            var host = Dns.GetHostEntry(address);
+            _target = host.HostName;
+        }
+        else
+        {
+            _target = target;
+        }
     }
 
     public override async Task Start(string[] args = null)
