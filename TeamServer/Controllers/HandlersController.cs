@@ -170,8 +170,10 @@ namespace TeamServer.Controllers
             var handler = _server.GetHandler(name);
             if (handler is null)
                 return NotFound($"Handler '{name}' not found");
-            
-            handler.Stop();
+
+            if (handler.Running)
+                handler.Stop();
+
             _server.RemoveHandler(handler);
             
             return NoContent();
