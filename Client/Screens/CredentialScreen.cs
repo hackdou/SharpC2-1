@@ -79,7 +79,7 @@ namespace SharpC2.Screens
             
             if (argument.Name.Equals("credential", StringComparison.OrdinalIgnoreCase))
             {
-                result = _credentials?.Where(c => c.Guid.StartsWith(typedWord, StringComparison.OrdinalIgnoreCase))
+                result = _credentials?
                     .Select(c => new CompletionItem
                     {
                         StartIndex = previousWordStart + 1,

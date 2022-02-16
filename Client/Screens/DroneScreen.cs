@@ -88,8 +88,7 @@ namespace SharpC2.Screens
 
             if (argument.Name.Equals("drone", StringComparison.OrdinalIgnoreCase))
             {
-                result = _drones?.Where(d => d.Guid.StartsWith(typedWord, StringComparison.OrdinalIgnoreCase)
-                    && !d.Hidden)
+                result = _drones?.Where(d => !d.Hidden)
                     .Select(d => new CompletionItem
                     {
                         StartIndex = previousWordStart + 1,
@@ -102,7 +101,7 @@ namespace SharpC2.Screens
             else if (argument.Name.Equals("handler", StringComparison.OrdinalIgnoreCase))
             {
                 _handlers = _apiService.GetHandlers().GetAwaiter().GetResult().ToList();
-                result = _handlers.Where(h => h.Name.StartsWith(typedWord))
+                result = _handlers
                     .Select(h => new CompletionItem
                     {
                         StartIndex = previousWordStart + 1,

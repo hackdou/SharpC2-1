@@ -80,7 +80,7 @@ namespace SharpC2.Screens
 
             if (argument.Name.Equals("type", StringComparison.OrdinalIgnoreCase))
             {
-                result = _handlerTypes.Where(t => t.StartsWith(typedWord, StringComparison.OrdinalIgnoreCase))
+                result = _handlerTypes
                     .Select(t => new CompletionItem
                     {
                         StartIndex = previousWordStart + 1,
@@ -91,7 +91,7 @@ namespace SharpC2.Screens
             }
             else if (argument.Name.Equals("handler", StringComparison.OrdinalIgnoreCase))
             {
-                result = _handlers.Where(h => h.Name.StartsWith(typedWord))
+                result = _handlers
                     .Select(h => new CompletionItem
                     {
                         StartIndex = previousWordStart + 1,
@@ -106,7 +106,7 @@ namespace SharpC2.Screens
                 var handlerName = splitInput[1];
                 var handler = _handlers.FirstOrDefault(h => h.Name.Equals(handlerName));
                 
-                result = handler?.Parameters.Where(p => p.Name.StartsWith(typedWord, StringComparison.OrdinalIgnoreCase))
+                result = handler?.Parameters
                     .Select(p => new CompletionItem
                     {
                         StartIndex = previousWordStart + 1,

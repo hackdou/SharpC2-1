@@ -69,7 +69,7 @@ namespace SharpC2.Screens
 
             if (argument.Name.Equals("filename", StringComparison.OrdinalIgnoreCase))
             {
-                result = _hostedFiles.Where(f => f.Filename.StartsWith(typedWord))
+                result = _hostedFiles
                     .Select(f => new CompletionItem
                     {
                         StartIndex = previousWordStart + 1,

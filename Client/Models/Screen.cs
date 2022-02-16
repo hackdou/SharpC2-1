@@ -89,12 +89,8 @@ namespace SharpC2.Models
         {
             var textUntilCaret = input[..caret];
             var previousWordStart = textUntilCaret.LastIndexOf(' ');
-            var typedWord = previousWordStart == -1
-                ? textUntilCaret
-                : textUntilCaret[(previousWordStart + 1)..];
 
             var result = Commands
-                .Where(c => c.Name.StartsWith(typedWord))
                 .Select(c => new CompletionItem
                 {
                     StartIndex = previousWordStart + 1,
