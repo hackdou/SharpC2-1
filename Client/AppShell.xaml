@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="Client.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:Client.Views"
+    Shell.FlyoutBehavior="Locked">
+
+    <ShellItem Route="LoginView" FlyoutItemIsVisible="False">
+        <ShellContent
+        Title="Drones"
+        ContentTemplate="{DataTemplate views:LoginView}"
+        Route="LoginView" />
+    </ShellItem>
+
+    <FlyoutItem Title="Drones">
+        <ShellContent ContentTemplate="{DataTemplate views:DronesView}"
+                      Route="DronesView" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Handlers">
+
+        <Tab Title="HTTP">
+            <ShellContent ContentTemplate="{DataTemplate views:HttpHandlersView}"
+                      Route="HttpHandlersView" />
+        </Tab>
+
+        <Tab Title="DNS">
+            <ShellContent ContentTemplate="{DataTemplate views:DnsHandlersView}"
+                      Route="DnsHandlersView" />
+        </Tab>
+
+        <Tab Title="SMB">
+            <ShellContent ContentTemplate="{DataTemplate views:SmbHandlersView}"
+                      Route="SmbHandlersView" />
+        </Tab>
+
+        <Tab Title="TCP">
+            <ShellContent ContentTemplate="{DataTemplate views:TcpHandlersView}"
+                      Route="TcpHandlersView" />
+        </Tab>
+
+        <Tab Title="External C2">
+            <ShellContent ContentTemplate="{DataTemplate views:ExternalC2View}"
+                      Route="ExternalC2View" />
+        </Tab>
+
+    </FlyoutItem>
+
+    <FlyoutItem Title="Profiles">
+        <ShellContent ContentTemplate="{DataTemplate views:ProfilesView}"
+                      Route="ProfilesView" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Payloads">
+        <ShellContent ContentTemplate="{DataTemplate views:PayloadsView}"
+                      Route="PayloadsView" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Settings">
+        <ShellContent ContentTemplate="{DataTemplate views:SettingsView}"
+                      Route="SettingsView" />
+    </FlyoutItem>
+
+</Shell>

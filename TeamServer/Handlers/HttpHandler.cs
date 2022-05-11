@@ -1,113 +1,97 @@
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Server.Kestrel.Core;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Hosting;
-
+using TeamServer.Interfaces;
 using TeamServer.Models;
+using TeamServer.Services;
 
-namespace TeamServer.Handlers
+namespace TeamServer.Handlers;
+
+public class HttpHandler : Handler
 {
-    public class HttpHandler : Handler
+    private CancellationTokenSource _tokenSource;
+
+    public int BindPort { get; set; }
+    public string ConnectAddress { get; set; }
+    public int ConnectPort { get; set; }
+    
+    public override HandlerType Type
+        => HandlerType.Http;
+
+    public HttpHandler(string name, int bindPort, string connectAddress, int connectPort, C2Profile profile)
+        : base(name, profile)
     {
-        public override string Name { get; }
-        private readonly string _workingDirectory;
+        BindPort = bindPort;
+        ConnectAddress = connectAddress;
+        ConnectPort = connectPort;
+    }
 
-        public HttpHandler(string handlerName)
+    public override bool Running
+    {
+        get
         {
-            Name = handlerName;
-            
-            _workingDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Handlers", handlerName);
-            if (!Directory.Exists(_workingDirectory)) Directory.CreateDirectory(_workingDirectory);
+            if (_tokenSource is null) return false;
+            return !_tokenSource.IsCancellationRequested;
         }
+    }
 
-        public override List<HandlerParameter> Parameters { get; } = new()
+    public override Task Start()
+    {
+        _tokenSource = new CancellationTokenSource();
+
+        var host = new HostBuilder()
+            .ConfigureWebHostDefaults(ConfigureWebHost)
+            .Build();
+
+        host.RunAsync(_tokenSource.Token);
+        return Task.CompletedTask;
+    }
+
+    private void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseUrls($"http://0.0.0.0:{BindPort}");
+        builder.UseSetting("name", Name);
+        builder.Configure(ConfigureApp);
+        builder.ConfigureServices(ConfigureServices);
+        builder.ConfigureKestrel(ConfigureKestrel);
+    }
+
+    private void ConfigureApp(IApplicationBuilder app)
+    {
+        app.UseRouting();
+        app.UseEndpoints(ConfigureEndpoints);
+    }
+
+    private void ConfigureEndpoints(IEndpointRouteBuilder endpoint)
+    {
+        endpoint.MapControllerRoute(Profile.Http.Endpoint, Profile.Http.Endpoint, new
         {
-            new HandlerParameter("BindPort", "80", false),
-            new HandlerParameter("ConnectAddress", "localhost", false),
-            new HandlerParameter("ConnectPort", "80", false)
-        };
+            controller = "HttpHandler", action = "RouteDrone"
+        });
+    }
 
-        public override Task Start()
-        {
-            // this throws if the handler doesn't have the required parameters set
-            base.Start();
+    private void ConfigureServices(IServiceCollection services)
+    {
+        services.AddTransient<ICryptoService, CryptoService>();
+        services.AddTransient<IDroneService, DroneService>();
+        services.AddTransient<ITaskService, TaskService>();
+        services.AddSingleton(Database);
+        services.AddSingleton(Hub);
+        services.AddControllers();
+        services.AddAutoMapper(typeof(Program));
+    }
 
-            var host = new HostBuilder()
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseUrls($"http://0.0.0.0:{GetParameter("BindPort")}");
-                    webBuilder.Configure(ConfigureApp);
-                    webBuilder.ConfigureServices(ConfigureServices);
-                    webBuilder.ConfigureKestrel(ConfigureKestrel);
-                })
-                .Build();
+    private static void ConfigureKestrel(KestrelServerOptions kestrel)
+    {
+        kestrel.AddServerHeader = false;
+    }
 
-            return host.RunAsync(TokenSource.Token);
-        }
+    public override void Stop()
+    {
+        // if null or already cancelled
+        if (_tokenSource is null || _tokenSource.IsCancellationRequested)
+            return;
 
-        private static void ConfigureKestrel(KestrelServerOptions k)
-        {
-            k.AddServerHeader = false;
-        }
-
-        private void ConfigureApp(IApplicationBuilder app)
-        {
-            app.UseRouting();
-            app.UseEndpoints(e =>
-            {
-                e.MapControllerRoute("/", "/", new
-                {
-                    controller = "HttpHandler",
-                    action = "RouteDrone"
-                });
-            });
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(_workingDirectory),
-                ServeUnknownFileTypes = true
-            });
-        }
-
-        private void ConfigureServices(IServiceCollection services)
-        {
-            services.AddControllers();
-            services.AddSingleton(Server);
-            services.AddSingleton(Crypto);
-        }
-
-        public async Task AddHostedFile(byte[] content, string filename)
-        {
-            var path = Path.Combine(_workingDirectory, filename);
-            await File.WriteAllBytesAsync(path, content);
-        }
-
-        public IEnumerable<FileInfo> GetHostedFiles()
-        {
-            var files = Directory.EnumerateFiles(_workingDirectory);
-            return files.Select(file => new FileInfo(file)).ToArray();
-        }
-
-        public bool RemoveHostedFile(string filename)
-        {
-            var path = Path.Combine(_workingDirectory, filename);
-            if (!File.Exists(path)) return false;
-            
-            File.Delete(path);
-            return true;
-        }
-
-        public override void Stop()
-        {
-            TokenSource?.Cancel();
-            TokenSource?.Dispose();
-        }
+        _tokenSource.Cancel();
+        _tokenSource.Dispose();
     }
 }

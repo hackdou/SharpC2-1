@@ -2,63 +2,80 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Drone.Interfaces;
 using Drone.Models;
 
-namespace Drone.Handlers
+namespace Drone.Handlers;
+
+public abstract class Handler : IHandler
 {
-    public abstract class Handler
+    protected Metadata Metadata { get; private set; }
+    protected IConfig Config { get; private set; }
+    protected ICrypto Crypto { get; private set; }
+
+    private readonly ConcurrentQueue<C2Message> _inbound = new();
+    private readonly ConcurrentQueue<DroneTaskOutput> _outbound = new();
+
+    public void Init(Metadata metadata, IConfig config, ICrypto crypto)
     {
-        protected readonly ConcurrentQueue<MessageEnvelope> InboundQueue = new();
-        protected readonly ConcurrentQueue<MessageEnvelope> OutboundQueue = new();
+        Metadata = metadata;
+        Config = config;
+        Crypto = crypto;
+    }
 
-        protected DroneConfig Config;
-        protected Metadata Metadata;
+    public abstract Task Start();
+    public abstract void Stop();
 
-        public virtual void Init(DroneConfig config, Metadata metadata)
+    public bool GetInbound(out IEnumerable<C2Message> messages)
+    {
+        if (_inbound.IsEmpty)
         {
-            Config = config;
-            Metadata = metadata;
+            messages = null;
+            return false;
         }
 
-        public void QueueOutbound(MessageEnvelope envelope)
+        List<C2Message> list = new();
+
+        while (_inbound.TryDequeue(out var message))
+            list.Add(message);
+
+        messages = list;
+        return true;
+    }
+
+    public void QueueOutbound(DroneTaskOutput output)
+    {
+        _outbound.Enqueue(output);
+    }
+
+    protected bool GetOutbound(out C2Message outbound)
+    {
+        if (_outbound.IsEmpty)
         {
-            OutboundQueue.Enqueue(envelope);
+            outbound = null;
+            return false;
         }
+        
+        List<DroneTaskOutput> list = new();
 
-        public bool GetInbound(out IEnumerable<MessageEnvelope> envelopes)
+        while (_outbound.TryDequeue(out var output))
+            list.Add(output);
+
+        var (iv, data, checksum) = Crypto.EncryptObject(list);
+
+        outbound = new C2Message
         {
-            if (InboundQueue.IsEmpty)
-            {
-                envelopes = null;
-                return false;
-            }
+            DroneId = Metadata.Id,
+            Iv = iv,
+            Data = data,
+            Checksum = checksum
+        };
+        
+        return true;
+    }
 
-            List<MessageEnvelope> temp = new();
-
-            while (InboundQueue.TryDequeue(out var envelope))
-                temp.Add(envelope);
-
-            envelopes = temp.ToArray();
-            return true;
-        }
-
-        protected IEnumerable<MessageEnvelope> GetOutboundQueue()
-        {
-            List<MessageEnvelope> temp = new();
-
-            while (OutboundQueue.TryDequeue(out var message))
-                temp.Add(message);
-
-            return temp.ToArray();
-        }
-
-        public abstract Task Start(string[] args = null);
-        public abstract void Stop();
-
-        protected enum HandlerMode
-        {
-            Client,
-            Server
-        }
+    protected void QueueInbound(C2Message message)
+    {
+        _inbound.Enqueue(message);
     }
 }

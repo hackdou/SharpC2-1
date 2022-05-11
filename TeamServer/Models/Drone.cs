@@ -1,51 +1,40 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿namespace TeamServer.Models;
 
-namespace TeamServer.Models
+public class Drone
 {
-    public class Drone
+    public string Id { get; set; }
+    public string ExternalAddress { get; set; }
+    public string InternalAddress { get; set; }
+    public string Handler { get; set; }
+    public string User { get; set; }
+    public string Hostname { get; set; }
+    public string Process { get; set; }
+    public int ProcessId { get; set; }
+    public string Integrity { get; set; }
+    public string Architecture { get; set; }
+    public DateTime FirstSeen { get; set; }
+    public DateTime LastSeen { get; set; }
+
+    public Drone(Metadata metadata)
     {
-        public DroneMetadata Metadata { get; }
-        public string Parent { get; set; }
-        public List<DroneModule> Modules { get; } = new();
-        public DateTime LastSeen { get; private set; }
+        Id = metadata.Id;
+        InternalAddress = metadata.InternalAddress;
+        User = metadata.User;
+        Hostname = metadata.Hostname;
+        Process = metadata.Process;
+        ProcessId = metadata.ProcessId;
+        Integrity = metadata.Integrity;
+        Architecture = metadata.Architecture;
+        FirstSeen = LastSeen = DateTime.UtcNow;
+    }
 
-        private readonly List<DroneTask> _tasks = new();
+    public Drone()
+    {
+        // automapper
+    }
 
-        public Drone(DroneMetadata metadata)
-            => Metadata = metadata;
-
-        public void CheckIn()
-            => LastSeen = DateTime.UtcNow;
-
-        public void TaskDrone(DroneTask task)
-            => _tasks.Add(task);
-
-        public void AddModule(DroneModule module)
-            => Modules.Add(module);
-
-        public IEnumerable<DroneTask> GetPendingTasks()
-        {
-            var tasks = _tasks.Where(t =>
-                t.Status == DroneTask.TaskStatus.Pending).ToList();
-
-            if (tasks.Count == 0) return Array.Empty<DroneTask>();
-
-            var copy = new DroneTask[tasks.Count]; 
-            tasks.CopyTo(copy, 0);
-            tasks.ForEach(t => t.UpdateStatus(DroneTask.TaskStatus.Tasked));            
-
-            return copy;
-        }
-
-        public IEnumerable<DroneTask> GetTasks()
-            => _tasks.ToArray();
-
-        public DroneTask GetTask(string guid)
-            => GetTasks().FirstOrDefault(t => t.TaskGuid.Equals(guid));
-
-        public void DeletePendingTask(DroneTask task)
-            => _tasks.Remove(task);
+    public void CheckIn()
+    {
+        LastSeen = DateTime.UtcNow;
     }
 }

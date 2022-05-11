@@ -1,85 +1,130 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using AutoMapper;
 
 using Microsoft.AspNetCore.SignalR;
 
 using TeamServer.Handlers;
-using TeamServer.Hubs;
 using TeamServer.Interfaces;
+using TeamServer.Storage;
 
-namespace TeamServer.Services
+namespace TeamServer.Services;
+
+public class HandlerService : IHandlerService
 {
-    public class HandlerService : IHandlerService
+    private readonly IMapper _mapper;
+    private readonly IDatabaseService _db;
+    private readonly IProfileService _profiles;
+    private IHubContext<HubService, IHubService> _hub;
+
+    private readonly List<Handler> _handlers = new();
+
+    public HandlerService(IMapper mapper, IDatabaseService db, IHubContext<HubService, IHubService> hub,
+        IProfileService profiles)
     {
-        private readonly List<Handler> _handlers = new();
+        _mapper = mapper;
+        _db = db;
+        _hub = hub;
+        _profiles = profiles;
+
+        // load handlers from db
+        LoadHandlersFromDb().GetAwaiter().GetResult();
+    }
+
+    private async Task LoadHandlersFromDb()
+    {
+        var conn = _db.GetAsyncConnection();
+        var http = await conn.Table<HttpHandlerDao>().ToArrayAsync();
         
-        private readonly ITaskService _taskService;
-        private readonly IServerService _serverService;
-        private readonly IHubContext<MessageHub, IMessageHub> _hubContext;
-
-        public HandlerService(ITaskService taskService, IServerService serverService, IHubContext<MessageHub, IMessageHub> hubContext)
+        foreach (var dao in http)
         {
-            _taskService = taskService;
-            _serverService = serverService;
-            _hubContext = hubContext;
-        }
-
-        private IEnumerable<Handler> LoadHandler(Assembly asm)
-        {
-            List<Handler> handlers = new();
+            var profile = await _profiles.GetProfile(dao.Profile);
             
-            foreach (var type in asm.GetTypes())
-            {
-                if (!type.IsSubclassOf(typeof(Handler))) continue;
-
-                if (Activator.CreateInstance(type) is not Handler handler)
-                    throw new Exception("Could not create instance of Handler.");
-
-                RegisterHandler(handler);
-                handlers.Add(handler);
-            }
-
-            return handlers;
-        }
-
-        public void AddHandler(Handler handler)
-        {
+            if (profile is null)
+                continue;
+            
+            var handler = new HttpHandler(dao.Name, dao.BindPort, dao.ConnectAddress, dao.ConnectPort, profile);
+            handler.Init(_db, _hub);
+            
             _handlers.Add(handler);
         }
+    }
 
-        public Handler LoadHandler(byte[] bytes)
+    public async Task AddHandler(Handler handler)
+    {
+        _handlers.Add(handler);
+
+        var conn = _db.GetAsyncConnection();
+        
+        switch (handler.Type)
         {
-            var asm = Assembly.Load(bytes);
-            var handlers = LoadHandler(asm);
-
-            return handlers.First();
+            case Handler.HandlerType.Http:
+                var httpDao = _mapper.Map<HttpHandler, HttpHandlerDao>(handler as HttpHandler);
+                await conn.InsertAsync(httpDao);
+                break;
+            
+            case Handler.HandlerType.Dns:
+                break;
+            
+            case Handler.HandlerType.Tcp:
+                break;
+            
+            case Handler.HandlerType.Smb:
+                break;
         }
+    }
 
-        private void RegisterHandler(Handler handler)
+    public Handler GetHandler(string name)
+    {
+        return _handlers.FirstOrDefault(h => h.Name.Equals(name));
+    }
+
+    public IEnumerable<Handler> GetHandlers()
+    {
+        return _handlers;
+    }
+
+    public async Task UpdateHandler(Handler handler)
+    {
+        var conn = _db.GetAsyncConnection();
+        
+        switch (handler.Type)
         {
-            handler.Init(_taskService, _serverService, _hubContext);
-            _handlers.Add(handler);
+            case Handler.HandlerType.Http:
+                var httpDao = _mapper.Map<HttpHandler, HttpHandlerDao>(handler as HttpHandler);
+                await conn.UpdateAsync(httpDao);
+                break;
+            
+            case Handler.HandlerType.Dns:
+                break;
+            
+            case Handler.HandlerType.Tcp:
+                break;
+            
+            case Handler.HandlerType.Smb:
+                break;
         }
+    }
 
-        public IEnumerable<Handler> GetHandlers()
+    public async Task DeleteHandler(Handler handler)
+    {
+        _handlers.Remove(handler);
+        
+        var conn = _db.GetAsyncConnection();
+        
+        switch (handler.Type)
         {
-            return _handlers;
-        }
-
-        public Handler GetHandler(string name)
-        {
-            return GetHandlers()
-                .FirstOrDefault(h => h.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-        }
-
-        public bool RemoveHandler(string name)
-        {
-            var handler = GetHandler(name);
-            handler?.Stop();
-
-            return _handlers.Remove(handler);
+            case Handler.HandlerType.Http:
+                var httpDao = _mapper.Map<HttpHandler, HttpHandlerDao>(handler as HttpHandler);
+                await conn.DeleteAsync(httpDao);
+                break;
+            
+            case Handler.HandlerType.Dns:
+                break;
+            
+            case Handler.HandlerType.Tcp:
+                break;
+            
+            case Handler.HandlerType.Smb:
+                break;
         }
     }
 }

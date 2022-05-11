@@ -1,0 +1,19 @@
+﻿- Alias: make-token
+  Description: Create & impersonate a token using plaintext credentials
+  Function: make-token
+  Arguments:
+  - Name: domain\\username
+    Optional: false
+  - Name: password
+    Optional: false
+
+- Alias: steal-token
+  Description: Duplicate & impersonate a token from the target process
+  Function: steal-token
+  Arguments:
+    - Name: pid
+      Optional: false
+
+- Alias: rev2self
+  Description: Drop token impersonation
+  Function: rev2self

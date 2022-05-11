@@ -1,78 +1,152 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
+using System.Security.Cryptography;
 
-using CommandLine;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
+using TeamServer.Filters;
 using TeamServer.Interfaces;
-using TeamServer.Models;
 using TeamServer.Services;
 
-namespace TeamServer
+namespace TeamServer;
+
+public static class Program
 {
-    internal static class Program
+    public static void Main(string[] args)
     {
-        public static async Task Main(string[] args)
+        var builder = WebApplication.CreateBuilder(args);
+        
+        // get password on cmdline
+        var password = string.Empty;
+        while (string.IsNullOrWhiteSpace(password))
         {
-            await Parser.Default.ParseArguments<Options>(args)
-                .MapResult(RunOptions, HandleParseErrors);
+            Console.Write("Set Password > ");
+            password = ReadPassword();
+            Console.Write(Environment.NewLine);
         }
-
-        private static async Task RunOptions(Options opts)
-        {
-            var host = CreateHostBuilder(Array.Empty<string>()).Build();
-
-            // set the server password for user auth
-            var userService = host.Services.GetRequiredService<IUserService>();
-            userService.SetPassword(opts.SharedPassword);
-
-            var server = host.Services.GetRequiredService<SharpC2Service>();
-            server.LoadDefaultModules();
-
-            // if custom Handler
-            if (!string.IsNullOrWhiteSpace(opts.HandlerPath))
+        
+        // initialise auth service
+        var authService = new AuthenticationService();
+        builder.Services.AddSingleton<IAuthenticationService>(authService);
+        
+        // set password on auth service
+        var jwtKey = GenerateJwtKey(password);
+        authService.SetServerPassword(password, jwtKey);
+        
+        // configure jwt auth
+        builder.Services
+            .AddAuthentication(a =>
             {
-                var bytes = await File.ReadAllBytesAsync(opts.HandlerPath);
-                server.LoadHandlers(bytes);
-            }
-
-            // if custom C2 profile
-            if (!string.IsNullOrWhiteSpace(opts.ProfilePath))
+                a.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                a.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(j =>
             {
-                var profile = await LoadC2Profile(opts.ProfilePath);
-                server.SetC2Profile(profile);
+                j.SaveToken = true;
+                j.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(jwtKey)
+                };
+            });
+
+        builder.Services.AddControllers(ConfigureControllers);
+        builder.Services.AddEndpointsApiExplorer();
+        
+        // ensure swagger can auth as well
+        builder.Services.AddSwaggerGen(s =>
+        {
+            s.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer",
+                In = ParameterLocation.Header,
+                Description = "JWT Authorization header using the Bearer scheme.\r\n\r\n"
+            });
+            s.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+        });
+        
+        // hub
+        builder.Services.AddSignalR();
+
+        // SharpC2 services
+        builder.Services.AddSingleton<IProfileService, ProfileService>();
+        builder.Services.AddSingleton<IHandlerService, HandlerService>();
+        builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
+        builder.Services.AddTransient<ICryptoService, CryptoService>();
+        builder.Services.AddTransient<IDroneService, DroneService>();
+        builder.Services.AddTransient<ITaskService, TaskService>();
+        builder.Services.AddTransient<IPayloadService, PayloadService>();
+
+        // automapper
+        builder.Services.AddAutoMapper(typeof(Program));
+
+        var app = builder.Build();
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+        app.MapControllers();
+        app.MapHub<HubService>("/SharpC2");
+        app.Run();
+    }
+
+    private static void ConfigureControllers(MvcOptions opts)
+    {
+        opts.Filters.Add<JumpCommandFilter>();
+    }
+
+    private static string ReadPassword()
+    {
+        var input = string.Empty;
+        
+        ConsoleKey key;
+        
+        do
+        {
+            var keyInfo = Console.ReadKey(intercept: true);
+            key = keyInfo.Key;
+
+            if (key == ConsoleKey.Backspace && input.Length > 0)
+            {
+                Console.Write("\b \b");
+                input = input[..^1];
             }
+            else if (!char.IsControl(keyInfo.KeyChar))
+            {
+                Console.Write("*");
+                input += keyInfo.KeyChar;
+            }
+        } while (key != ConsoleKey.Enter);
 
-            await host.RunAsync();
-        }
-
-        private static async Task<C2Profile> LoadC2Profile(string path)
-        {
-            var text = await File.ReadAllTextAsync(path);
-            var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
-            return deserializer.Deserialize<C2Profile>(text);
-        }
-
-        private static async Task HandleParseErrors(IEnumerable<Error> errs)
-        {
-            foreach (var err in errs)
-                await Console.Error.WriteLineAsync(err?.ToString());
-        }
-
-        private static IHostBuilder CreateHostBuilder(string[] args)
-        {
-            var builder = Host.CreateDefaultBuilder(args);
-            builder.ConfigureWebHostDefaults(Configure);
-
-            return builder;
-        }
-
-        private static void Configure(IWebHostBuilder webBuilder)
-            => webBuilder.UseStartup<Startup>();
+        return input;
+    }
+    
+    private static byte[] GenerateJwtKey(string password)
+    {
+        using var pbkdf = new Rfc2898DeriveBytes(password, 16, 50000, HashAlgorithmName.SHA256);
+        return pbkdf.GetBytes(32);
     }
 }

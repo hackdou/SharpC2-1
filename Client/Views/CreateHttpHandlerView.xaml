@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Client.Views.CreateHttpHandlerView"
+             xmlns:viewModels="clr-namespace:Client.ViewModels"
+             x:DataType="viewModels:CreateHttpHandlerViewModel"
+             Shell.FlyoutBehavior="Disabled"
+             Shell.NavBarIsVisible="False">
+
+    <StackLayout Padding="10"
+                 Spacing="10">
+
+        <Label Text="Handler Name"/>
+        <Entry Text="{Binding Name}"/>
+
+        <Label Text="Bind Port"/>
+        <Entry Text="{Binding BindPort}"/>
+
+        <Label Text="Connect Address"/>
+        <Entry Text="{Binding ConnectAddress}"/>
+
+        <Label Text="Connect Port"/>
+        <Entry Text="{Binding ConnectPort}"/>
+
+        <Label Text="C2 Profile"/>
+        <Picker ItemsSource="{Binding ProfilePicker}" SelectedItem="{Binding SelectedProfile}"/>
+
+        <StackLayout Orientation="Horizontal"
+                     Padding="10"
+                     Spacing="10">
+
+            <Button Text="Create"
+                    Command="{Binding CreateCommand}"/>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"/>
+
+        </StackLayout>
+    </StackLayout>
+
+</ContentPage>

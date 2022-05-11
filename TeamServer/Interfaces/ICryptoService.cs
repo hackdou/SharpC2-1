@@ -1,12 +1,8 @@
-﻿using TeamServer.Models;
+﻿namespace TeamServer.Interfaces;
 
-namespace TeamServer.Interfaces
+public interface ICryptoService
 {
-    public interface ICryptoService
-    {
-        MessageEnvelope EncryptMessage(C2Message message);
-        C2Message DecryptEnvelope(MessageEnvelope envelope);
-        T DecryptData<T>(byte[] data);
-        string GetEncodedKey();
-    }
+    Task<(byte[] iv, byte[] data, byte[] checksum)> EncryptObject<T>(T obj);
+    Task<T> DecryptObject<T>(byte[] iv, byte[] data, byte[] checksum);
+    Task<byte[]> GetKey();
 }

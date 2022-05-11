@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:Client.Models"
+             xmlns:viewModels="clr-namespace:Client.ViewModels"
+             x:Class="Client.Views.DronesView">
+
+    <StackLayout Orientation="Vertical">
+
+        <Grid Padding="10" HorizontalOptions="CenterAndExpand">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <Label Text="External"
+                   Grid.Column="0"
+                   Grid.Row="0"
+                   FontAttributes="Bold"/>
+
+            <Label Text="Internal"
+                   Grid.Column="1"
+                   Grid.Row="0"
+                   FontAttributes="Bold"/>
+
+            <Label Text="Handler"
+                   Grid.Column="2"
+                   Grid.Row="0"
+                   FontAttributes="Bold"/>
+
+            <Label Text="Hostname"
+                   Grid.Column="3"
+                   Grid.Row="0"
+                   FontAttributes="Bold"/>
+
+            <Label Text="User"
+                   Grid.Column="4"
+                   Grid.Row="0"
+                   FontAttributes="Bold"/>
+
+            <Label Text="Process"
+                   Grid.Column="5"
+                   Grid.Row="0"
+                   FontAttributes="Bold"/>
+
+            <Label Text="PID"
+                   Grid.Column="6"
+                   Grid.Row="0"
+                   FontAttributes="Bold"/>
+
+            <Label Text="Integrity"
+                   Grid.Column="7"
+                   Grid.Row="0"
+                   FontAttributes="Bold"/>
+
+            <Label Text="Architecture"
+                   Grid.Column="8"
+                   Grid.Row="0"
+                   FontAttributes="Bold"/>
+
+            <Label Text="Last Seen"
+                   Grid.Column="9"
+                   Grid.Row="0"
+                   FontAttributes="Bold"/>
+
+        </Grid>
+
+        <ListView ItemsSource="{Binding Drones}"
+                  x:DataType="viewModels:DronesViewModel"
+                  SelectionMode="Single"
+                  SelectedItem="{Binding SelectedDrone}">
+
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="models:Drone">
+                    <ViewCell>
+                        <Grid Padding="10">
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+
+                            <Label Text="{Binding ExternalAddress}"
+                                   Grid.Column="0"
+                                   Grid.Row="0"
+                                   VerticalOptions="Center"/>
+
+                            <Label Text="{Binding InternalAddress}"
+                                   Grid.Column="1"
+                                   Grid.Row="0"
+                                   VerticalOptions="Center"/>
+
+                            <Label Text="{Binding Handler}"
+                                   Grid.Column="2"
+                                   Grid.Row="0"
+                                   VerticalOptions="Center"/>
+
+                            <Label Text="{Binding Hostname}"
+                                   Grid.Column="3"
+                                   Grid.Row="0"
+                                   VerticalOptions="Center"/>
+
+                            <Label Text="{Binding User}"
+                                   Grid.Column="4"
+                                   Grid.Row="0"
+                                   VerticalOptions="Center"/>
+
+                            <Label Text="{Binding Process}"
+                                   Grid.Column="5"
+                                   Grid.Row="0"
+                                   VerticalOptions="Center"/>
+
+                            <Label Text="{Binding ProcessId}"
+                                   Grid.Column="6"
+                                   Grid.Row="0"
+                                   VerticalOptions="Center"/>
+
+                            <Label Text="{Binding Integrity}"
+                                   Grid.Column="7"
+                                   Grid.Row="0"
+                                   VerticalOptions="Center"/>
+
+                            <Label Text="{Binding Architecture}"
+                                   Grid.Column="8"
+                                   Grid.Row="0"
+                                   VerticalOptions="Center"/>
+
+                            <Label Text="{Binding Time}"
+                                   Grid.Column="9"
+                                   Grid.Row="0"
+                                   VerticalOptions="Center"/>
+                        </Grid>
+                    </ViewCell>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+
+        </ListView>
+
+        <StackLayout Orientation="Horizontal"
+                     Padding="10"
+                     Spacing="10"
+                     x:DataType="viewModels:DronesViewModel">
+
+            <Button Text="Interact"
+                    Command="{Binding InteractCommand}"/>
+
+            <Button Text="Kill"
+                    Command="{Binding KillCommand}"/>
+
+            <Button Text="Remove"
+                    Command="{Binding RemoveCommand}"/>
+
+        </StackLayout>
+
+    </StackLayout>
+    
+</ContentPage>

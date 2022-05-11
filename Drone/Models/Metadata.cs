@@ -1,27 +1,31 @@
-﻿namespace Drone.Models
-{
-    public class Metadata
-    {
-        public string Guid { get; set; }
-        public string Address { get; set; }
-        public string Hostname { get; set; }
-        public string Username { get; set; }
-        public string Process { get; set; }
-        public int Pid { get; set; }
-        public DroneIntegrity Integrity { get; set; }
-        public DroneArch Arch { get; set; }
-        
-        public enum DroneIntegrity
-        {
-            Medium,
-            High,
-            SYSTEM
-        }
+﻿using ProtoBuf;
 
-        public enum DroneArch
-        {
-            x86,
-            x64
-        }
-    }
+namespace Drone.Models;
+
+[ProtoContract]
+public class Metadata
+{
+    [ProtoMember(1)]
+    public string Id { get; set; }
+    
+    [ProtoMember(2)]
+    public string InternalAddress { get; set; }
+    
+    [ProtoMember(3)]
+    public string Hostname { get; set; }
+    
+    [ProtoMember(4)]
+    public string User { get; set; }
+    
+    [ProtoMember(5)]
+    public string Process { get; set; }
+    
+    [ProtoMember(6)]
+    public int ProcessId { get; set; }
+    
+    [ProtoMember(7)]
+    public string Integrity { get; set; }
+    
+    [ProtoMember(8)]
+    public string Architecture { get; set; }
 }

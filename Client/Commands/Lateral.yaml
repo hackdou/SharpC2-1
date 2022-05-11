@@ -1,0 +1,10 @@
+﻿- Alias: jump
+  Description: Move laterally
+  Function: jump
+  Arguments:
+    - Name: method
+      Optional: false
+    - Name: target
+      Optional: false
+    - Name: handler
+      Optional: false

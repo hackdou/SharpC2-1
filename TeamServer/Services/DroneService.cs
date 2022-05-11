@@ -1,35 +1,61 @@
-using System.Collections.Generic;
-using System.Linq;
+﻿using AutoMapper;
 
 using TeamServer.Interfaces;
 using TeamServer.Models;
+using TeamServer.Storage;
 
-namespace TeamServer.Services
+namespace TeamServer.Services;
+
+public class DroneService : IDroneService
 {
-    public class DroneService : IDroneService
+    private readonly IDatabaseService _db;
+    private readonly IMapper _mapper;
+
+    public DroneService(IDatabaseService db, IMapper mapper)
     {
-        private readonly List<Drone> _drones = new();
+        _db = db;
+        _mapper = mapper;
+    }
 
-        public void AddDrone(Drone drone)
-        {
-            _drones.Add(drone);
-        }
+    public async Task AddDrone(Drone drone)
+    {
+        var conn = _db.GetAsyncConnection();
+        var dao = _mapper.Map<Drone, DroneDao>(drone);
+        
+        await conn.InsertAsync(dao);
+    }
 
-        public IEnumerable<Drone> GetDrones()
-        {
-            return _drones;
-        }
+    public async Task<Drone> GetDrone(string id)
+    {
+        var conn = _db.GetAsyncConnection();
+        var dao = await conn.Table<DroneDao>().FirstOrDefaultAsync(d => d.Id.Equals(id));
+        var drone = _mapper.Map<DroneDao, Drone>(dao);
 
-        public Drone GetDrone(string guid)
-        {
-            return GetDrones()
-                .FirstOrDefault(d => d.Metadata.Guid.Equals(guid));
-        }
+        return drone;
+    }
 
-        public bool RemoveDrone(string guid)
-        {
-            var drone = GetDrone(guid);
-            return _drones.Remove(drone);
-        }
+    public async Task<IEnumerable<Drone>> GetDrones()
+    {
+        var conn = _db.GetAsyncConnection();
+        var dao = await conn.Table<DroneDao>().ToArrayAsync();
+        var drones = _mapper.Map<IEnumerable<DroneDao>, IEnumerable<Drone>>(dao);
+
+        return drones;
+    }
+
+    public async Task UpdateDrone(Drone drone)
+    {
+        var conn = _db.GetAsyncConnection();
+        var dao = _mapper.Map<Drone, DroneDao>(drone);
+        
+        await conn.UpdateAsync(dao);
+    }
+
+    public async Task DeleteDrone(Drone drone)
+    {
+        var conn = _db.GetAsyncConnection();
+        var dao = _mapper.Map<Drone, DroneDao>(drone);
+        
+        await conn.DeleteAsync(dao);
     }
 }

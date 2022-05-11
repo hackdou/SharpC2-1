@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:Client.ViewModels"
+             x:Class="Client.Views.EditHttpHandlerView"
+             x:DataType="viewModels:EditHttpHandlerViewModel"
+             Shell.FlyoutBehavior="Disabled"
+             Shell.NavBarIsVisible="False">
+    
+    <StackLayout Padding="10"
+                 Spacing="10">
+
+        <Label Text="Handler Name"/>
+        <Entry Text="{Binding Handler.Name}" IsReadOnly="True"/>
+
+        <Label Text="Bind Port"/>
+        <Entry Text="{Binding Handler.BindPort}"/>
+
+        <Label Text="Connect Address"/>
+        <Entry Text="{Binding Handler.ConnectAddress}"/>
+
+        <Label Text="Connect Port"/>
+        <Entry Text="{Binding Handler.ConnectPort}"/>
+
+        <Label Text="Profile"/>
+        <Entry Text="{Binding Handler.Profile}"/>
+
+        <StackLayout Orientation="Horizontal"
+                     Padding="10"
+                     Spacing="10">
+
+            <Button Text="Save"
+                    Command="{Binding SaveCommand}"/>
+
+        </StackLayout>
+    </StackLayout>
+    
+</ContentPage>

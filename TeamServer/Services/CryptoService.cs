@@ -1,112 +1,94 @@
-﻿using System;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
+﻿using System.Security.Cryptography;
 
 using TeamServer.Interfaces;
-using TeamServer.Models;
+using TeamServer.Storage;
+using TeamServer.Utilities;
 
 namespace TeamServer.Services;
 
 public class CryptoService : ICryptoService
 {
-    private readonly byte[] _key;
-
-    public CryptoService()
+    private readonly IDatabaseService _db;
+    
+    public CryptoService(IDatabaseService db)
     {
-#if DEBUG
-        _key = Encoding.UTF8.GetBytes("bmihRwRyhdfwGCa!VJ!97f6tGWPxXD&m");
-#else
-        _key = GetRandomData(32);
-#endif
+        _db = db;
     }
-
-    public MessageEnvelope EncryptMessage(C2Message message)
+    
+    public async Task<(byte[] iv, byte[] data, byte[] checksum)> EncryptObject<T>(T obj)
     {
-        var envelope = new MessageEnvelope();
-        var raw = message.Serialize();
-
+        var key = await GetKey();
+        
         using var aes = Aes.Create();
         aes.Mode = CipherMode.CBC;
-        aes.Key = _key;
+        aes.Key = key;
         aes.GenerateIV();
 
-        using var cryptoTransform = aes.CreateEncryptor();
-        envelope.Iv = aes.IV;
-        envelope.Data = cryptoTransform.TransformFinalBlock(raw, 0, raw.Length);
-        envelope.Hmac = CalculateHmac(envelope.Data);
+        using var transform = aes.CreateEncryptor();
+        
+        var raw = obj.Serialize();
+        var enc = transform.TransformFinalBlock(raw, 0, raw.Length);
+        var checksum = ComputeHmac(enc, key);
 
-        return envelope;
+        return (aes.IV, enc, checksum);
     }
 
-    public C2Message DecryptEnvelope(MessageEnvelope envelope)
+    public async Task<T> DecryptObject<T>(byte[] iv, byte[] data, byte[] checksum)
     {
-        if (!ValidHmac(envelope))
-            throw new Exception("Invalid HMAC");
+        var key = await GetKey();
+        
+        if (!ComputeHmac(data, key).SequenceEqual(checksum))
+            throw new CryptoException("Invalid Checksum");
 
         using var aes = Aes.Create();
         aes.Mode = CipherMode.CBC;
-        aes.Key = _key;
-        aes.IV = envelope.Iv;
-
-        using var cryptoTransform = aes.CreateDecryptor();
-        var dec = cryptoTransform.TransformFinalBlock(envelope.Data, 0, envelope.Data.Length);
-
-        return dec.Deserialize<C2Message>();
-    }
-
-    public T DecryptData<T>(byte[] data)
-    {
-        //16 bytes
-        var iv = data[..16];
-        
-        // 32 bytes
-        var hmac = data[16..48];
-        
-        // unknown size
-        var enc = data[48..];
-        
-        if (!ValidHmac(enc, hmac))
-            throw new Exception("Invalid HMAC");
-        
-        using var aes = Aes.Create();
-        aes.Mode = CipherMode.CBC;
-        aes.Key = _key;
+        aes.Key = key;
         aes.IV = iv;
 
-        using var cryptoTransform = aes.CreateDecryptor();
-        var dec = cryptoTransform.TransformFinalBlock(enc, 0, enc.Length);
+        using var transform = aes.CreateDecryptor();
+        var dec = transform.TransformFinalBlock(data, 0, data.Length);
 
         return dec.Deserialize<T>();
     }
 
-    public string GetEncodedKey()
+    public async Task<byte[]> GetKey()
     {
-        return Convert.ToBase64String(_key);
+        #if DEBUG
+        return Convert.FromBase64String("TfiAGr88Ia1PHiFHxTVMTf5/qXzhgN2nnn4TvsXYUQo=");
+        #endif
+
+        var conn = _db.GetAsyncConnection();
+        var dao = await conn.Table<CryptoDao>().FirstOrDefaultAsync();
+
+        // if key was null, create one
+        if (dao is null)
+        {
+            dao = new CryptoDao { Key = GenerateRandomKey() };
+            await conn.InsertAsync(dao);
+        }
+
+        return dao.Key;
     }
 
-    private byte[] GetRandomData(int length)
+    private static byte[] ComputeHmac(byte[] data, byte[] key)
     {
-        using var rng = RandomNumberGenerator.Create();
-        var data = new byte[length];
-        rng.GetNonZeroBytes(data);
-        return data;
-    }
-
-    private byte[] CalculateHmac(byte[] data)
-    {
-        using var hmac = new HMACSHA256(_key);
+        using var hmac = new HMACSHA256(key);
         return hmac.ComputeHash(data);
     }
 
-    private bool ValidHmac(MessageEnvelope envelope)
+    private static byte[] GenerateRandomKey()
     {
-        return ValidHmac(envelope.Data, envelope.Hmac);
-    }
+        var buf = new byte[32];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetNonZeroBytes(buf);
 
-    private bool ValidHmac(byte[] data, byte[] hmac)
-    {
-        var calculated = CalculateHmac(data);
-        return calculated.SequenceEqual(hmac);
+        return buf;
     }
+}
+
+public class CryptoException : Exception
+{
+    public CryptoException() { }
+    public CryptoException(string message) : base(message) { }
+    public CryptoException(string message, Exception inner) : base(message, inner) { }
 }

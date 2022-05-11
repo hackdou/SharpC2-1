@@ -1,43 +1,18 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace SharpC2.Models
+﻿namespace Client.Models
 {
-    public class Handler : Result
+    public class Handler
     {
         public string Name { get; set; }
-        public IEnumerable<Parameter> Parameters { get; set; }
+        public HandlerType Type { get; set; }
         public bool Running { get; set; }
+        public string Profile { get; set; }
 
-        public string ParametersAsString
+        public enum HandlerType : int
         {
-            get
-            {
-                if (!Parameters.Any()) return "";
-
-                var sb = new StringBuilder();
-                
-                foreach (var parameter in Parameters)
-                {
-                    sb.AppendLine($"{parameter.Name}: {parameter.Value} ");
-                }
-                
-                return sb.ToString().TrimEnd(' ');
-            }
+            Http = 0,
+            Dns = 1,
+            Tcp = 2,
+            Smb = 3
         }
-
-        public class Parameter
-        {
-            public string Name { get; set; }
-            public string Value { get; set; }
-            public bool Optional { get; set; }
-        }
-
-        protected internal override IList<ResultProperty> ResultProperties => new List<ResultProperty>
-        {
-            new() { Name = "Name", Value = Name },
-            new() { Name = "Running", Value = Running }
-        };
     }
 }

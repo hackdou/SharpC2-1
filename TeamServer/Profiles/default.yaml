@@ -1,0 +1,6 @@
+﻿Name: Default
+Description: Default SharpC2 profile
+Http:
+  Endpoint: /index.html
+  Sleep: 5
+  Jitter: 0

@@ -1,41 +1,146 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
     <PropertyGroup>
-        <TargetFramework>net48</TargetFramework>
-        <LangVersion>10</LangVersion>
-        <Company />
-        <Product />
-        <IsPackable>false</IsPackable>
-        <PackageId />
-        <PackageVersion />
-        <Authors />
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+        <ProjectGuid>{839211EB-C350-4DF7-A639-1B725F737AEE}</ProjectGuid>
+        <OutputType>WinExe</OutputType>
+        <AppDesignerFolder>Properties</AppDesignerFolder>
+        <RootNamespace>Drone</RootNamespace>
         <AssemblyName>drone</AssemblyName>
+        <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+        <FileAlignment>512</FileAlignment>
+        <LangVersion>10</LangVersion>
     </PropertyGroup>
-
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <OutputPath>..\TeamServer\Resources\</OutputPath>
-      <PlatformTarget>AnyCPU</PlatformTarget>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>bin\Debug\</OutputPath>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+        <Prefer32bit>false</Prefer32bit>
     </PropertyGroup>
-
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <PlatformTarget>AnyCPU</PlatformTarget>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <DebugType>none</DebugType>
+        <Optimize>true</Optimize>
+        <OutputPath>..\TeamServer\Resources\</OutputPath>
+        <DefineConstants>TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+        <Prefer32bit>false</Prefer32bit>
     </PropertyGroup>
-
     <ItemGroup>
-      <PackageReference Include="dnMerge" Version="0.5.15">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="MinHook.NET" Version="1.1.1" />
+      <Compile Include="Drone.cs" />
+      <Compile Include="Functions\ChangeDirectory.cs" />
+      <Compile Include="Functions\ExecuteAssembly.cs" />
+      <Compile Include="Functions\Exit.cs" />
+      <Compile Include="Functions\GetCurrentUser.cs" />
+      <Compile Include="Functions\Jump.cs" />
+      <Compile Include="Functions\JumpPsexec.cs" />
+      <Compile Include="Functions\JumpWinRM.cs" />
+      <Compile Include="Functions\ListDirectory.cs" />
+      <Compile Include="Functions\ListProcesses.cs" />
+      <Compile Include="Functions\MakeDirectory.cs" />
+      <Compile Include="Functions\MakeToken.cs" />
+      <Compile Include="Functions\ModuleOverload.cs" />
+      <Compile Include="Functions\PowerShell.cs" />
+      <Compile Include="Functions\PowerShellImport.cs" />
+      <Compile Include="Functions\PrintDirectory.cs" />
+      <Compile Include="Functions\ReadFile.cs" />
+      <Compile Include="Functions\RemoveDirectory.cs" />
+      <Compile Include="Functions\RemoveFile.cs" />
+      <Compile Include="Functions\RevToSelf.cs" />
+      <Compile Include="Functions\Run.cs" />
+      <Compile Include="Functions\Shell.cs" />
+      <Compile Include="Functions\Sleep.cs" />
+      <Compile Include="Functions\StealToken.cs" />
+      <Compile Include="Functions\Upload.cs" />
+      <Compile Include="Handlers\Handler.cs" />
+      <Compile Include="Handlers\HttpHandler.cs" />
+      <Compile Include="Interfaces\IConfig.cs" />
+      <Compile Include="Interfaces\ICrypto.cs" />
+      <Compile Include="Interfaces\IHandler.cs" />
+      <Compile Include="Models\C2Message.cs" />
+      <Compile Include="Models\DroneTask.cs" />
+      <Compile Include="Models\DroneTaskOutput.cs" />
+      <Compile Include="Models\DroneFunction.cs" />
+      <Compile Include="Models\ObjectResult.cs" />
+      <Compile Include="Models\Metadata.cs" />
+      <Compile Include="Program.cs" />
+      <Compile Include="Services\Config.cs" />
+      <Compile Include="Services\Crypto.cs" />
+      <Compile Include="Utilities\Delegates.cs" />
+      <Compile Include="Utilities\Extensions.cs" />
+      <Compile Include="Utilities\Helpers.cs" />
+      <Compile Include="Utilities\Native.cs" />
+      <Compile Include="Utilities\PowerShellRunner.cs" />
+      <Compile Include="Utilities\Win32.cs" />
     </ItemGroup>
-
     <ItemGroup>
-      <Reference Include="System.ServiceProcess, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Reference Include="DInvoke.Data, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+        <HintPath>..\packages\DInvoke.Data.1.0.4\lib\netstandard2.0\DInvoke.Data.dll</HintPath>
       </Reference>
+      <Reference Include="DInvoke.DynamicInvoke, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+        <HintPath>..\packages\DInvoke.DynamicInvoke.1.0.4\lib\netstandard2.0\DInvoke.DynamicInvoke.dll</HintPath>
+      </Reference>
+      <Reference Include="DInvoke.ManualMap, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+        <HintPath>..\packages\DInvoke.ManualMap.1.0.4\lib\netstandard2.0\DInvoke.ManualMap.dll</HintPath>
+      </Reference>
+      <Reference Include="mscorlib" />
+      <Reference Include="protobuf-net, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+        <HintPath>..\packages\protobuf-net.3.1.0\lib\net461\protobuf-net.dll</HintPath>
+      </Reference>
+      <Reference Include="protobuf-net.Core, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+        <HintPath>..\packages\protobuf-net.Core.3.1.0\lib\net461\protobuf-net.Core.dll</HintPath>
+      </Reference>
+      <Reference Include="System" />
+      <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+        <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+      </Reference>
+      <Reference Include="System.Collections.Immutable, Version=1.2.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+        <HintPath>..\packages\System.Collections.Immutable.1.7.1\lib\net461\System.Collections.Immutable.dll</HintPath>
+      </Reference>
+      <Reference Include="System.Core" />
+      <Reference Include="System.Management.Automation">
+        <HintPath>System.Management.Automation.dll</HintPath>
+      </Reference>
+      <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+        <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+      </Reference>
+      <Reference Include="System.Numerics" />
+      <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+        <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+      </Reference>
+      <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+        <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      </Reference>
+      <Reference Include="System.ServiceProcess" />
+      <Reference Include="System.Xml" />
     </ItemGroup>
-
     <ItemGroup>
-      <Compile Remove="TransactedAssembly.cs" />
+      <None Include="packages.config" />
     </ItemGroup>
-
+    <ItemGroup>
+      <Content Include="dnMerge.config" />
+    </ItemGroup>
+    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+    <Import Project="..\packages\dnMerge.0.5.15\build\dnMerge.targets" Condition="Exists('..\packages\dnMerge.0.5.15\build\dnMerge.targets')" />
+    <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+      <PropertyGroup>
+        <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105.The missing file is {0}.</ErrorText>
+      </PropertyGroup>
+      <Error Condition="!Exists('..\packages\dnMerge.0.5.15\build\dnMerge.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\dnMerge.0.5.15\build\dnMerge.targets'))" />
+    </Target>
+    <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+         Other similar extension points exist, see Microsoft.Common.targets.
+    <Target Name="BeforeBuild">
+    </Target>
+    <Target Name="AfterBuild">
+    </Target>
+    -->
 </Project>

@@ -1,182 +1,160 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-using AutoMapper;
+﻿using AutoMapper;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
-using SharpC2.API.V1;
-using SharpC2.API.V1.Requests;
-using SharpC2.API.V1.Responses;
+using SharpC2.API;
+using SharpC2.API.Request;
+using SharpC2.API.Response;
 
 using TeamServer.Handlers;
-using TeamServer.Hubs;
 using TeamServer.Interfaces;
 using TeamServer.Services;
 
-namespace TeamServer.Controllers
+namespace TeamServer.Controllers;
+
+[ApiController]
+[Authorize]
+[Route(Routes.V1.Handlers)]
+public class HandlersController : ControllerBase
 {
-    [ApiController]
-    [Authorize]
-    [Route(Routes.V1.Handlers)]
-    public class HandlersController : ControllerBase
+    private readonly IHandlerService _handlers;
+    private readonly IDatabaseService _database;
+    private readonly IProfileService _profiles;
+    private readonly IMapper _mapper;
+    private readonly IHubContext<HubService, IHubService> _hub;
+
+    public HandlersController(IHandlerService handlers, IDatabaseService database, IProfileService profiles,
+        IMapper mapper, IHubContext<HubService, IHubService> hub)
     {
-        private readonly SharpC2Service _server;
-        private readonly ICryptoService _crypto;
+        _handlers = handlers;
+        _database = database;
+        _profiles = profiles;
+        _mapper = mapper;
+        _hub = hub;
+    }
+
+    [HttpGet]
+    public ActionResult<IEnumerable<HandlerResponse>> GetHandlers()
+    {
+        var handlers = _handlers.GetHandlers();
+        var response = _mapper.Map<IEnumerable<Handler>, IEnumerable<HandlerResponse>>(handlers);
+
+        return Ok(response);
+    }
+
+    [HttpGet("http")]
+    public ActionResult<IEnumerable<HttpHandlerResponse>> GetHttpHandlers()
+    {
+        var handlers = _handlers.GetHandlers().Where(h => h.Type == Handler.HandlerType.Http);
+        var response = _mapper.Map<IEnumerable<Handler>, IEnumerable<HttpHandlerResponse>>(handlers);
+
+        return Ok(response);
+    }
+
+    [HttpGet("http/{name}")]
+    public ActionResult<HttpHandlerResponse> GetHttpHandler(string name)
+    {
+        var handler = _handlers.GetHandler(name);
+        if (handler is null) return NotFound();
+
+        var response = _mapper.Map<Handler, HttpHandlerResponse>(handler);
+        return Ok(response);
+    }
+
+    [HttpPost("http")]
+    public async Task<ActionResult<HttpHandlerResponse>> CreateHttpHandler([FromBody] CreateHttpHandlerRequest request)
+    {
+        // find profile
+        var profile = await _profiles.GetProfile(request.ProfileName);
+
+        if (profile is null)
+            return NotFound("Profile not found");
         
-        private readonly IMapper _mapper;
-        private readonly IHubContext<MessageHub, IMessageHub> _hub;
+        // create and start
+        var handler = new HttpHandler(request.Name, request.BindPort, request.ConnectAddress, request.ConnectPort, profile);
+        handler.Init(_database, _hub);
+        await handler.Start();
+        
+        // store
+        await _handlers.AddHandler(handler);
+        
+        // notify hub
+        await _hub.Clients.All.NotifyHttpHandlerCreated(handler.Name);
 
-        public HandlersController(SharpC2Service server, IMapper mapper, IHubContext<MessageHub, IMessageHub> hub, ICryptoService crypto)
-        {
-            _mapper = mapper;
-            _hub = hub;
-            _crypto = crypto;
-            _server = server;
-        }
+        // return to user
+        var response = _mapper.Map<HttpHandler, HttpHandlerResponse>(handler);
+        return Ok(response);
+    }
 
-        [HttpGet]
-        public IActionResult GetHandlers()
-        {
-            var handlers = _server.GetHandlers();
-            var response = _mapper.Map<IEnumerable<Handler>, IEnumerable<HandlerResponse>>(handlers);
-            
-            return Ok(response);
-        }
+    [HttpPut("http/{name}")]
+    public async Task<ActionResult<HandlerResponse>> UpdateHttpHandler(string name, [FromBody] CreateHttpHandlerRequest request)
+    {
+        var handler = (HttpHandler) _handlers.GetHandler(name);
+        
+        if (handler is null)
+            return NotFound("Handler not found");
 
-        [HttpGet("{name}")]
-        public IActionResult GetHandler(string name)
-        {
-            var handler = _server.GetHandler(name);
-            if (handler is null) return NotFound();
+        var profile = await _profiles.GetProfile(request.ProfileName);
 
-            var response = _mapper.Map<Handler, HandlerResponse>(handler);
-            return Ok(response);
-        }
+        if (profile is null)
+            return NotFound("Profile not found");
 
-        [HttpGet("types")]
-        public IActionResult GetHandlerTypes()
-        {
-            return Ok(Enum.GetNames(typeof(CreateHandlerRequest.HandlerType)));
-        }
+        // stop
+        handler.Stop();
 
-        [HttpPost("load")]
-        public async Task<IActionResult> LoadHandler([FromBody] LoadAssemblyRequest request)
-        {
-            var handlers = _server.LoadHandlers(request.Bytes);
-            var response = _mapper.Map<IEnumerable<Handler>, IEnumerable<HandlerResponse>>(handlers);
+        // set new values
+        handler.BindPort = request.BindPort;
+        handler.ConnectAddress = request.ConnectAddress;
+        handler.ConnectPort = request.ConnectPort;
+        handler.Profile = profile;
 
-            foreach (var handlerResponse in response)
-                await _hub.Clients.All.HandlerLoaded(handlerResponse);
+        // start
+        await handler.Start();
 
-            return Ok(response);
-        }
+        // notify hub
+        await _hub.Clients.All.NotifyHttpHandlerUpdated(handler.Name);
 
-        [HttpPost]
-        public async Task<IActionResult> CreateHandler([FromBody] CreateHandlerRequest request)
-        {
-            // check if handler name already exists
-            var existing = _server.GetHandler(request.HandlerName);
-            
-            if (existing is not null)
-                return BadRequest($"Handler with name '{request.HandlerName}' already exists");
-            
-            // create new handler
-            Handler handler = request.Type switch
-            {
-                CreateHandlerRequest.HandlerType.HTTP => new HttpHandler(request.HandlerName),
-                CreateHandlerRequest.HandlerType.SMB => new SmbHandler(request.HandlerName),
-                CreateHandlerRequest.HandlerType.TCP => new TcpHandler(request.HandlerName),
-                
-                _ => throw new ArgumentOutOfRangeException()
-            };
+        // response
+        var response = _mapper.Map<HttpHandler, HttpHandlerResponse>(handler);
+        return Ok(response);
+    }
 
-            // add and return path
-            _server.AddHandler(handler);
-            
-            var root = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Path.ToUriComponent()}";
-            var path = $"{root}/{handler.Name}";
+    [HttpPatch("{name}")]
+    public async Task<ActionResult<HandlerResponse>> ToggleHandlerStatus(string name)
+    {
+        // get handler
+        var handler = _handlers.GetHandler(name);
+        
+        if (handler is null)
+            return NotFound();
 
-            var response = _mapper.Map<Handler, HandlerResponse>(handler);
-            await _hub.Clients.All.HandlerLoaded(response);
-            return Created(path, response);
-        }
+        // toggle status
+        if (handler.Running) handler.Stop();
+        else await handler.Start();
+        
+        // notify hub
+        await _hub.Clients.All.NotifyHandlerStateChanged(handler.Name);
+        
+        // return response
+        var response = _mapper.Map<Handler, HandlerResponse>(handler);
+        return Ok(response);
+    }
 
-        [HttpPut("{name}")]
-        public async Task<IActionResult> SetHandlerParameters(string name, [FromBody] Dictionary<string, string> parameters)
-        {
-            var handler = _server.GetHandler(name);
-            if (handler is null) return NotFound();
-            handler.SetParameters(parameters);
-
-            await _hub.Clients.All.HandlerParametersSet(parameters);
-
-            var response = _mapper.Map<Handler, HandlerResponse>(handler);
-            return Ok(response);
-        }
-
-        [HttpPatch("{name}")]
-        public async Task<IActionResult> SetHandlerParameter(string name, [FromQuery] string key, [FromQuery] string value)
-        {
-            var handler = _server.GetHandler(name);
-            if (handler is null) return NotFound();
-            handler.SetParameter(key, value);
-
-            await _hub.Clients.All.HandlerParameterSet(key, value);
-
-            var response = _mapper.Map<Handler, HandlerResponse>(handler);
-            return Ok(response);
-        }
-
-        [HttpPatch("{name}/start")]
-        public async Task<IActionResult> StartHandler(string name)
-        {
-            var handler = _server.GetHandler(name);
-
-            if (handler is null) return NotFound();
-            if (handler.Running) return BadRequest("Handler is already running");
-
-            handler.Init(_server, _crypto);
-            var task = handler.Start();
-
-            if (task.IsFaulted) return BadRequest(task.Exception?.Message);
-
-            var response = _mapper.Map<Handler, HandlerResponse>(handler);
-            await _hub.Clients.All.HandlerStarted(response);
-            return Ok(response);
-        }
-
-        [HttpPatch("{name}/stop")]
-        public async Task<IActionResult> StopHandler(string name)
-        {
-            var handler = _server.GetHandler(name);
-
-            if (handler is null) return NotFound();
-            if (!handler.Running) return BadRequest("Handler is already stopped");
-            
-            handler.Stop();
-
-            var response = _mapper.Map<Handler, HandlerResponse>(handler);
-            await _hub.Clients.All.HandlerStopped(response);
-            return Ok(response);
-        }
-
-        [HttpDelete("{name}")]
-        public IActionResult RemoveHandler(string name)
-        {
-            var handler = _server.GetHandler(name);
-            if (handler is null)
-                return NotFound($"Handler '{name}' not found");
-
-            if (handler.Running)
-                handler.Stop();
-
-            _server.RemoveHandler(handler);
-            
-            return NoContent();
-        }
+    [HttpDelete("{name}")]
+    public async Task<IActionResult> DeleteHandler(string name)
+    {
+        var handler = _handlers.GetHandler(name);
+        
+        if (handler is null)
+            return NotFound();
+        
+        handler.Stop();
+        
+        await _hub.Clients.All.NotifyHttpHandlerDeleted(handler.Name);
+        await _handlers.DeleteHandler(handler);
+        
+        return NoContent();
     }
 }

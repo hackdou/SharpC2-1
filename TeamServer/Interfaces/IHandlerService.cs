@@ -1,15 +1,19 @@
-using System.Collections.Generic;
+﻿using TeamServer.Handlers;
 
-using TeamServer.Handlers;
+namespace TeamServer.Interfaces;
 
-namespace TeamServer.Interfaces
+public interface IHandlerService
 {
-    public interface IHandlerService
-    {
-        void AddHandler(Handler handler);
-        IEnumerable<Handler> LoadHandlers(byte[] bytes);
-        IEnumerable<Handler> GetHandlers();
-        Handler GetHandler(string name);
-        void RemoveHandler(Handler handler);
-    }
+    // create
+    Task AddHandler(Handler handler);
+    
+    // read
+    Handler GetHandler(string name);
+    IEnumerable<Handler> GetHandlers();
+    
+    // update
+    Task UpdateHandler(Handler handler);
+    
+    // delete
+    Task DeleteHandler(Handler handler);
 }

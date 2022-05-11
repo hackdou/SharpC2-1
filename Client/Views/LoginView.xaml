@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:Client.ViewModels"
+             x:Class="Client.Views.LoginView"
+             x:DataType="viewModels:LoginViewModel"
+             Title="SharpC2"
+             Shell.FlyoutBehavior="Disabled"
+             Shell.NavBarIsVisible="False">
+
+    <StackLayout VerticalOptions="Center"
+                 HorizontalOptions="Center"
+                 Padding="10"
+                 Spacing="10"
+                 WidthRequest="250">
+
+        <Label Text="SharpC2"
+               FontSize="Large"
+               HorizontalTextAlignment="Center"
+               Padding="0,0,0,50"/>
+
+        <Entry Placeholder="hostname"
+               Text="{Binding Host}"
+               ClearButtonVisibility="WhileEditing"/>
+
+        <Entry Placeholder="nickname"
+               Text="{Binding Nick}"
+               ClearButtonVisibility="WhileEditing"/>
+
+        <Entry Placeholder="password"
+               IsPassword="True"
+               Text="{Binding Pass}"
+               ClearButtonVisibility="WhileEditing"/>
+
+        <Button Text="Login"
+                Command="{Binding LoginCommand}"/>
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}"/>
+
+    </StackLayout>
+
+</ContentPage>

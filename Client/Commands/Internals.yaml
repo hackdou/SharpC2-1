@@ -1,0 +1,11 @@
+﻿- Alias: sleep
+  Description: Set the sleep and jitter
+  Function: sleep
+  Arguments:
+    - Name: sleep
+      Optional: false
+    - Name: jitter
+
+- Alias: exit
+  Description: Kill this Drone
+  Function: exit

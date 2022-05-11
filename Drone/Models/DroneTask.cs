@@ -1,23 +1,21 @@
-﻿using System.Runtime.Serialization;
+﻿using System;
 
-namespace Drone.Models
+using ProtoBuf;
+
+namespace Drone.Models;
+
+[ProtoContract]
+public class DroneTask
 {
-    [DataContract]
-    public class DroneTask
-    {
-        [DataMember (Name = "TaskGuid")]
-        public string TaskGuid { get; set; }
-        
-        [DataMember (Name = "Module")]
-        public string Module { get; set; }
-        
-        [DataMember (Name = "Command")]
-        public string Command { get; set; }
-        
-        [DataMember (Name = "Arguments")]
-        public string[] Arguments { get; set; }
-        
-        [DataMember (Name = "Artefact")]
-        public string Artefact { get; set; }
-    }
+    [ProtoMember(1)]
+    public string TaskId { get; set; }
+    
+    [ProtoMember(2)]
+    public string Function { get; set; }
+
+    [ProtoMember(3)]
+    public string[] Parameters { get; set; } = Array.Empty<string>();
+
+    [ProtoMember(4)]
+    public byte[] Artefact { get; set; } = Array.Empty<byte>();
 }

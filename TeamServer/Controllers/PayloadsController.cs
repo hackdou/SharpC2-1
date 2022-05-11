@@ -1,54 +1,37 @@
-using System;
-using System.Threading.Tasks;
-
-using AutoMapper;
-
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-using SharpC2.API.V1;
-using SharpC2.API.V1.Responses;
+using SharpC2.API;
 
-using TeamServer.Models;
-using TeamServer.Services;
+using TeamServer.Interfaces;
 
-namespace TeamServer.Controllers
+namespace TeamServer.Controllers;
+
+[ApiController]
+[Authorize]
+[Route(Routes.V1.Payloads)]
+public class PayloadsController : ControllerBase
 {
-    [ApiController]
-    [Authorize]
-    [Route(Routes.V1.Payloads)]
-    public class PayloadsController : ControllerBase
+    private readonly IHandlerService _handlers;
+    private readonly IPayloadService _payloads;
+
+    public PayloadsController(IHandlerService handlers, IPayloadService payloads)
     {
-        private readonly SharpC2Service _server;
-        private readonly IMapper _mapper;
+        _handlers = handlers;
+        _payloads = payloads;
+    }
 
-        public PayloadsController(SharpC2Service server, IMapper mapper)
-        {
-            _server = server;
-            _mapper = mapper;
-        }
+    [HttpGet("{handler}/{format}")]
+    public async Task<ActionResult<byte[]>> GeneratePayload(string handler, string format)
+    {
+        var h = _handlers.GetHandler(handler);
 
-        [HttpGet("formats")]
-        public IActionResult GetPayloadFormats()
-        {
-            return Ok(Enum.GetNames(typeof(SharpC2Service.PayloadFormat)));
-        }
+        if (h is null)
+            return NotFound("Handler not found");
 
-        [HttpGet("{handler}/{format}")]
-        public async Task<IActionResult> GetPayload(string handler, string format)
-        {
-            // get the handler
-            var h = _server.GetHandler(handler);
-            if (h is null) return NotFound("Handler not found");
+        if (!Enum.TryParse(format, true, out PayloadFormat f))
+            return BadRequest("Invalid payload format");
 
-            // parse the format
-            if (!Enum.TryParse(format, true, out SharpC2Service.PayloadFormat payloadFormat))
-                return BadRequest("Invalid payload format");
-
-            var payload = await _server.GeneratePayload(payloadFormat, h);
-            
-            var response = _mapper.Map<Payload, PayloadResponse>(payload);
-            return Ok(response);
-        }
+        return await _payloads.GeneratePayload(h, f);
     }
 }

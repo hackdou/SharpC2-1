@@ -1,87 +1,211 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
+
+using AutoMapper;
 
 using Microsoft.AspNetCore.SignalR;
 
-using TeamServer.Hubs;
 using TeamServer.Interfaces;
 using TeamServer.Models;
+using TeamServer.Storage;
 
-namespace TeamServer.Services
+namespace TeamServer.Services;
+
+public class TaskService : ITaskService
 {
-    public class TaskService : ITaskService
+    private readonly IDatabaseService _db;
+    private readonly IMapper _mapper;
+    private readonly IHubContext<HubService, IHubService> _hub;
+
+    public TaskService(IDatabaseService db, IMapper mapper, IHubContext<HubService, IHubService> hub)
     {
-        private readonly IDroneService _drones;
-        private readonly ICryptoService _crypto;
-        private readonly IHubContext<MessageHub, IMessageHub> _hub;
+        _db = db;
+        _mapper = mapper;
+        _hub = hub;
+    }
 
-        public TaskService(IDroneService drones, ICryptoService crypto, IHubContext<MessageHub, IMessageHub> hub)
+    public async Task AddTask(DroneTaskRecord task)
+    {
+        var conn = _db.GetAsyncConnection();
+        
+        try
         {
-            _drones = drones;
-            _crypto = crypto;
-            _hub = hub;
+            var dao = _mapper.Map<DroneTaskRecord, DroneTaskRecordDao>(task);
+            await conn.InsertAsync(dao);
         }
-
-        public async Task<IEnumerable<MessageEnvelope>> GetDroneTasks(DroneMetadata metadata)
+        catch (Exception e)
         {
-            var drone = _drones.GetDrone(metadata.Guid);
+            Debug.WriteLine(e.Message);
+        }
+        // finally
+        // {
+        //     await conn.CloseAsync();
+        // }
+    }
 
-            if (drone is null)
-            {
-                drone = new Drone(metadata);
-                _drones.AddDrone(drone);
-            }
-
-            drone.CheckIn();
-            await _hub.Clients.All.DroneCheckedIn(drone.Metadata);
-
-            // create a new list of envelopes to send
-            var envelopes = new List<MessageEnvelope>();
-
-            // get a collection of all drones
-            var allDrones = _drones.GetDrones().ToArray();
+    public async Task<DroneTaskRecord> GetTask(string taskId)
+    {
+        var conn = _db.GetAsyncConnection();
+        
+        try
+        {
+            var dao = await conn.Table<DroneTaskRecordDao>()
+                .FirstOrDefaultAsync(t => t.TaskId.Equals(taskId));
             
-            // set the current "top-level" drones
-            var currentParents = new[] { drone };
-            
-            while (true)
-            {
-                if (!currentParents.Any()) break;
+            var task = _mapper.Map<DroneTaskRecordDao, DroneTaskRecord>(dao);
 
-                var allChildren = new List<Drone>();
-                
-                // iterate over each parent
-                foreach (var parent in currentParents)
+            return task;
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e.Message);
+            return null;
+        }
+        // finally
+        // {
+        //     await conn.CloseAsync();
+        // }
+    }
+
+    public async Task<IEnumerable<DroneTaskRecord>> GetAllTasks()
+    {
+        var conn = _db.GetAsyncConnection();
+        
+        try
+        {
+            var query = conn.Table<DroneTaskRecordDao>();
+            var dao = await query.ToArrayAsync();
+            var tasks = _mapper.Map<IEnumerable<DroneTaskRecordDao>, IEnumerable<DroneTaskRecord>>(dao);
+        
+            return tasks;
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e.Message);
+            return Array.Empty<DroneTaskRecord>();
+        }
+        // finally
+        // {
+        //     await conn.CloseAsync();
+        // }
+    }
+
+    public async Task<IEnumerable<DroneTaskRecord>> GetTasks(string droneId)
+    {
+        var conn = _db.GetAsyncConnection();
+        
+        try
+        {
+            var query = conn.Table<DroneTaskRecordDao>().Where(t => t.DroneId.Equals(droneId));
+            var dao = await query.ToArrayAsync();
+            var tasks = _mapper.Map<IEnumerable<DroneTaskRecordDao>, IEnumerable<DroneTaskRecord>>(dao);
+
+            return tasks;
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e.Message);
+            return Array.Empty<DroneTaskRecord>();
+        }
+        // finally
+        // {
+        //     await conn.CloseAsync();
+        // }
+    }
+
+    public async Task<IEnumerable<DroneTask>> GetPendingTasks(string droneId)
+    {
+        var conn = _db.GetAsyncConnection();
+
+        try
+        {
+            // get all pending tasks for this drone
+            var query = conn.Table<DroneTaskRecordDao>()
+                .Where(t => t.DroneId.Equals(droneId) && t.Status == 0);
+        
+            var records = await query.ToArrayAsync();
+
+            if (records.Any())
+            {
+                // for each one, update the status and start time
+                foreach (var record in records)
                 {
-                    var parentTasks = parent.GetPendingTasks().ToArray();
-                    
-                    if (parentTasks.Any())
-                    {
-                        var envelope = CreateEnvelopeFromTasks(parentTasks);
-                        envelope.Drone = parent.Metadata.Guid;
-                        envelopes.Add(envelope);
-                    }
+                    record.Status = 1;
+                    record.StartTime = DateTime.UtcNow;
 
-                    // get all drones that our current drones are parents for
-                    var children = allDrones.Where(d => !string.IsNullOrWhiteSpace(d.Parent) && d.Parent.Equals(parent.Metadata.Guid)).ToArray();
-                    if (children.Any()) allChildren.AddRange(children);
+                    // update db
+                    await conn.UpdateAsync(record);
+
+                    // notify hub
+                    await _hub.Clients.All.NotifyDroneTaskUpdated(record.DroneId, record.TaskId);
                 }
-
-                currentParents = allChildren.ToArray();
             }
 
-            return envelopes;
+            return _mapper.Map<IEnumerable<DroneTaskRecordDao>, IEnumerable<DroneTask>>(records);
         }
-
-        private MessageEnvelope CreateEnvelopeFromTasks(IEnumerable<DroneTask> tasks)
+        catch (Exception e)
         {
-            var message = new C2Message(C2Message.MessageDirection.Downstream, C2Message.MessageType.DroneTask)
-            {
-                Data = tasks.Serialize()
-            };
-
-            return _crypto.EncryptMessage(message);
+            Debug.WriteLine(e.Message);
+            return Array.Empty<DroneTask>();
         }
+        // finally
+        // {
+        //     await conn.CloseAsync();
+        // }
+    }
+
+    public async Task UpdateTasks(IEnumerable<DroneTaskOutput> outputs)
+    {
+        var conn = _db.GetAsyncConnection();
+
+        try
+        {
+            foreach (var output in outputs)
+            {
+                var dao = await conn.Table<DroneTaskRecordDao>().FirstOrDefaultAsync(t =>
+                    t.TaskId.Equals(output.TaskId));
+            
+                if (dao is null) continue;
+            
+                // update db
+                UpdateTask(output, dao);
+                await conn.UpdateAsync(dao);
+
+                // notify hub
+                await _hub.Clients.All.NotifyDroneTaskUpdated(dao.DroneId, dao.TaskId);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e.Message);
+        }
+        // finally
+        // {
+        //     await conn.CloseAsync();
+        // }
+    }
+
+    private static void UpdateTask(DroneTaskOutput output, DroneTaskRecordDao dao)
+    {
+        // update status
+        dao.Status = (int)output.Status;
+        
+        // update result
+        if (dao.Result is null || dao.Result.Length == 0)
+        {
+            dao.Result = output.Output;
+        }
+        else
+        {
+            var tmp = dao.Result;
+            
+            Array.Resize(ref tmp, tmp.Length + output.Output.Length);
+            Buffer.BlockCopy(output.Output, 0, tmp, tmp.Length, output.Output.Length);
+
+            dao.Result = tmp;
+        }
+        
+        // set end time
+        if (output.Status is DroneTaskOutput.TaskStatus.Complete or DroneTaskOutput.TaskStatus.Aborted)
+            dao.EndTime = DateTime.UtcNow;
     }
 }

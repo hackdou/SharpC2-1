@@ -1,0 +1,37 @@
+﻿- Alias: mkdir
+  Description: Create a directory
+  Function: mkdir
+  Arguments:
+  - Name: path
+    Optional: false
+
+- Alias: rmdir
+  Description: Remove a directory
+  Function: rmdir
+  Arguments:
+    - Name: path
+      Optional: false
+
+- Alias: rm
+  Description: Remove a file
+  Function: rm
+  Arguments:
+    - Name: path
+      Optional: false
+
+- Alias: upload
+  Description: Upload a file
+  Function: upload
+  Arguments:
+    - Name: file
+      Optional: false
+      Artefact: true
+    - Name: destination
+      Optional: false
+
+- Alias: cat
+  Description: Read a text file from disk
+  Function: cat
+  Arguments:
+    - Name: path
+      Optional: false

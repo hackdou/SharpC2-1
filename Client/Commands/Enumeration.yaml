@@ -1,0 +1,23 @@
+﻿- Alias: ls
+  Description: List file system
+  Function: ls
+  Arguments:
+  - Name: path
+
+- Alias: pwd
+  Description: Print working directory
+  Function: pwd
+
+- Alias: cd
+  Description: Change directory
+  Function: cd
+  Arguments:
+  - Name: path
+    
+- Alias: ps
+  Description: List running processes
+  Function: ps
+    
+- Alias: getuid
+  Description: Get current user identity
+  Function: getuid

@@ -1,0 +1,18 @@
+﻿- Alias: coffee
+  Description: Mimikatz standard::coffee
+  Function: module-overload
+  Arguments:
+  - Name: assembly
+    DefaultValue: powerkatz.dll
+    Artefact: true
+    Embedded: true
+    Visible: false
+    Optional: false
+  - Name: export
+    DefaultValue: powershell_reflective_mimikatz
+    Optional: false
+    Visible: false
+  - Name: args
+    DefaultValue: standard::coffee
+    Optional: false
+    Visible: false

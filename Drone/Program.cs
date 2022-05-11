@@ -1,20 +1,15 @@
-﻿namespace Drone
-{
-    internal static class Program
-    {
-        private static void Main(string[] args)
-        {
-            # if DEBUG
-            System.Threading.Thread.Sleep(15000);
-            #endif
-            
-            Execute();
-        }
+﻿namespace Drone;
 
-        public static void Execute()
-        {
-            var drone = new Drone();
-            drone.Start();
-        }
+public static class Program
+{
+    public static void Main(string[] args)
+    {
+        Execute();
+    }
+
+    public static void Execute()
+    {
+        var drone = new Drone();
+        drone.Start();
     }
 }

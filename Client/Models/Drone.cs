@@ -1,76 +1,68 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using MvvmHelpers;
 
-namespace SharpC2.Models
+namespace Client.Models
 {
-    public class Drone : Result
+    public class Drone : ObservableObject
     {
-        public string Guid { get; set; }
-        public string Parent { get; set; }
-        public string Address { get; set; }
+        public string Id { get; set; }
+        public string ExternalAddress { get; set; }
+        public string InternalAddress { get; set; }
+        public string Handler { get; set; }
+        public string User { get; set; }
         public string Hostname { get; set; }
-        public string Username { get; set; }
         public string Process { get; set; }
-        public int Pid { get; set; }
-        public DroneIntegrity Integrity { get; set; }
-        public DroneArch Arch { get; set; }
+        public int ProcessId { get; set; }
+        public string Integrity { get; set; }
+        public string Architecture { get; set; }
+        public DateTime FirstSeen { get; set; }
         public DateTime LastSeen { get; set; }
 
-        public bool Hidden { get; private set; }
-
-        public void Hide()
+        private string _time;
+        public string Time
         {
-            Hidden = true;
+            get { return _time; }
+            set
+            {
+                _time = value;
+                OnPropertyChanged();
+            }
         }
 
-        public void Show()
+        public Drone()
         {
-            Hidden = false;
-        }
-        
-        public List<DroneModule> Modules { get; set; }
+            var timer = new System.Timers.Timer();
+            timer.Interval = 500;
+            timer.AutoReset = true;
+            timer.Elapsed += Timer_Elapsed;
+            timer.Start();
 
-        // empty ctor for automapper
-        public Drone() { }
-
-        public Drone(DroneMetadata metadata)
-        {
-            Guid = metadata.Guid;
-            Address = metadata.Address;
-            Hostname = metadata.Hostname;
-            Username = metadata.Username;
-            Process = metadata.Process;
-            Pid = metadata.Pid;
-            Integrity = (DroneIntegrity)metadata.Integrity;
-            Arch = (DroneArch)metadata.Arch;
-            LastSeen = DateTime.UtcNow;
-        }
-        
-        public enum DroneIntegrity
-        {
-            Medium,
-            High,
-            SYSTEM
+            // cheat
+            Time = "0s";
         }
 
-        public enum DroneArch
+        private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            x86,
-            x64
-        }
+            var timeDiff = DateTime.UtcNow - LastSeen;
 
-        protected internal override IList<ResultProperty> ResultProperties => new List<ResultProperty>
-        {
-            new() { Name = "Guid", Value = Guid },
-            new() { Name = "Parent", Value = Parent },
-            new() { Name = "Address", Value = Address },
-            new() { Name = "Hostname", Value = Hostname },
-            new() { Name = "Username", Value = Username },
-            new() { Name = "Process", Value = Process },
-            new() { Name = "Pid", Value = Pid },
-            new() { Name = "Integrity", Value = Integrity },
-            new() { Name = "Arch", Value = Arch },
-            new() { Name = "LastSeen", Value = LastSeen }
-        };
+            // if less than 1s show in ms
+            if (timeDiff.TotalSeconds < 1)
+                Time = $"{Math.Round(timeDiff.TotalMilliseconds)}ms";
+
+            // if less than 1m show in s
+            else if (timeDiff.TotalMinutes < 1)
+                Time = $"{Math.Round(timeDiff.TotalSeconds)}s";
+
+            // if less than 1h show in m
+            else if (timeDiff.TotalHours < 1)
+                Time = $"{Math.Round(timeDiff.TotalMinutes)}m";
+
+            // if less than 1d show in h
+            else if (timeDiff.TotalDays < 1)
+                Time = $"{Math.Round(timeDiff.TotalHours)}h";
+
+            // else show in d
+            else
+                Time = $"{Math.Round(timeDiff.TotalDays)}d";
+        }
     }
 }

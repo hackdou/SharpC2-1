@@ -1,0 +1,50 @@
+﻿- Alias: run
+  Description: Run an executable
+  Function: run
+  Arguments:
+    - Name: program
+      Optional: false
+    - Name: args
+
+- Alias: shell
+  Description: Run a command via cmd.exe
+  Function: shell
+  Arguments:
+    - Name: args
+      Optional: false
+      
+- Alias: powershell
+  Description: Execute a PowerShell script
+  Function: powershell
+  Arguments:
+    - Name: cmdlet
+      Optional: false
+    - Name: script-path
+      Optional: true
+      Artefact: true
+
+- Alias: powershell-import
+  Description: Import a PowerShell script
+  Function: powershell-import
+  Arguments:
+    - Name: script-path
+      Optional: false
+      Artefact: true
+
+- Alias: execute-assembly
+  Description: Execute a .NET assembly in memory
+  Function: execute-assembly
+  Arguments:
+  - Name: assembly-path
+    Optional: false
+    Artefact: true
+  - Name: args
+
+- Alias: overload
+  Description: Overload and execute a native DLL in memory
+  Function: module-overload
+  Arguments:
+  - Name: dll-path
+    Optional: false
+    Artefact: true
+  - Name: args
