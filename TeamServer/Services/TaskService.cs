@@ -199,7 +199,7 @@ public class TaskService : ITaskService
             var tmp = dao.Result;
             
             Array.Resize(ref tmp, tmp.Length + output.Output.Length);
-            Buffer.BlockCopy(output.Output, 0, tmp, tmp.Length, output.Output.Length);
+            Buffer.BlockCopy(output.Output, 0, tmp, dao.Result.Length, output.Output.Length);
 
             dao.Result = tmp;
         }

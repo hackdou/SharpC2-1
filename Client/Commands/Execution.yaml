@@ -40,6 +40,15 @@
     Artefact: true
   - Name: args
 
+- Alias: inline-execute
+  Description: Execute a custom capability (IDroneFunction)
+  Function: inline-execute
+  Arguments:
+  - Name: assembly-path
+    Optional: false
+    Artefact: true
+  - Name: args
+
 - Alias: overload
   Description: Overload and execute a native DLL in memory
   Function: module-overload

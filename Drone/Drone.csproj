@@ -5,7 +5,7 @@
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
         <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
         <ProjectGuid>{839211EB-C350-4DF7-A639-1B725F737AEE}</ProjectGuid>
-        <OutputType>WinExe</OutputType>
+        <OutputType>Library</OutputType>
         <AppDesignerFolder>Properties</AppDesignerFolder>
         <RootNamespace>Drone</RootNamespace>
         <AssemblyName>drone</AssemblyName>
@@ -36,10 +36,12 @@
     </PropertyGroup>
     <ItemGroup>
       <Compile Include="Drone.cs" />
+      <Compile Include="Functions\TaskKill.cs" />
       <Compile Include="Functions\ChangeDirectory.cs" />
       <Compile Include="Functions\ExecuteAssembly.cs" />
       <Compile Include="Functions\Exit.cs" />
       <Compile Include="Functions\GetCurrentUser.cs" />
+      <Compile Include="Functions\InlineExecute.cs" />
       <Compile Include="Functions\Jump.cs" />
       <Compile Include="Functions\JumpPsexec.cs" />
       <Compile Include="Functions\JumpWinRM.cs" />
@@ -64,6 +66,7 @@
       <Compile Include="Handlers\HttpHandler.cs" />
       <Compile Include="Interfaces\IConfig.cs" />
       <Compile Include="Interfaces\ICrypto.cs" />
+      <Compile Include="Interfaces\IDroneFunction.cs" />
       <Compile Include="Interfaces\IHandler.cs" />
       <Compile Include="Models\C2Message.cs" />
       <Compile Include="Models\DroneTask.cs" />

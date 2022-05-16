@@ -158,7 +158,8 @@
 
         </ListView>
 
-        <StackLayout Orientation="Horizontal"
+        <HorizontalStackLayout
+                             HorizontalOptions="Center"
                      Padding="10"
                      Spacing="10"
                      x:DataType="viewModels:DronesViewModel">
@@ -172,7 +173,7 @@
             <Button Text="Remove"
                     Command="{Binding RemoveCommand}"/>
 
-        </StackLayout>
+        </HorizontalStackLayout>
 
     </StackLayout>
     
